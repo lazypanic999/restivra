@@ -1,0 +1,6 @@
+{
+  "timeout_seconds": 120,
+  "checks": [
+    { "name": "İki müşteri geri yüklendi", "sql": "SELECT count(*) = 2 FROM public.customers" }
+  ]
+}

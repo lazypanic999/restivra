@@ -1,0 +1,12 @@
+{
+  "timeout_seconds": 180,
+  "max_backup_bytes": 268435456,
+  "memory_mb": 1536,
+  "data_mb": 512,
+  "checks": [
+    {
+      "name": "Müşteri tablosunda kayıt var",
+      "sql": "SELECT count(*) > 0 FROM public.customers"
+    }
+  ]
+}

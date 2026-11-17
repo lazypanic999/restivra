@@ -1,0 +1,64 @@
+name: restivra
+services:
+  db:
+    image: postgres:17-bookworm
+    environment:
+      POSTGRES_USER: restivra
+      POSTGRES_DB: restivra
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run scripts/setup.ps1 or scripts/setup.sh first}
+    volumes:
+      - app-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U restivra -d restivra]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+    networks: [control]
+  api:
+    build: .
+    image: restivra:local
+    command: [serve, --listen, "0.0.0.0:7474"]
+    ports: ["127.0.0.1:7474:7474"]
+    environment:
+      RESTIVRA_DATABASE_URL: postgres://restivra:${POSTGRES_PASSWORD}@db:5432/restivra?sslmode=disable
+      RESTIVRA_INSTANCE: ${RESTIVRA_INSTANCE:-restivra-main}
+    depends_on:
+      db: {condition: service_healthy}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    restart: unless-stopped
+    networks: [control, edge]
+  worker:
+    image: restivra:local
+    pull_policy: never
+    command: [worker]
+    # Docker management is intentionally isolated from the web API.
+    user: "0:0"
+    environment:
+      RESTIVRA_DATABASE_URL: postgres://restivra:${POSTGRES_PASSWORD}@db:5432/restivra?sslmode=disable
+      RESTIVRA_BACKUP_ROOT: /backups
+      RESTIVRA_WORK_DIR: /work/jobs
+      RESTIVRA_INSTANCE: ${RESTIVRA_INSTANCE:-restivra-main}
+      RESTIVRA_WEBHOOK_URL: ${RESTIVRA_WEBHOOK_URL:-}
+      RESTIVRA_RETENTION_DAYS: ${RESTIVRA_RETENTION_DAYS:-30}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./backups:/backups:ro
+      - worker-data:/work
+    depends_on:
+      db: {condition: service_healthy}
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    stop_grace_period: 45s
+    restart: unless-stopped
+    networks: [control, outbound]
+volumes:
+  app-data:
+  worker-data:
+networks:
+  control: {internal: true}
+  edge: {}
+  outbound: {}

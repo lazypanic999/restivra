@@ -1,0 +1,12 @@
+/work/
+/restivra
+/restivra.exe
+/.env
+/backups/*
+!/backups/.gitkeep
+/web/node_modules/
+/internal/webui/dist/*
+!/internal/webui/dist/.gitkeep
+*.dump
+*.backup
+*.log

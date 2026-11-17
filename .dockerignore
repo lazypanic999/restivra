@@ -1,0 +1,9 @@
+.git
+.env
+work
+backups
+web/node_modules
+internal/webui/dist
+*.dump
+*.backup
+*.log
