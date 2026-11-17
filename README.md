@@ -8,6 +8,8 @@ Self-hosted PostgreSQL 17 backup verification for small teams and agencies. Rest
 
 [Türkçe kurulum ve kullanım](README.tr.md)
 
+The interface defaults to **English**. Select **Türkçe** to switch; the preference is remembered locally. See the [design review](docs/DESIGN-REVIEW.md) and [real PostgreSQL acceptance results](docs/POSTGRES-ACCEPTANCE.md).
+
 ![Restivra dashboard with synthetic demo results](docs/screenshots/dashboard.jpg)
 
 ## Features

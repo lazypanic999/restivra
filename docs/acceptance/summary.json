@@ -1,0 +1,218 @@
+{
+  "source": {
+    "customers": 10000,
+    "products": 500,
+    "orders": 25000,
+    "order_items": 100000,
+    "revenue": 46337500.0,
+    "content_hash": "fbd89235fba940ddb5b3c4f63e9bf230",
+    "version": "PostgreSQL 17.12 (Debian 17.12-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit"
+  },
+  "source_orders_after_data_loss": 0,
+  "archive_bytes": 530663,
+  "archive_sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667",
+  "scenarios": [
+    {
+      "scenario": "01-relational-restore",
+      "job_id": "683c24d2a4c598a1f805b4b7db945517",
+      "status": "passed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "10,000 customers",
+          "status": "passed"
+        },
+        {
+          "name": "500 products",
+          "status": "passed"
+        },
+        {
+          "name": "25,000 orders",
+          "status": "passed"
+        },
+        {
+          "name": "100,000 order items",
+          "status": "passed"
+        },
+        {
+          "name": "Foreign keys restored",
+          "status": "passed"
+        },
+        {
+          "name": "Revenue view matches source",
+          "status": "passed"
+        },
+        {
+          "name": "Function restored",
+          "status": "passed"
+        },
+        {
+          "name": "Identity sequence restored",
+          "status": "passed"
+        },
+        {
+          "name": "Indexes restored",
+          "status": "passed"
+        },
+        {
+          "name": "JSONB data restored",
+          "status": "passed"
+        },
+        {
+          "name": "Data fingerprint matches source",
+          "status": "passed"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 6595,
+      "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667"
+    },
+    {
+      "scenario": "02-source-empty-backup-restores",
+      "job_id": "7d60add660c04f1c6d4fedef25fd1297",
+      "status": "passed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "10,000 customers",
+          "status": "passed"
+        },
+        {
+          "name": "500 products",
+          "status": "passed"
+        },
+        {
+          "name": "25,000 orders",
+          "status": "passed"
+        },
+        {
+          "name": "100,000 order items",
+          "status": "passed"
+        },
+        {
+          "name": "Foreign keys restored",
+          "status": "passed"
+        },
+        {
+          "name": "Revenue view matches source",
+          "status": "passed"
+        },
+        {
+          "name": "Function restored",
+          "status": "passed"
+        },
+        {
+          "name": "Identity sequence restored",
+          "status": "passed"
+        },
+        {
+          "name": "Indexes restored",
+          "status": "passed"
+        },
+        {
+          "name": "JSONB data restored",
+          "status": "passed"
+        },
+        {
+          "name": "Data fingerprint matches source",
+          "status": "passed"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 5692,
+      "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667"
+    },
+    {
+      "scenario": "03-false-business-check",
+      "job_id": "49353b66112518e871249a3bc75bbe1f",
+      "status": "failed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "Wrong count",
+          "status": "failed"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 3555,
+      "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667"
+    },
+    {
+      "scenario": "04-query-error",
+      "job_id": "adb62455101b8f473ca7ae0d4ca05a96",
+      "status": "failed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "Missing table",
+          "status": "error",
+          "error": "query failed or exceeded its time limit"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 4272,
+      "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667"
+    },
+    {
+      "scenario": "05-write-blocked",
+      "job_id": "836614dc996ce6c818e071f069d39e73",
+      "status": "failed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "Write attempt",
+          "status": "error",
+          "error": "query failed or exceeded its time limit"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 3664,
+      "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667"
+    },
+    {
+      "scenario": "06-query-timeout",
+      "job_id": "77eb108aebe048c93140ac09e48727ab",
+      "status": "failed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "Slow query",
+          "status": "error",
+          "error": "query failed or exceeded its time limit"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 14073,
+      "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667"
+    },
+    {
+      "scenario": "07-truncated-archive",
+      "job_id": "76f9d90c8c6811c92166c74c26932dc5",
+      "status": "failed",
+      "restore": "failed",
+      "checks": [],
+      "cleanup": "passed",
+      "duration_ms": 3416,
+      "sha256": "2b9d4b5184dc69826b4fb997569dec1e3cefbcf449517b4ad46c0ddfe4eb6f6e"
+    },
+    {
+      "scenario": "08-cancel-running-query",
+      "job_id": "e2df4010a07655567a4383e73bae0478",
+      "status": "cancelled",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "Cancelable query",
+          "status": "error",
+          "error": "query failed or exceeded its time limit"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 4784,
+      "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667"
+    }
+  ],
+  "synthetic_data": true,
+  "mock_database": false,
+  "created_at": "2026-11-17T19:52:08.8983438Z"
+}

@@ -1,123 +1,53 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useId } from "react";
 import { createRoot } from "react-dom/client";
-import {
-  Activity,
-  ArrowDownToLine,
-  ArrowRight,
-  ArrowUpRight,
-  Bell,
-  Check,
-  CheckCircle2,
-  ChevronRight,
-  Clock3,
-  Database,
-  FileCheck2,
-  Folder,
-  LayoutDashboard,
-  LoaderCircle,
-  MoreHorizontal,
-  Play,
-  Plus,
-  RefreshCw,
-  Search,
-  Settings2,
-  ShieldCheck,
-  Terminal,
-  Trash2,
-  X,
-  XCircle,
-  TriangleAlert,
-  CalendarClock,
-  CircleHelp,
-  HardDrive,
-  Square,
-  Copy,
-} from "lucide-react";
+import "@fontsource/public-sans/400.css";
+import "@fontsource/public-sans/600.css";
+import { LanguageProvider, useLanguage } from "./language.jsx";
 import "./styles.css";
 
-const labels = {
-  passed: "Başarılı",
-  failed: "Başarısız",
-  running: "Çalışıyor",
-  queued: "Sırada",
-  cancelled: "İptal edildi",
-  interrupted: "Yarıda kaldı",
-  not_run: "Çalıştırılmadı",
-  error: "Sorgu hatası",
-  not_needed: "Gerekmedi",
-};
-const active = (j) => j && ["queued", "running"].includes(j.status);
-const date = (v, full = false) =>
-  v
-    ? new Intl.DateTimeFormat("tr-TR", {
-        day: "numeric",
-        month: "short",
-        ...(full ? { year: "numeric" } : {}),
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(new Date(v))
-    : "—";
-const duration = (j) =>
-  j?.report
-    ? `${(j.report.duration_ms / 1000).toFixed(1)} sn`
-    : j?.started_at && j?.finished_at
-      ? `${Math.round((new Date(j.finished_at) - new Date(j.started_at)) / 1000)} sn`
-      : "—";
-const bytes = (v) =>
-  v >= 1073741824
-    ? `${(v / 1073741824).toFixed(2)} GiB`
-    : v >= 1048576
-      ? `${(v / 1048576).toFixed(2)} MiB`
-      : v >= 1024
-        ? `${(v / 1024).toFixed(2)} KiB`
-        : v
-          ? `${v} bayt`
+const active = (job) => job && ["queued", "running"].includes(job.status);
+const size = (value) =>
+  value >= 1073741824
+    ? `${(value / 1073741824).toFixed(2)} GiB`
+    : value >= 1048576
+      ? `${(value / 1048576).toFixed(2)} MiB`
+      : value >= 1024
+        ? `${(value / 1024).toFixed(2)} KiB`
+        : value
+          ? `${value} B`
           : "—";
-function Mark() {
+
+function Status({ value }) {
+  const { t } = useLanguage();
   return (
-    <svg viewBox="0 0 40 40" aria-hidden="true">
-      <rect width="40" height="40" rx="12" fill="currentColor" />
-      <path
-        d="M12 27V13h8a5 5 0 0 1 0 10h-3m6-1 6 5"
-        fill="none"
-        stroke="white"
-        strokeWidth="3.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-function Badge({ status }) {
-  const Icon = ["passed"].includes(status)
-    ? CheckCircle2
-    : active({ status })
-      ? status === "running"
-        ? LoaderCircle
-        : Clock3
-      : ["failed", "error"].includes(status)
-        ? XCircle
-        : TriangleAlert;
-  return (
-    <span className={`badge ${status}`}>
-      <Icon size={13} className={status === "running" ? "spin" : ""} />
-      {labels[status] || status}
+    <span className={`status status-${value}`}>
+      <i aria-hidden="true" />
+      {t(`status.${value}`)}
     </span>
   );
 }
-function Empty({ icon: Icon = Folder, title, text, children }) {
+function Button({ children, primary = false, className = "", ...props }) {
   return (
-    <div className="empty">
-      <div className="empty-icon">
-        <Icon size={27} />
-      </div>
+    <button
+      {...props}
+      className={`button ${primary ? "primary" : ""} ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
+function Empty({ title, text, children }) {
+  return (
+    <div className="empty-state">
       <h3>{title}</h3>
       <p>{text}</p>
       {children}
     </div>
   );
 }
+
 function App() {
+  const { language, setLanguage, t, explain, formatDate } = useLanguage();
   const [page, setPage] = useState("overview"),
     [projects, setProjects] = useState([]),
     [jobs, setJobs] = useState([]),
@@ -130,7 +60,8 @@ function App() {
     [search, setSearch] = useState(""),
     [filter, setFilter] = useState("all"),
     [busy, setBusy] = useState(""),
-    [toast, setToast] = useState("");
+    [toast, setToast] = useState(""),
+    [updated, setUpdated] = useState(null);
   const token = useRef("");
   const api = useCallback(async (path, options = {}) => {
     const response = await fetch(`/api${path}`, {
@@ -146,7 +77,8 @@ function App() {
       },
     });
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "İşlem tamamlanamadı");
+    if (!response.ok)
+      throw Error(data.error || "The request could not be completed.");
     return data;
   }, []);
   const refresh = useCallback(async () => {
@@ -160,6 +92,7 @@ function App() {
       setJobs(j);
       setHealth(h);
       setError("");
+      setUpdated(new Date().toISOString());
     } catch (e) {
       setError(e.message);
     } finally {
@@ -182,13 +115,19 @@ function App() {
   }, [api, refresh]);
   useEffect(() => {
     if (!toast) return;
-    const timer = setTimeout(() => setToast(""), 4500);
+    const timer = setTimeout(() => setToast(""), 5000);
     return () => clearTimeout(timer);
   }, [toast]);
-  const perform = async (key, fn) => {
+  useEffect(() => {
+    if (selected) {
+      const current = jobs.find((job) => job.id === selected.id);
+      if (current) setSelected(current);
+    }
+  }, [jobs]);
+  const perform = async (key, action) => {
     setBusy(key);
     try {
-      await fn();
+      await action();
       await refresh();
     } catch (e) {
       setToast(e.message);
@@ -196,607 +135,404 @@ function App() {
       setBusy("");
     }
   };
-  const start = (p) =>
-    perform(p.id, async () => {
+  const start = (project) =>
+    perform(project.id, async () => {
       await api("/jobs", {
         method: "POST",
-        body: JSON.stringify({ project_id: p.id }),
+        body: JSON.stringify({ project_id: project.id }),
       });
-      setToast("Test sıraya alındı. Worker hazır olduğunda başlayacak.");
+      setToast({ key: "queuedToast" });
     });
-  const openReport = async (j) => {
+  const inspect = async (job) => {
     try {
-      setSelected(await api(`/jobs/${j.id}`));
+      setSelected(await api(`/jobs/${job.id}`));
     } catch (e) {
       setToast(e.message);
     }
   };
-  useEffect(() => {
-    if (selected) {
-      const updated = jobs.find((j) => j.id === selected.id);
-      if (updated) setSelected(updated);
-    }
-  }, [jobs]);
-  const showForm = (p) => {
+  const openProject = (project) => {
     if (!session) {
-      setToast("Bağlantı kurulamadı; sayfayı yenileyin.");
+      setToast("invalid session token; refresh the page");
       return;
     }
     setForm(
-      p
-        ? { ...p, config: { ...p.config, checks: p.config.checks || [] } }
+      project
+        ? {
+            ...project,
+            config: { ...project.config, checks: project.config.checks || [] },
+          }
         : {
             name: "",
             backup_pattern: "",
-            timezone: "Europe/Istanbul",
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
             schedule_time: "",
             config: { ...session.default_config, checks: [] },
           },
     );
   };
-  const total = jobs.length,
-    passed = jobs.filter((j) => j.status === "passed").length,
-    failed = jobs.filter((j) =>
-      ["failed", "interrupted"].includes(j.status),
+  const go = (destination) => {
+    setPage(destination);
+    setSearch("");
+    setFilter("all");
+  };
+  const passed = jobs.filter((job) => job.status === "passed").length,
+    failed = jobs.filter((job) =>
+      ["failed", "interrupted"].includes(job.status),
     ).length,
     running = jobs.filter(active).length;
-  const visibleProjects = projects.filter((p) =>
-    p.name.toLocaleLowerCase("tr").includes(search.toLocaleLowerCase("tr")),
+  const matches = (name) =>
+    name
+      .toLocaleLowerCase(language)
+      .includes(search.toLocaleLowerCase(language));
+  const listedProjects = projects.filter((project) => matches(project.name));
+  const listedJobs = jobs.filter(
+    (job) =>
+      matches(job.project_name) && (filter === "all" || job.status === filter),
   );
-  const visibleJobs = jobs.filter(
-    (j) =>
-      (filter === "all" || j.status === filter) &&
-      j.project_name
-        .toLocaleLowerCase("tr")
-        .includes(search.toLocaleLowerCase("tr")),
-  );
-  const title = {
-    overview: "Genel bakış",
-    projects: "Projeler",
-    history: "Test geçmişi",
-    guide: "Kurulum rehberi",
-  }[page];
+  const seconds = (job) =>
+    job.report
+      ? (job.report.duration_ms / 1000).toFixed(1)
+      : job.started_at && job.finished_at
+        ? (
+            (new Date(job.finished_at) - new Date(job.started_at)) /
+            1000
+          ).toFixed(1)
+        : null;
+  const runDuration = (job) =>
+    seconds(job) !== null ? `${seconds(job)} ${t("seconds")}` : "—";
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
-        <a
-          className="brand"
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            setPage("overview");
-          }}
-        >
-          <Mark />
-          <span>
-            restivra<span className="brand-dot">.</span>
-          </span>
-        </a>
-        <div className="workspace">
-          <span className="workspace-avatar">R</span>
-          <div>
-            <strong>Çalışma alanım</strong>
-            <small>Kendi sunucunda · PostgreSQL 17</small>
-          </div>
-          <ShieldCheck size={16} />
-        </div>
-        <div className="nav-label">ÇALIŞMA ALANI</div>
-        <nav>
-          {[
-            ["overview", LayoutDashboard, "Genel bakış"],
-            ["projects", Database, "Projeler"],
-            ["history", Activity, "Test geçmişi"],
-          ].map(([id, Icon, label]) => (
-            <button
-              key={id}
-              className={page === id ? "nav-item selected" : "nav-item"}
-              onClick={() => {
-                setPage(id);
-                setSearch("");
-              }}
-            >
-              <Icon size={19} />
-              {label}
-              {id === "projects" && <span>{projects.length}</span>}
-              {id === "history" && running > 0 && <i />}
-            </button>
-          ))}
-        </nav>
-        <div className="sidebar-bottom">
-          <div className="assurance">
-            <ShieldCheck size={22} />
-            <strong>Verin senin alanında.</strong>
-            <p>Geri yükleme ortamları her testten sonra temizlenir.</p>
-            <button onClick={() => setPage("guide")}>
-              Nasıl çalışır? <ArrowUpRight size={14} />
-            </button>
-          </div>
-          <button
-            className={`nav-item ${page === "guide" ? "selected" : ""}`}
-            onClick={() => setPage("guide")}
+    <>
+      <a className="skip-link" href="#records">
+        {t("skipContent")}
+      </a>
+      <header className="app-header">
+        <div className="header-inner">
+          <a
+            className="wordmark"
+            href="#"
+            onClick={(event) => {
+              event.preventDefault();
+              go("overview");
+            }}
           >
-            <CircleHelp size={18} />
-            Kurulum rehberi
-          </button>
-          <div className="version">
-            <span className="tiny-dot" />
-            Restivra <span>v0.1.0</span>
+            Restivra
+          </a>
+          <nav aria-label="Restivra">
+            {["overview", "projects", "history", "setup"].map((id) => (
+              <button
+                key={id}
+                aria-current={page === id ? "page" : undefined}
+                onClick={() => go(id)}
+              >
+                {t(id)}
+              </button>
+            ))}
+          </nav>
+          <label className="language-switch">
+            <span>{t("language")}</span>
+            <select
+              aria-label={t("language")}
+              value={language}
+              onChange={(event) => setLanguage(event.target.value)}
+            >
+              <option value="en">English</option>
+              <option value="tr">Türkçe</option>
+            </select>
+          </label>
+        </div>
+      </header>
+      <main id="records" className="workspace">
+        <div className="page-heading">
+          <div>
+            <h1>{page === "overview" ? t("heading") : t(page)}</h1>
+            <p>
+              {page === "overview"
+                ? t("description")
+                : page === "projects"
+                  ? t("projectsDescription")
+                  : page === "history"
+                    ? t("historyDescription")
+                    : t("setupDescription")}
+            </p>
+          </div>
+          {page !== "setup" && (
+            <Button primary onClick={() => openProject()} disabled={!session}>
+              {t("newProject")}
+            </Button>
+          )}
+        </div>
+        <div className="system-line">
+          <span
+            className={`health ${health?.worker_online ? "connected" : "disconnected"}`}
+          >
+            <i />
+            {t(health?.worker_online ? "workerOnline" : "workerOffline")}
+          </span>
+          {health && <span>{t("databaseOnline")}</span>}
+          <span>PostgreSQL 17</span>
+          <div className="update-controls">
+            {updated && (
+              <span>
+                {t("lastUpdated", {
+                  time: new Date(updated).toLocaleTimeString(
+                    language === "tr" ? "tr-TR" : "en-GB",
+                    { hour: "2-digit", minute: "2-digit", second: "2-digit" },
+                  ),
+                })}
+              </span>
+            )}
+            <button className="text-button" onClick={refresh}>
+              {t("refresh")}
+            </button>
           </div>
         </div>
-      </aside>
-      <div className="main-shell">
-        <header className="topbar">
-          <div className="breadcrumb">
-            Çalışma alanı <ChevronRight size={14} />
-            <strong>{title}</strong>
+        {error && (
+          <div className="notice error-notice" role="alert">
+            <strong>{t("connectionError")}</strong> {explain(error)}{" "}
+            <button onClick={refresh}>{t("refresh")}</button>
           </div>
-          <div className="top-actions">
-            <span
-              className={`worker-indicator ${health?.worker_online ? "online" : ""}`}
-            >
-              <i />
-              {health?.worker_online ? "Worker bağlı" : "Worker bekleniyor"}
-            </span>
-            <button
-              className="icon-btn"
-              title="Verileri yenile"
-              aria-label="Verileri yenile"
-              onClick={refresh}
-            >
-              <RefreshCw size={17} />
-            </button>
-            <span className="profile">R</span>
+        )}
+        {!loading && health && !health.worker_online && (
+          <div className="notice">{t("offlineNotice")}</div>
+        )}
+        {loading ? (
+          <div className="loading" role="status">
+            {t("loading")}
           </div>
-        </header>
-        <main>
-          <div className="page-heading">
-            <div>
-              <div className="eyebrow">GERİ YÜKLEME MERKEZİ</div>
-              <h1>{title}</h1>
-              <p>
-                {page === "overview"
-                  ? "Yedeklerinin geri yüklenebildiğini düzenli olarak doğrula."
-                  : page === "projects"
-                    ? "Müşterilerinin yedeklerini tek bir yerden yönet."
-                    : page === "history"
-                      ? "Her çalışmanın sonucunu ve doğrulama raporunu incele."
-                      : "İlk geri yükleme testine birkaç adımda hazırlan."}
-              </p>
-            </div>
-            {page !== "guide" && (
-              <button className="button primary" onClick={() => showForm()}>
-                <Plus size={17} />
-                Yeni proje
-              </button>
+        ) : (
+          <>
+            {page === "overview" && (
+              <div className="summary-line">
+                <p>
+                  {t("summary", {
+                    projects: projects.length,
+                    passed,
+                    failed,
+                    active: running,
+                  })}
+                </p>
+                <small>{t("recentWindow", { count: jobs.length })}</small>
+              </div>
             )}
-          </div>
-          {error && (
-            <div className="notice danger">
-              <XCircle size={18} />
-              <span>Bağlantı hatası: {error}</span>
-              <button onClick={refresh}>Tekrar dene</button>
-            </div>
-          )}
-          {!loading && health && !health.worker_online && (
-            <div className="notice">
-              <TriangleAlert size={18} />
-              <span>
-                Worker henüz bağlı değil. Sıraya alınan testler worker
-                başladığında çalışır.
-              </span>
-              <button onClick={() => setPage("guide")}>Kurulumu incele</button>
-            </div>
-          )}
-          {loading ? (
-            <div className="loading">
-              <LoaderCircle className="spin" />
-              Çalışma alanı yükleniyor…
-            </div>
-          ) : (
-            <>
-              {page === "overview" && (
-                <>
-                  <section className="summary-grid">
-                    {[
-                      [
-                        Database,
-                        "Aktif proje",
-                        projects.length,
-                        "Tanımlı yedek kaynağı",
-                        "purple",
-                      ],
-                      [
-                        ShieldCheck,
-                        "Başarılı test",
-                        passed,
-                        total
-                          ? `Son ${total} çalışma içinde`
-                          : "Henüz çalışma yok",
-                        "green",
-                      ],
-                      [
-                        TriangleAlert,
-                        "Dikkat gerekiyor",
-                        failed,
-                        "Başarısız veya yarıda kalan",
-                        "orange",
-                      ],
-                      [
-                        Activity,
-                        "Aktif çalışma",
-                        running,
-                        "Çalışan ve sıradaki testler",
-                        "blue",
-                      ],
-                    ].map(([Icon, label, value, hint, color]) => (
-                      <div className="stat-card" key={label}>
-                        <div className="stat-label">
-                          {label}
-                          <span className={`stat-icon ${color}`}>
-                            <Icon size={18} />
-                          </span>
-                        </div>
-                        <strong>{value.toString().padStart(2, "0")}</strong>
-                        <small>{hint}</small>
-                      </div>
-                    ))}
-                  </section>
-                  <section className="overview-split">
-                    <div className="confidence-card">
-                      <div>
-                        <span className="section-kicker">
-                          HER TESTTE SOMUT BİR SONUÇ
-                        </span>
-                        <h2>
-                          Geri dönüşe
-                          <br />
-                          hazır ol.
-                        </h2>
-                        <p>
-                          Yedeği aç. Veriyi kontrol et.
-                          <br />
-                          Sonucu raporla.
-                        </p>
-                        <button
-                          className="button"
-                          onClick={() => setPage("history")}
-                        >
-                          Test sonuçlarına git <ArrowRight size={16} />
-                        </button>
-                      </div>
-                      <div className="restore-art" aria-hidden="true">
-                        <div className="orbit one" />
-                        <div className="orbit two" />
-                        <div className="art-database">
-                          <Database size={58} strokeWidth={1.2} />
-                          <span>
-                            <Check size={19} />
-                          </span>
-                        </div>
-                        <div className="art-tag">
-                          <span />
-                          RESTORE · VERIFY
-                        </div>
-                      </div>
-                    </div>
-                    <div className="card workflow-card">
-                      <div className="card-title">
-                        <h2>Bir testin yolculuğu</h2>
-                        <span className="muted">4 adım</span>
-                      </div>
-                      {[
-                        [
-                          Folder,
-                          "Yedeği seç",
-                          "Klasördeki en yeni eşleşen dosya",
-                        ],
-                        [
-                          Database,
-                          "Geri yükle",
-                          "Dış ağa kapalı geçici PostgreSQL",
-                        ],
-                        [
-                          FileCheck2,
-                          "Kontrolleri çalıştır",
-                          "Salt okunur SQL doğrulamaları",
-                        ],
-                        [
-                          ShieldCheck,
-                          "Raporla ve temizle",
-                          "Sonuç kaydı, geçici ortam temizliği",
-                        ],
-                      ].map(([Icon, label, text], i) => (
-                        <div className="workflow-step" key={label}>
-                          <span>
-                            <Icon size={17} />
-                          </span>
-                          <div>
-                            <strong>{label}</strong>
-                            <small>{text}</small>
-                          </div>
-                          <b>0{i + 1}</b>
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                </>
-              )}
-              {(page === "overview" || page === "projects") && (
-                <section className="card projects-card">
-                  <div className="card-title">
-                    <div>
-                      <h2>
-                        Projeler{" "}
-                        <span className="count">{projects.length}</span>
-                      </h2>
-                      {page === "overview" && (
-                        <p>Son test sonuçları ve yaklaşan çalışmalar</p>
-                      )}
-                    </div>
-                    {page === "overview" ? (
-                      <button
-                        className="text-button"
-                        onClick={() => setPage("projects")}
-                      >
-                        Tüm projeler <ArrowUpRight size={15} />
-                      </button>
-                    ) : (
-                      <div className="search">
-                        <Search size={16} />
-                        <input
-                          aria-label="Proje ara"
-                          placeholder="Proje ara…"
-                          value={search}
-                          onChange={(e) => setSearch(e.target.value)}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  {projects.length === 0 ? (
-                    <Empty
-                      title="İlk projen için her şey hazır"
-                      text="Yedek dosyanın yolunu tanımla ve ilk geri yükleme testini başlat."
-                    >
-                      <button
-                        className="button primary"
-                        onClick={() => showForm()}
-                      >
-                        <Plus size={16} />
-                        İlk projeyi oluştur
-                      </button>
-                      <button
-                        className="text-button"
-                        onClick={() => setPage("guide")}
-                      >
-                        Önce kurulum rehberine bak <ArrowRight size={14} />
-                      </button>
-                    </Empty>
-                  ) : (
-                    <div className="table-scroll">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>PROJE / YEDEK KAYNAĞI</th>
-                            <th>SON TEST</th>
-                            <th>SONUÇ</th>
-                            <th>SONRAKİ ÇALIŞMA</th>
-                            <th />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {visibleProjects
-                            .slice(0, page === "overview" ? 5 : 500)
-                            .map((p) => (
-                              <tr key={p.id}>
-                                <td>
-                                  <div className="project-name">
-                                    <span className="project-avatar">
-                                      <Database size={18} />
-                                    </span>
-                                    <div>
-                                      <strong>{p.name}</strong>
-                                      <code>{p.backup_pattern}</code>
-                                    </div>
-                                  </div>
-                                </td>
-                                <td>{date(p.last_job?.queued_at)}</td>
-                                <td>
-                                  {p.last_job ? (
-                                    <button
-                                      className="badge-button"
-                                      onClick={() => openReport(p.last_job)}
-                                    >
-                                      <Badge status={p.last_job.status} />
-                                    </button>
-                                  ) : (
-                                    <span className="muted">
-                                      Henüz test yok
-                                    </span>
-                                  )}
-                                </td>
-                                <td>
-                                  <div>{date(p.next_run_at)}</div>
-                                  {p.schedule_time && (
-                                    <small className="cell-sub">
-                                      {p.timezone}
-                                    </small>
-                                  )}
-                                </td>
-                                <td>
-                                  <div className="row-actions">
-                                    <button
-                                      className="button small"
-                                      disabled={
-                                        active(p.last_job) || busy === p.id
-                                      }
-                                      onClick={() => start(p)}
-                                    >
-                                      {busy === p.id ? (
-                                        <LoaderCircle
-                                          className="spin"
-                                          size={14}
-                                        />
-                                      ) : (
-                                        <Play size={13} />
-                                      )}
-                                      Test et
-                                    </button>
-                                    <button
-                                      className="icon-btn"
-                                      title={`${p.name} ayarları`}
-                                      aria-label={`${p.name} ayarları`}
-                                      onClick={() => showForm(p)}
-                                    >
-                                      <Settings2 size={16} />
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                      {!visibleProjects.length && (
-                        <div className="no-results">
-                          Eşleşen proje bulunamadı.
-                        </div>
-                      )}
-                    </div>
+            {(page === "overview" || page === "projects") && (
+              <section className="ledger" aria-labelledby="project-heading">
+                <div className="section-heading">
+                  <h2 id="project-heading">{t("projects")}</h2>
+                  {page === "projects" && (
+                    <label className="search-field">
+                      <span>{t("searchProjects")}</span>
+                      <input
+                        type="search"
+                        value={search}
+                        onChange={(event) => setSearch(event.target.value)}
+                      />
+                    </label>
                   )}
-                </section>
-              )}
-              {(page === "overview" || page === "history") && (
-                <section className="card history-card">
-                  <div className="card-title">
-                    <div>
-                      <h2>
-                        {page === "overview" ? "Son çalışmalar" : "Çalışmalar"}{" "}
-                        <span className="count">{jobs.length}</span>
-                      </h2>
-                      <p>
-                        En son 100 çalışma · tüm saatler cihazının saat
-                        diliminde
-                      </p>
-                    </div>
-                    {page === "overview" ? (
-                      <button
-                        className="text-button"
-                        onClick={() => setPage("history")}
-                      >
-                        Geçmişi aç <ArrowUpRight size={15} />
-                      </button>
-                    ) : (
-                      <div className="search">
-                        <Search size={16} />
-                        <input
-                          aria-label="Çalışmalarda proje ara"
-                          placeholder="Proje ara…"
-                          value={search}
-                          onChange={(e) => setSearch(e.target.value)}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  {page === "history" && (
-                    <div className="filters">
-                      {[
-                        ["all", "Tümü"],
-                        ["passed", "Başarılı"],
-                        ["failed", "Başarısız"],
-                        ["running", "Çalışıyor"],
-                        ["queued", "Sırada"],
-                        ["cancelled", "İptal"],
-                        ["interrupted", "Yarıda kalan"],
-                      ].map(([id, label]) => (
-                        <button
-                          key={id}
-                          className={filter === id ? "active" : ""}
-                          onClick={() => setFilter(id)}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {!jobs.length ? (
-                    <Empty
-                      icon={Activity}
-                      title="Henüz bir test çalışmadı"
-                      text="İlk testin ardından geri yükleme sonuçları burada görünecek."
-                    />
-                  ) : (
-                    <div className="table-scroll">
-                      <table>
-                        <thead>
-                          <tr>
-                            <th>PROJE</th>
-                            <th>BAŞLANGIÇ</th>
-                            <th>SONUÇ</th>
-                            <th>SÜRE</th>
-                            <th>TETİKLEYİCİ</th>
-                            <th />
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {visibleJobs
-                            .slice(0, page === "overview" ? 5 : 100)
-                            .map((j) => (
-                              <tr key={j.id}>
-                                <td>
-                                  <strong>{j.project_name}</strong>
-                                  <small className="cell-sub mono">
-                                    {j.id.slice(0, 8)}
+                </div>
+                {!projects.length ? (
+                  <Empty title={t("noProjects")} text={t("noProjectsText")}>
+                    <Button onClick={() => openProject()}>
+                      {t("createProject")}
+                    </Button>
+                  </Empty>
+                ) : (
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>{t("project")}</th>
+                          <th>{t("latestResult")}</th>
+                          <th>{t("lastRun")}</th>
+                          <th>{t("nextRun")}</th>
+                          <th className="action-column">{t("actions")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {listedProjects.map((project) => (
+                          <tr key={project.id}>
+                            <td>
+                              <strong className="project-name">
+                                {project.name}
+                              </strong>
+                              <code className="file-path">
+                                {project.backup_pattern}
+                              </code>
+                            </td>
+                            <td>
+                              {project.last_job ? (
+                                <button
+                                  className="status-button"
+                                  onClick={() => inspect(project.last_job)}
+                                >
+                                  <Status value={project.last_job.status} />
+                                </button>
+                              ) : (
+                                <span className="secondary">
+                                  {t("notTested")}
+                                </span>
+                              )}
+                            </td>
+                            <td>{formatDate(project.last_job?.queued_at)}</td>
+                            <td>
+                              {project.next_run_at ? (
+                                <>
+                                  <span>{formatDate(project.next_run_at)}</span>
+                                  <small className="cell-note">
+                                    {project.timezone}
                                   </small>
-                                </td>
-                                <td>{date(j.started_at || j.queued_at)}</td>
-                                <td>
-                                  <Badge status={j.status} />
-                                </td>
-                                <td className="mono">{duration(j)}</td>
-                                <td>
-                                  <span className="trigger">
-                                    {j.trigger === "schedule" ? (
-                                      <CalendarClock size={13} />
-                                    ) : (
-                                      <Play size={12} />
-                                    )}{" "}
-                                    {j.trigger === "schedule"
-                                      ? "Zamanlama"
-                                      : "Manuel"}
-                                  </span>
-                                </td>
-                                <td>
-                                  <button
-                                    className="text-button"
-                                    onClick={() => openReport(j)}
-                                  >
-                                    İncele <ChevronRight size={14} />
-                                  </button>
-                                </td>
-                              </tr>
-                            ))}
-                        </tbody>
-                      </table>
-                      {!visibleJobs.length && (
-                        <div className="no-results">
-                          Bu filtreye uygun çalışma bulunamadı.
-                        </div>
-                      )}
+                                </>
+                              ) : (
+                                <span className="secondary">
+                                  {t("manualOnly")}
+                                </span>
+                              )}
+                            </td>
+                            <td>
+                              <div className="row-actions">
+                                <Button
+                                  disabled={
+                                    active(project.last_job) ||
+                                    busy === project.id
+                                  }
+                                  onClick={() => start(project)}
+                                >
+                                  {t("runTest")}
+                                </Button>
+                                <button
+                                  className="text-button"
+                                  aria-label={`${t("edit")}: ${project.name}`}
+                                  onClick={() => openProject(project)}
+                                >
+                                  {t("edit")}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {!listedProjects.length && (
+                      <p className="no-results">{t("noMatches")}</p>
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
+            {(page === "overview" || page === "history") && (
+              <section className="ledger" aria-labelledby="run-heading">
+                <div className="section-heading">
+                  <h2 id="run-heading">
+                    {page === "overview" ? t("recentRuns") : t("history")}
+                  </h2>
+                  {page === "overview" ? (
+                    <button
+                      className="text-button"
+                      onClick={() => go("history")}
+                    >
+                      {t("allRuns")}
+                    </button>
+                  ) : (
+                    <div className="table-filters">
+                      <label className="search-field">
+                        <span>{t("searchRuns")}</span>
+                        <input
+                          type="search"
+                          value={search}
+                          onChange={(event) => setSearch(event.target.value)}
+                        />
+                      </label>
+                      <label className="search-field">
+                        <span>{t("statusFilter")}</span>
+                        <select
+                          value={filter}
+                          onChange={(event) => setFilter(event.target.value)}
+                        >
+                          <option value="all">{t("allResults")}</option>
+                          {[
+                            "passed",
+                            "failed",
+                            "running",
+                            "queued",
+                            "cancelled",
+                            "interrupted",
+                          ].map((value) => (
+                            <option key={value} value={value}>
+                              {t(`status.${value}`)}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                     </div>
                   )}
-                </section>
-              )}
-              {page === "guide" && <Guide />}
-            </>
-          )}
-          <footer>
-            <span>
-              <Mark />
-              restivra <i /> Geri yükleme doğrulaması
-            </span>
-            <span>PostgreSQL 17 · Kendi sunucunda</span>
-          </footer>
-        </main>
-      </div>
+                </div>
+                {!jobs.length ? (
+                  <Empty title={t("noRuns")} text={t("noRunsText")} />
+                ) : (
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>{t("project")}</th>
+                          <th>{t("result")}</th>
+                          <th>{t("started")}</th>
+                          <th className="numeric">{t("duration")}</th>
+                          <th>{t("trigger")}</th>
+                          <th className="action-column">{t("report")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {listedJobs
+                          .slice(0, page === "overview" ? 6 : 100)
+                          .map((job) => (
+                            <tr key={job.id}>
+                              <td>
+                                <strong>{job.project_name}</strong>
+                                <code className="cell-note run-id">
+                                  {job.id.slice(0, 8)}
+                                </code>
+                              </td>
+                              <td>
+                                <Status value={job.status} />
+                              </td>
+                              <td>
+                                {formatDate(job.started_at || job.queued_at)}
+                              </td>
+                              <td className="numeric">{runDuration(job)}</td>
+                              <td>
+                                {t(
+                                  job.trigger === "schedule"
+                                    ? "scheduled"
+                                    : "manual",
+                                )}
+                              </td>
+                              <td className="action-column">
+                                <button
+                                  className="text-button"
+                                  onClick={() => inspect(job)}
+                                >
+                                  {t("inspect")}
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                      </tbody>
+                    </table>
+                    {!listedJobs.length && (
+                      <p className="no-results">{t("noMatches")}</p>
+                    )}
+                  </div>
+                )}
+              </section>
+            )}
+            {page === "setup" && <Setup />}
+          </>
+        )}
+        <footer className="app-footer">
+          <span>Restivra 0.1.0</span>
+          <span>{t("selfHosted")}</span>
+          <span>{t("localTime")}</span>
+        </footer>
+      </main>
       {form && (
         <ProjectForm
           project={form}
@@ -814,17 +550,17 @@ function App() {
               body: JSON.stringify(body),
             });
             setForm(null);
-            setToast("Proje kaydedildi.");
+            setToast({ key: "savedToast" });
             await refresh();
           }}
           onArchive={
             form.id
-              ? () =>
-                  perform(form.id, async () => {
-                    await api(`/projects/${form.id}`, { method: "DELETE" });
-                    setForm(null);
-                    setToast("Proje arşivlendi; test geçmişi saklanıyor.");
-                  })
+              ? async () => {
+                  await api(`/projects/${form.id}`, { method: "DELETE" });
+                  setForm(null);
+                  setToast({ key: "archivedToast" });
+                  await refresh();
+                }
               : null
           }
         />
@@ -832,6 +568,7 @@ function App() {
       {selected && (
         <Report
           job={selected}
+          duration={runDuration(selected)}
           onClose={() => setSelected(null)}
           onCancel={() =>
             perform(selected.id, async () => {
@@ -839,7 +576,7 @@ function App() {
                 method: "POST",
                 body: "{}",
               });
-              setToast("İptal istendi; geçici kaynaklar temizleniyor.");
+              setToast({ key: "cancelledToast" });
               setSelected(await api(`/jobs/${selected.id}`));
             })
           }
@@ -847,34 +584,78 @@ function App() {
       )}
       {toast && (
         <div className="toast" role="status">
-          <Bell size={17} />
-          {toast}
-          <button aria-label="Bildirimi kapat" onClick={() => setToast("")}>
-            <X size={15} />
+          <span>
+            {typeof toast === "string" ? explain(toast) : t(toast.key)}
+          </span>
+          <button aria-label={t("dismiss")} onClick={() => setToast("")}>
+            ×
           </button>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
+function Modal({ title, description, onClose, children }) {
+  const { t } = useLanguage(),
+    ref = useRef(null),
+    id = useId();
+  useEffect(() => {
+    const previous = document.activeElement;
+    ref.current.showModal();
+    ref.current.querySelector("input, textarea, select")?.focus();
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = overflow;
+      previous?.focus?.();
+    };
+  }, []);
+  return (
+    <dialog
+      ref={ref}
+      className="modal"
+      aria-labelledby={id}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+    >
+      <header className="modal-header">
+        <div>
+          <h2 id={id}>{title}</h2>
+          {description && <p>{description}</p>}
+        </div>
+        <button
+          className="close-button"
+          aria-label={t("close")}
+          onClick={onClose}
+        >
+          ×
+        </button>
+      </header>
+      {children}
+    </dialog>
+  );
+}
 function ProjectForm({ project, onClose, onSave, onArchive }) {
+  const { t, explain } = useLanguage();
   const [value, setValue] = useState(() => structuredClone(project)),
     [saving, setSaving] = useState(false),
     [error, setError] = useState(""),
     [archiveConfirm, setArchiveConfirm] = useState(false);
-  const update = (key, v) => setValue((old) => ({ ...old, [key]: v }));
-  const config = (key, v) =>
-    setValue((old) => ({ ...old, config: { ...old.config, [key]: v } }));
-  const check = (i, key, v) =>
+  const update = (key, next) => setValue((old) => ({ ...old, [key]: next }));
+  const config = (key, next) =>
+    setValue((old) => ({ ...old, config: { ...old.config, [key]: next } }));
+  const updateCheck = (index, key, next) =>
     config(
       "checks",
-      value.config.checks.map((c, index) =>
-        index === i ? { ...c, [key]: v } : c,
+      value.config.checks.map((check, i) =>
+        i === index ? { ...check, [key]: next } : check,
       ),
     );
-  const submit = async (e) => {
-    e.preventDefault();
+  const submit = async (event) => {
+    event.preventDefault();
     setError("");
     setSaving(true);
     try {
@@ -885,543 +666,456 @@ function ProjectForm({ project, onClose, onSave, onArchive }) {
       setSaving(false);
     }
   };
+  const archive = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      await onArchive();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
   return (
     <Modal
-      title={project.id ? "Proje ayarları" : "Yeni proje oluştur"}
-      subtitle="Yedeğin hazırsa, ilk geri yükleme testi de hazır."
+      title={t(project.id ? "projectSettings" : "createProject")}
       onClose={onClose}
-      wide
     >
       <form onSubmit={submit}>
-        <div className="form-body">
-          {error && <div className="notice danger">{error}</div>}
-          <div className="form-section-label">
-            <Database size={16} />
-            PROJE BİLGİLERİ
-          </div>
-          <label>
-            Proje adı
+        <div className="modal-body">
+          {error && (
+            <div className="notice error-notice" role="alert">
+              {explain(error)}
+            </div>
+          )}
+          <label className="field">
+            {t("projectName")}
             <input
               autoFocus
               required
               maxLength={120}
-              placeholder="Örn. Atlas E-ticaret"
+              placeholder={t("namePlaceholder")}
               value={value.name}
-              onChange={(e) => update("name", e.target.value)}
+              onChange={(event) => update("name", event.target.value)}
             />
           </label>
-          <label>
-            Yedek dosyası veya eşleşmesi
+          <label className="field">
+            {t("backupPattern")}
             <input
               required
-              placeholder="atlas/*.dump"
+              className="code-input"
+              placeholder="customer/*.dump"
               value={value.backup_pattern}
-              onChange={(e) => update("backup_pattern", e.target.value)}
+              onChange={(event) => update("backup_pattern", event.target.value)}
             />
-            <small>
-              Yedek köküne göre bağıl yol. Birden fazla eşleşmede değiştirilme
-              zamanı en yeni olan dosya seçilir.
-            </small>
+            <small>{t("patternHint")}</small>
           </label>
-          <div className="inline-note">
-            <Folder size={16} />
-            <span>
-              PostgreSQL 17 · pg_dump 17 · Custom format (<code>-Fc</code>)
-            </span>
-          </div>
-          <div className="form-section-label">
-            <CalendarClock size={16} />
-            ZAMANLAMA
-          </div>
-          <label className="toggle-row">
-            <input
-              type="checkbox"
-              checked={!!value.schedule_time}
-              onChange={(e) =>
-                update("schedule_time", e.target.checked ? "03:00" : "")
-              }
-            />
-            <span>Her gün otomatik test et</span>
-          </label>
-          {value.schedule_time && (
-            <div className="form-grid">
-              <label>
-                Çalışma saati
-                <input
-                  type="time"
-                  required
-                  value={value.schedule_time}
-                  onChange={(e) => update("schedule_time", e.target.value)}
-                />
-              </label>
-              <label>
-                Saat dilimi
-                <input
-                  required
-                  placeholder="Europe/Istanbul"
-                  value={value.timezone}
-                  onChange={(e) => update("timezone", e.target.value)}
-                />
-              </label>
-            </div>
-          )}
-          <div className="form-section-label">
-            <FileCheck2 size={16} />
-            VERİ KONTROLLERİ <span>İsteğe bağlı</span>
-          </div>
-          <p className="field-help">
-            Tek bir boolean döndüren SELECT sorguları ekle. Noktalı virgül ve
-            SQL yorumu kullanma.
-          </p>
-          {value.config.checks.map((c, i) => (
-            <div className="check-editor" key={i}>
-              <div>
-                <input
-                  required
-                  aria-label={`Kontrol ${i + 1} adı`}
-                  placeholder="Kontrol adı"
-                  value={c.name}
-                  onChange={(e) => check(i, "name", e.target.value)}
-                />
+          <p className="format-note">{t("supportedFormat")}</p>
+          <fieldset>
+            <legend>{t("scheduling")}</legend>
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={!!value.schedule_time}
+                onChange={(event) =>
+                  update("schedule_time", event.target.checked ? "03:00" : "")
+                }
+              />
+              {t("daily")}
+            </label>
+            {value.schedule_time && (
+              <div className="field-grid">
+                <label className="field">
+                  {t("time")}
+                  <input
+                    type="time"
+                    required
+                    value={value.schedule_time}
+                    onChange={(event) =>
+                      update("schedule_time", event.target.value)
+                    }
+                  />
+                </label>
+                <label className="field">
+                  {t("timezone")}
+                  <input
+                    required
+                    value={value.timezone}
+                    onChange={(event) => update("timezone", event.target.value)}
+                  />
+                </label>
+              </div>
+            )}
+          </fieldset>
+          <fieldset>
+            <legend>
+              {t("checks")} <small>({t("optional")})</small>
+            </legend>
+            <p className="help-text">{t("checkHint")}</p>
+            {value.config.checks.map((check, index) => (
+              <div className="check-editor" key={index}>
+                <label className="field">
+                  {t("checkName")}
+                  <input
+                    required
+                    aria-label={`${t("checkName")} ${index + 1}`}
+                    value={check.name}
+                    onChange={(event) =>
+                      updateCheck(index, "name", event.target.value)
+                    }
+                  />
+                </label>
+                <label className="field">
+                  {t("sql")}
+                  <textarea
+                    required
+                    spellCheck={false}
+                    aria-label={`${t("sql")} ${index + 1}`}
+                    placeholder="SELECT count(*) > 0 FROM public.customers"
+                    value={check.sql}
+                    onChange={(event) =>
+                      updateCheck(index, "sql", event.target.value)
+                    }
+                  />
+                </label>
                 <button
                   type="button"
-                  className="icon-btn"
-                  aria-label={`Kontrol ${i + 1} sil`}
+                  className="text-button destructive"
                   onClick={() =>
                     config(
                       "checks",
-                      value.config.checks.filter((_, n) => n !== i),
+                      value.config.checks.filter((_, i) => i !== index),
                     )
                   }
                 >
-                  <Trash2 size={15} />
+                  {t("removeCheck", { number: index + 1 })}
                 </button>
               </div>
-              <textarea
-                required
-                aria-label={`Kontrol ${i + 1} SQL`}
-                spellCheck={false}
-                placeholder="SELECT count(*) > 0 FROM public.customers"
-                value={c.sql}
-                onChange={(e) => check(i, "sql", e.target.value)}
-              />
-            </div>
-          ))}
-          <button
-            type="button"
-            className="button small"
-            disabled={value.config.checks.length >= 32}
-            onClick={() =>
-              config("checks", [...value.config.checks, { name: "", sql: "" }])
-            }
-          >
-            <Plus size={14} />
-            Kontrol ekle
-          </button>
+            ))}
+            <Button
+              type="button"
+              disabled={value.config.checks.length >= 32}
+              onClick={() =>
+                config("checks", [
+                  ...value.config.checks,
+                  { name: "", sql: "" },
+                ])
+              }
+            >
+              {t("addCheck")}
+            </Button>
+          </fieldset>
           <details className="advanced">
-            <summary>Kaynak sınırları</summary>
-            <div className="form-grid">
-              <label>
-                Toplam süre (saniye)
-                <input
-                  type="number"
-                  min="5"
-                  max="3600"
-                  required
-                  value={value.config.timeout_seconds}
-                  onChange={(e) =>
-                    config("timeout_seconds", Number(e.target.value))
-                  }
-                />
-              </label>
-              <label>
-                Veri alanı (MiB)
-                <input
-                  type="number"
-                  min="128"
-                  max="8192"
-                  required
-                  value={value.config.data_mb}
-                  onChange={(e) => config("data_mb", Number(e.target.value))}
-                />
-              </label>
-              <label>
-                Bellek sınırı (MiB)
-                <input
-                  type="number"
-                  min={value.config.data_mb + 256}
-                  max="16384"
-                  required
-                  value={value.config.memory_mb}
-                  onChange={(e) => config("memory_mb", Number(e.target.value))}
-                />
-              </label>
-              <label>
-                En büyük yedek (MiB)
-                <input
-                  type="number"
-                  min="1"
-                  max="10240"
-                  required
-                  value={value.config.max_backup_bytes / 1048576}
-                  onChange={(e) =>
-                    config("max_backup_bytes", Number(e.target.value) * 1048576)
-                  }
-                />
-              </label>
+            <summary>{t("limits")}</summary>
+            <div className="field-grid">
+              {[
+                ["timeout_seconds", "totalTimeout", 5, 3600, 1],
+                ["data_mb", "dataLimit", 128, 8192, 1],
+                [
+                  "memory_mb",
+                  "memoryLimit",
+                  value.config.data_mb + 256,
+                  16384,
+                  1,
+                ],
+                ["max_backup_bytes", "archiveLimit", 1, 10240, 1048576],
+              ].map(([key, label, min, max, factor]) => (
+                <label className="field" key={key}>
+                  {t(label)}
+                  <input
+                    required
+                    type="number"
+                    min={min}
+                    max={max}
+                    step="1"
+                    value={value.config[key] / factor}
+                    onChange={(event) =>
+                      config(key, Number(event.target.value) * factor)
+                    }
+                  />
+                </label>
+              ))}
             </div>
           </details>
           {onArchive && (
-            <div className="archive-zone">
+            <div className="archive-controls">
               {archiveConfirm ? (
                 <>
-                  <span>Proje arşivlensin mi? Geçmişi saklanacak.</span>
-                  <button
+                  <p>{t("archiveQuestion")}</p>
+                  <Button
                     type="button"
-                    className="text-button danger-text"
-                    onClick={onArchive}
+                    disabled={saving}
+                    className="destructive"
+                    onClick={archive}
                   >
-                    Evet, arşivle
-                  </button>
+                    {t("confirmArchive")}
+                  </Button>
                   <button
                     type="button"
                     className="text-button"
                     onClick={() => setArchiveConfirm(false)}
                   >
-                    Vazgeç
+                    {t("cancel")}
                   </button>
                 </>
               ) : (
                 <button
                   type="button"
-                  className="text-button danger-text"
+                  className="text-button destructive"
                   onClick={() => setArchiveConfirm(true)}
                 >
-                  <Trash2 size={14} />
-                  Projeyi arşivle
+                  {t("archiveProject")}
                 </button>
               )}
             </div>
           )}
         </div>
-        <div className="modal-footer">
-          <button type="button" className="button" onClick={onClose}>
-            Vazgeç
-          </button>
-          <button disabled={saving} className="button primary">
-            {saving ? (
-              <LoaderCircle className="spin" size={16} />
-            ) : (
-              <Check size={16} />
-            )}
-            Projeyi kaydet
-          </button>
-        </div>
+        <footer className="modal-footer">
+          <Button type="button" onClick={onClose}>
+            {t("cancel")}
+          </Button>
+          <Button primary disabled={saving}>
+            {t(saving ? "saving" : "saveProject")}
+          </Button>
+        </footer>
       </form>
     </Modal>
   );
 }
-function Modal({ title, subtitle, onClose, children, wide = false }) {
-  const ref = useRef(null);
-  useEffect(() => {
-    const previous = document.activeElement;
-    ref.current.showModal();
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-      previous?.focus?.();
-    };
-  }, []);
+function Report({ job, duration, onClose, onCancel }) {
+  const { t, explain, formatDate } = useLanguage(),
+    [copied, setCopied] = useState(false),
+    [copyError, setCopyError] = useState("");
+  const report = job.report;
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(report.backup.sha256);
+      setCopied(true);
+    } catch {
+      setCopyError(true);
+    }
+  };
+  const notices = report?.warnings || [];
   return (
-    <dialog
-      ref={ref}
-      className={`modal ${wide ? "wide" : ""}`}
-      onCancel={(e) => {
-        e.preventDefault();
-        onClose();
-      }}
-      onClick={(e) => {
-        if (e.target === ref.current) {
-          const rect = ref.current.getBoundingClientRect();
-          if (
-            e.clientX < rect.left ||
-            e.clientX > rect.right ||
-            e.clientY < rect.top ||
-            e.clientY > rect.bottom
-          )
-            onClose();
-        }
-      }}
-    >
-      <div className="modal-header">
-        <div>
-          <h2>{title}</h2>
-          {subtitle && <p>{subtitle}</p>}
+    <Modal title={t("report")} description={job.project_name} onClose={onClose}>
+      <div className="modal-body report-body">
+        <div className="report-outcome">
+          <Status value={job.status} />
+          <code>{job.id}</code>
         </div>
-        <button
-          className="icon-btn"
-          aria-label="Pencereyi kapat"
-          onClick={onClose}
+        <p
+          className={
+            ["failed", "interrupted"].includes(job.status)
+              ? "outcome-description destructive"
+              : "outcome-description"
+          }
         >
-          <X size={20} />
-        </button>
-      </div>
-      {children}
-    </dialog>
-  );
-}
-function Report({ job, onClose, onCancel }) {
-  const r = job.report;
-  const notices = r?.warnings || [];
-  return (
-    <Modal
-      title="Test raporu"
-      subtitle={`${job.project_name} · ${job.id.slice(0, 8)}`}
-      onClose={onClose}
-      wide
-    >
-      <div className="form-body report-body">
-        <div className={`report-status ${job.status}`}>
+          {job.status === "passed"
+            ? t("reportPassed")
+            : active(job)
+              ? t("reportRunning")
+              : explain(job.error) || t("reportFailed")}
+        </p>
+        <dl className="report-facts">
           <div>
-            {job.status === "passed" ? (
-              <ShieldCheck size={28} />
-            ) : active(job) ? (
-              <LoaderCircle size={28} className="spin" />
-            ) : (
-              <TriangleAlert size={28} />
-            )}
-            <div>
-              <h3>{labels[job.status]}</h3>
-              <p>
-                {job.status === "passed"
-                  ? "Geri yükleme ve tanımlı kontroller tamamlandı."
-                  : active(job)
-                    ? "İş tamamlandığında sonuçlar otomatik olarak güncellenecek."
-                    : job.error || "Bu çalışma tamamlanamadı."}
-              </p>
-            </div>
-          </div>
-          <Badge status={job.status} />
-        </div>
-        <div className="report-meta">
-          <div>
-            <small>BAŞLANGIÇ</small>
-            <strong>{date(job.started_at || job.queued_at, true)}</strong>
+            <dt>{t("started")}</dt>
+            <dd>{formatDate(job.started_at || job.queued_at, true)}</dd>
           </div>
           <div>
-            <small>SÜRE</small>
-            <strong>{duration(job)}</strong>
+            <dt>{t("duration")}</dt>
+            <dd>{duration}</dd>
           </div>
           <div>
-            <small>TETİKLEYİCİ</small>
-            <strong>
-              {job.trigger === "schedule" ? "Günlük zamanlama" : "Manuel"}
-            </strong>
+            <dt>{t("trigger")}</dt>
+            <dd>{t(job.trigger === "schedule" ? "scheduled" : "manual")}</dd>
           </div>
-        </div>
-        {r ? (
+        </dl>
+        {report ? (
           <>
-            <div className="form-section-label">
-              <FileCheck2 size={16} />
-              DOĞRULAMA ADIMLARI
+            <div className="table-scroll">
+              <table className="check-results">
+                <thead>
+                  <tr>
+                    <th>{t("stage")}</th>
+                    <th>{t("result")}</th>
+                    <th>{t("details")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{t("restore")}</td>
+                    <td>
+                      <Status value={report.restore_status} />
+                    </td>
+                    <td>PostgreSQL 17</td>
+                  </tr>
+                  {report.checks.map((check, index) => (
+                    <tr key={index}>
+                      <td>{check.name}</td>
+                      <td>
+                        <Status value={check.status} />
+                      </td>
+                      <td>{check.error && explain(check.error)}</td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <td>{t("cleanup")}</td>
+                    <td>
+                      <Status value={report.cleanup_status} />
+                    </td>
+                    <td />
+                  </tr>
+                </tbody>
+              </table>
             </div>
-            <div className="result-row">
-              <div>
-                <Database size={17} />
-                <strong>Geri yükleme</strong>
-              </div>
-              <Badge status={r.restore_status} />
-            </div>
-            {r.checks.map((c, i) => (
-              <div className="result-row" key={i}>
-                <div>
-                  <FileCheck2 size={17} />
-                  <span>
-                    <strong>{c.name}</strong>
-                    {c.error && <small>{c.error}</small>}
-                  </span>
-                </div>
-                <Badge status={c.status} />
-              </div>
-            ))}
-            {!r.checks.length && (
-              <p className="field-help">
-                Özel SQL kontrolü tanımlanmamış. Uygulama verisi doğrulanmadı.
-              </p>
+            {!report.checks.length && (
+              <p className="help-text">{t("noChecks")}</p>
             )}
-            <div className="result-row">
+            <h3 className="report-section-title">{t("archive")}</h3>
+            <dl className="archive-facts">
               <div>
-                <Trash2 size={17} />
-                <strong>Geçici ortam temizliği</strong>
-              </div>
-              <Badge status={r.cleanup_status} />
-            </div>
-            <div className="form-section-label">
-              <HardDrive size={16} />
-              TEST EDİLEN YEDEK
-            </div>
-            <div className="backup-detail">
-              <div>
-                <span>Dosya</span>
-                <strong>{r.backup.name}</strong>
+                <dt>{t("file")}</dt>
+                <dd>
+                  <code>{report.backup.name}</code>
+                </dd>
               </div>
               <div>
-                <span>Boyut</span>
-                <strong>{bytes(r.backup.bytes)}</strong>
+                <dt>{t("size")}</dt>
+                <dd>{size(report.backup.bytes)}</dd>
               </div>
               <div>
-                <span>Dosya değiştirilme zamanı</span>
-                <strong>{date(r.backup.modified_at, true)}</strong>
+                <dt>{t("modified")}</dt>
+                <dd>{formatDate(report.backup.modified_at, true)}</dd>
               </div>
               <div>
-                <span>PostgreSQL / pg_dump</span>
-                <strong>
-                  {r.backup.source_version || "—"} /{" "}
-                  {r.backup.dump_version || "—"}
-                </strong>
+                <dt>PostgreSQL / pg_dump</dt>
+                <dd>
+                  {report.backup.source_version || "—"} /{" "}
+                  {report.backup.dump_version || "—"}
+                </dd>
               </div>
-              <div className="hash">
-                <span>SHA-256</span>
-                <code>{r.backup.sha256 || "Hesaplanamadı"}</code>
+            </dl>
+            <div className="fingerprint">
+              <div>
+                <h4>{t("fingerprint")}</h4>
+                {report.backup.sha256 && (
+                  <button className="text-button" onClick={copy}>
+                    {t(copied ? "copied" : "copyFingerprint")}
+                  </button>
+                )}
               </div>
+              <code>{report.backup.sha256 || "—"}</code>
+              {copyError && <p role="alert">{t("copyFailed")}</p>}
             </div>
             <details className="advanced">
-              <summary>Kapsam ve uyarılar ({notices.length})</summary>
-              <p className="field-help">
-                Bu test, mantıksal geri yüklemeyi ve seçili sorguları doğrular.
-                Tam uygulama kurtarmasını, orijinal yetkileri veya yedeğin
-                güncelliğini garanti etmez.
-              </p>
-              {notices.map((n, i) => (
-                <div className="report-warning" key={i}>
-                  <TriangleAlert size={14} />
-                  <span>{n}</span>
-                </div>
-              ))}
+              <summary>{t("scope", { count: notices.length })}</summary>
+              <ul className="warning-list">
+                {notices.map((notice, index) => (
+                  <li key={index}>{explain(notice)}</li>
+                ))}
+              </ul>
             </details>
           </>
         ) : (
-          !active(job) && (
-            <div className="notice">
-              Bu çalışma geri yükleme raporu üretmeden sonlandı. Hata özeti
-              yukarıda.
-            </div>
-          )
+          !active(job) && <p className="notice">{t("noReport")}</p>
         )}
-        <div className="notification-line">
-          <Bell size={14} />
-          Bildirim:{" "}
-          {
+        <p className="notification-note">
+          {t("notification")}:{" "}
+          {t(
             {
-              skipped: "Yapılandırılmadı / gerekli değil",
-              pending: "Teslim bekliyor",
-              delivered: "Teslim edildi",
-              failed: "Teslim edilemedi",
-            }[job.notification_status]
-          }
+              skipped: "notificationSkipped",
+              pending: "notificationPending",
+              delivered: "notificationDelivered",
+              failed: "notificationFailed",
+            }[job.notification_status] || "notificationSkipped",
+          )}
           {job.notification_attempts > 0 &&
-            ` · ${job.notification_attempts} deneme`}
-        </div>
+            ` (${t("attempts", { count: job.notification_attempts })})`}
+        </p>
       </div>
-      <div className="modal-footer">
+      <footer className="modal-footer">
         {active(job) && (
-          <button className="button danger-text" onClick={onCancel}>
-            <Square size={13} />
-            Testi iptal et
-          </button>
+          <Button
+            className="destructive"
+            disabled={job.cancel_requested}
+            onClick={onCancel}
+          >
+            {t(job.cancel_requested ? "cancelling" : "cancelTest")}
+          </Button>
         )}
-        <button className="button" onClick={onClose}>
-          Kapat
-        </button>
-        {r && (
+        <Button onClick={onClose}>{t("close")}</Button>
+        {report && (
           <a
             className="button primary"
             href={`/api/jobs/${job.id}/report`}
             download
           >
-            <ArrowDownToLine size={16} />
-            JSON indir
+            {t("download")}
           </a>
         )}
-      </div>
+      </footer>
     </Modal>
   );
 }
-function Guide() {
+function Setup() {
+  const { t } = useLanguage(),
+    [shell, setShell] = useState("powershell");
+  const installation =
+    shell === "powershell"
+      ? "./scripts/setup.ps1\ndocker pull postgres:17-bookworm\ndocker compose up --build -d"
+      : "sh scripts/setup.sh\ndocker pull postgres:17-bookworm\ndocker compose up --build -d";
   return (
-    <div className="guide-grid">
-      <section className="card guide-main">
-        <div className="card-title">
-          <h2>İlk testine başla</h2>
-          <span className="count">4 adım</span>
-        </div>
+    <div className="setup-layout">
+      <section>
+        <h2>{t("installation")}</h2>
+        <label className="field shell-select">
+          {t("shell")}
+          <select
+            value={shell}
+            onChange={(event) => setShell(event.target.value)}
+          >
+            <option value="powershell">PowerShell</option>
+            <option value="bash">Bash</option>
+          </select>
+        </label>
+        <pre>
+          <code>{installation}</code>
+        </pre>
         {[
-          [
-            "Yedek dosyanı klasöre koy",
-            "PostgreSQL 17 üzerinde pg_dump 17 ile alınmış, tamamlanmış bir custom dump dosyası kullan. Compose kurulumunda dosyaları projenin backups/ klasörüne yerleştir.",
-            "pg_dump -Fc -f customer.dump your_database",
-          ],
-          [
-            "Bir proje oluştur",
-            "Projene müşteri adını ver ve yedek klasörüne göre bağıl dosya yolunu gir. *.dump eşleşmesinde dosya değiştirilme zamanı en yeni olan seçilir.",
-            "customer/*.dump",
-          ],
-          [
-            "Veri kontrollerini tanımla",
-            "Uygulaman için anlamlı bir kontrol ekle. Sorgu tek bir true / false değeri döndürmeli. Kontroller isteğe bağlıdır.",
-            "SELECT count(*) > 0 FROM public.customers",
-          ],
-          [
-            "Test et ve raporu incele",
-            "Manuel test başlat veya günlük saat belirle. Worker geri yüklemeyi yapar, kontrolleri çalıştırır ve geçici ortamı kaldırır.",
-            null,
-          ],
-        ].map(([title, text, code], i) => (
-          <div className="guide-step" key={title}>
-            <span>0{i + 1}</span>
-            <div>
-              <h3>{title}</h3>
-              <p>{text}</p>
-              {code && (
-                <pre>
-                  <code>{code}</code>
-                </pre>
-              )}
-            </div>
-          </div>
+          [1, "pg_dump -Fc -f customer.dump your_database"],
+          [2, "SELECT count(*) > 0 FROM public.customers"],
+          [3, null],
+        ].map(([number, code]) => (
+          <section className="setup-step" key={number}>
+            <h3>{t(`setupTitle${number}`)}</h3>
+            <p>{t(`setupText${number}`)}</p>
+            {code && (
+              <pre>
+                <code>{code}</code>
+              </pre>
+            )}
+          </section>
         ))}
       </section>
-      <div>
-        <section className="card guide-note">
-          <ShieldCheck size={25} />
-          <h3>Testin kapsamı</h3>
-          <p>
-            Başarılı sonuç, yedeğin geri yüklendiği ve tanımlanan kontrollerin
-            geçtiği anlamına gelir.
-          </p>
-          <p>
-            Uygulamanın tamamının kurtarılabildiği, orijinal yetkilerin
-            korunduğu veya yedeğin güncel olduğu ayrıca doğrulanmalıdır.
-          </p>
-        </section>
-        <section className="card guide-note">
-          <Terminal size={25} />
-          <h3>Worker bağlantısı</h3>
-          <p>
-            Docker Compose kurulumunda worker otomatik başlar. Sorun varsa
-            sunucuda servis günlüklerini incele.
-          </p>
-          <pre>
-            <code>docker compose logs worker</code>
-          </pre>
-          <p>
-            Başarısız işler için HTTPS webhook adresini sunucudaki{" "}
-            <code>.env</code> dosyasında <code>RESTIVRA_WEBHOOK_URL</code> ile
-            tanımlayabilirsin.
-          </p>
-        </section>
-      </div>
+      <aside className="setup-notes">
+        <h2>{t("documented")}</h2>
+        <p>{t("scopeNote")}</p>
+        <p>{t("supportedFormat")}</p>
+        <h3>{t("workerOnline")}</h3>
+        <p>{t("workerHelp")}</p>
+        <pre>
+          <code>docker compose logs worker</code>
+        </pre>
+        <h3>{t("notification")}</h3>
+        <p>{t("webhookHelp")}</p>
+      </aside>
     </div>
   );
 }
-createRoot(document.getElementById("root")).render(<App />);
+
+createRoot(document.getElementById("root")).render(
+  <LanguageProvider>
+    <App />
+  </LanguageProvider>,
+);

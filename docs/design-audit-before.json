@@ -1,0 +1,113 @@
+{
+  "tool": "avoid-ai-design",
+  "version": "0.4.0",
+  "scanned": 2,
+  "summary": {
+    "P0": 1,
+    "P1": 5,
+    "P2": 1,
+    "total": 7
+  },
+  "findings": [
+    {
+      "file": "outputs\\restivra\\web\\src\\main.jsx",
+      "id": "I3",
+      "severity": "P1",
+      "name": "The worn Lucide set / the sparkle-for-AI glyph",
+      "why": "Sparkles, Zap, Rocket, Shield, BarChart3, ArrowRight in the same roles, and a sparkle beside anything 'AI'.",
+      "lines": [
+        3
+      ],
+      "notes": [
+        "ArrowRight, Check, CheckCircle2"
+      ]
+    },
+    {
+      "file": "outputs\\restivra\\web\\src\\main.jsx",
+      "id": "SD5",
+      "severity": "P1",
+      "name": "One word accented in the headline",
+      "why": "Coloring, italicizing, or highlighting a single headline word is among the commonest tells of a generated page.",
+      "lines": [
+        528,
+        671
+      ],
+      "notes": [
+        "\"{projects.length}\"",
+        "\"{jobs.length}\""
+      ]
+    },
+    {
+      "file": "outputs\\restivra\\web\\src\\main.jsx",
+      "id": "SD4d",
+      "severity": "P2",
+      "name": "Template chrome: meta strings joined with middle dots",
+      "why": "'A · B · C' metadata strings are a stock chrome move, not a decision about this content.",
+      "lines": [
+        279,
+        478,
+        676,
+        796,
+        929,
+        1323
+      ],
+      "notes": []
+    },
+    {
+      "file": "outputs\\restivra\\web\\src\\styles.css",
+      "id": "T1",
+      "severity": "P0",
+      "name": "Inter as the primary face",
+      "why": "Inter is the default of nearly every AI tool and component library.",
+      "lines": [
+        2
+      ],
+      "notes": []
+    },
+    {
+      "file": "outputs\\restivra\\web\\src\\styles.css",
+      "id": "C2",
+      "severity": "P1",
+      "name": "Indigo / violet primary buttons",
+      "why": "The accent defaulted instead of being chosen.",
+      "lines": [
+        210,
+        311,
+        360,
+        364,
+        370,
+        485
+      ],
+      "notes": [
+        "#c1b4ff (hue 250°)",
+        "#6656ce (hue 248°)",
+        "#b6a9ee (hue 251°)",
+        "#7766e8 (hue 248°)"
+      ]
+    },
+    {
+      "file": "outputs\\restivra\\web\\src\\styles.css",
+      "id": "C9",
+      "severity": "P1",
+      "name": "Muted text below WCAG AA",
+      "why": "Grey-on-grey body copy fails contrast; it is both a tell and an accessibility defect.",
+      "lines": [
+        14
+      ],
+      "notes": [
+        "--muted #8990a3 on #f7f8fb = 3.00:1"
+      ]
+    },
+    {
+      "file": "outputs\\restivra\\web\\src\\styles.css",
+      "id": "K3",
+      "severity": "P1",
+      "name": "Glassmorphism (backdrop-blur)",
+      "why": "Frosted surfaces by reflex; keep blur only where layering is real, like a nav over scrolling content.",
+      "lines": [
+        952
+      ],
+      "notes": []
+    }
+  ]
+}

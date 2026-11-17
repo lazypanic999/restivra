@@ -1,0 +1,9 @@
+{
+  "customers": 10000,
+  "products": 500,
+  "orders": 25000,
+  "order_items": 100000,
+  "revenue": 46337500.0,
+  "content_hash": "fbd89235fba940ddb5b3c4f63e9bf230",
+  "version": "PostgreSQL 17.12 (Debian 17.12-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit"
+}

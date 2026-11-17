@@ -1,8 +1,10 @@
 # MVP validation — 2026-11-17
 
+Additional validation: [PostgreSQL 17.12 relational acceptance run](POSTGRES-ACCEPTANCE.md) with 135,500 synthetic rows, source-data loss and eight expected outcomes; [English/Turkish interface and design review](DESIGN-REVIEW.md).
+
 ## Completed locally
 
-- Frontend production build with Vite; npm reported no known vulnerabilities at installation time.
+- Frontend production build with Vite; runtime dependency audit is clean. The current development-chain advisory is documented in the design review.
 - `go vet ./...` passed.
 - `RESTIVRA_INTEGRATION=1 go test -p 1 ./... -count=1 -timeout=10m` passed against real Docker/PostgreSQL 17 containers.
 - Multi-stage Docker build and Compose startup completed; API, application database and worker are running.
