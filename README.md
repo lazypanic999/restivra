@@ -172,6 +172,6 @@ Manual cleanup verifies the exact ownership label. Do not target active jobs. Ha
 
 ## Remaining work
 
-Real agency pilots, extension compatibility, larger-database sizing and payment validation. S3, PDF, extra database engines/major versions, PITR and hosted multi-tenant operation are outside the MVP. See [ROADMAP.md](ROADMAP.md).
+Real developer pilots on their own computers, extension compatibility, larger-database sizing and payment validation. S3, PDF, extra database engines/major versions, PITR and hosted multi-tenant operation are outside the MVP. See [ROADMAP.md](ROADMAP.md).
 
 References: [pg_restore](https://www.postgresql.org/docs/17/app-pgrestore.html), [advisory locks](https://www.postgresql.org/docs/17/explicit-locking.html#ADVISORY-LOCKS), [Docker run](https://docs.docker.com/reference/cli/docker/container/run/).

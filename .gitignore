@@ -9,4 +9,5 @@
 !/internal/webui/dist/.gitkeep
 *.dump
 *.backup
+*.partial
 *.log

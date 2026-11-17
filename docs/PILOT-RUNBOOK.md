@@ -154,7 +154,7 @@ to your own retention policy. Parent directories must already exist.
 sh scripts/metadata-backup.sh /private/restivra-20261118.dump
 ```
 
-PowerShell 7:
+PowerShell 7.2+:
 
 ```powershell
 ./scripts/metadata-backup.ps1 -OutputPath work/restivra-20261118.dump
@@ -188,3 +188,5 @@ cleanup, host memory and notification delivery. Test one worker restart and a
 metadata restore drill. Ask the operator to complete installation and first
 verification from this guide without developer intervention. A successful local
 soak is evidence for starting this pilot, not a substitute for it.
+
+Webhook delivery can be repeated if delivery succeeds but the metadata update is interrupted. Receivers should deduplicate by job_id. A successful verification with no configured webhook does not imply alert delivery was tested.

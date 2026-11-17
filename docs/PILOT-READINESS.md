@@ -22,6 +22,9 @@ the next product milestone. Public hosted SaaS readiness is a separate project.
   English/Turkish login, wrong-token rejection and logout were checked in-browser.
 - API readiness has a bounded database timeout and Compose healthcheck. A
   `doctor` command checks worker prerequisites without restoring customer data.
+- Compose waits for PostgreSQL's final PID 1 process, not initdb's temporary
+  server. A separate empty-volume install completed without API/worker startup
+  errors after this startup-gate correction.
 - Reports carry stable safe error codes and English/Turkish next actions.
   PostgreSQL stderr is classified in bounded memory, never persisted verbatim.
 - The compiler and Docker/CI build moved to patched Go 1.27.4 after a reachable
