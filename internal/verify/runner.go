@@ -112,18 +112,12 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 	// Cleanup is registered BEFORE create: cancellation can occur after Docker has
 	// created a container but before the CLI receives its successful response.
 	defer func() {
-		cleanupCtx, cleanupCancel := context.WithTimeout(context.Background(), 20*time.Second)
-		defer cleanupCancel()
-		if _, err := r.Docker.Run(cleanupCtx, nil, "rm", "--force", "--volumes", name); err != nil {
-			// A failed create may not have created any container at all.
-			ids, listErr := r.Docker.Run(cleanupCtx, nil, "ps", "--all", "--quiet", "--filter", "name=^/"+name+"$")
-			if listErr != nil || strings.TrimSpace(ids) != "" {
-				report.Status = "failed"
-				report.CleanupStatus = "failed"
-				report.ErrorCode = "cleanup_failed"
-				report.Error = "container cleanup failed; use cleanup --run-id " + report.RunID
-				return
-			}
+		if err := cleanupCreatedContainer(r.Docker, name, 20*time.Second); err != nil {
+			report.Status = "failed"
+			report.CleanupStatus = "failed"
+			report.ErrorCode = "cleanup_failed"
+			report.Error = "container cleanup failed; use cleanup --run-id " + report.RunID
+			return
 		}
 		report.CleanupStatus = "passed"
 	}()
@@ -246,6 +240,24 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 	report.Status = "passed"
 	report.Stage = "complete"
 	return
+}
+
+func cleanupCreatedContainer(docker Commander, name string, removalBudget time.Duration) error {
+	removeCtx, stopRemove := context.WithTimeout(context.Background(), removalBudget)
+	_, err := docker.Run(removeCtx, nil, "rm", "--force", "--volumes", name)
+	stopRemove()
+	if err == nil {
+		return nil
+	}
+	// The daemon may have completed removal after the CLI timed out. Confirm
+	// absence with a fresh, independently bounded context, never the expired one.
+	confirmCtx, stopConfirm := context.WithTimeout(context.Background(), 5*time.Second)
+	defer stopConfirm()
+	ids, listErr := docker.Run(confirmCtx, nil, "ps", "--all", "--quiet", "--filter", "name=^/"+name+"$")
+	if listErr != nil || strings.TrimSpace(ids) != "" {
+		return errors.New("container removal could not be confirmed")
+	}
+	return nil
 }
 
 func stageErrorCode(stage string) string {

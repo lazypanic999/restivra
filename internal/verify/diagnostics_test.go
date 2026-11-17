@@ -3,8 +3,10 @@ package verify
 import (
 	"context"
 	"errors"
+	"io"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestDiagnosticsPersistOnlyFixedCategories(t *testing.T) {
@@ -38,5 +40,24 @@ func TestRestoreReportCarriesSafeFailureCode(t *testing.T) {
 	report = (Runner{Docker: docker, WorkDir: work}).Run(context.Background(), source, DefaultConfig())
 	if report.ErrorCode != "restore_failed" {
 		t.Fatal("generic failures need a stable code")
+	}
+}
+
+type removalDeadline struct{ *fakeDocker }
+
+func (d removalDeadline) Run(ctx context.Context, input io.Reader, args ...string) (string, error) {
+	if len(args) > 0 && args[0] == "rm" {
+		<-ctx.Done()
+		return "", ctx.Err()
+	}
+	return d.fakeDocker.Run(ctx, input, args...)
+}
+func TestTimedOutRemovalUsesFreshConfirmation(t *testing.T) {
+	for _, exists := range []bool{false, true} {
+		docker := removalDeadline{&fakeDocker{containerExists: exists}}
+		err := cleanupCreatedContainer(docker, "restivra-"+strings.Repeat("a", 32), 5*time.Millisecond)
+		if (err != nil) != exists {
+			t.Fatalf("confirmation of remaining=%v returned %v", exists, err)
+		}
 	}
 }
