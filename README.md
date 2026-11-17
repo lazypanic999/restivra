@@ -1,5 +1,7 @@
 # Restivra
 
+[![CI](https://github.com/lazypanic999/restivra/actions/workflows/ci.yml/badge.svg)](https://github.com/lazypanic999/restivra/actions/workflows/ci.yml)
+
 **Restore your PostgreSQL backups. Run your checks. Keep the evidence.**
 
 Self-hosted PostgreSQL 17 backup verification for small teams and agencies. Restivra restores existing custom-format dumps into temporary, network-isolated containers, executes read-only SQL checks, records the results, and removes temporary resources.
