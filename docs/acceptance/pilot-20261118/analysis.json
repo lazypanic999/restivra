@@ -1,0 +1,25 @@
+{
+  "resource_samples": 97,
+  "memory": [
+    {
+      "container": "api-1",
+      "observations": 97,
+      "min_mib": 8.277,
+      "max_mib": 10.76
+    },
+    {
+      "container": "db-1",
+      "observations": 97,
+      "min_mib": 29.84,
+      "max_mib": 38.16
+    },
+    {
+      "container": "worker-1",
+      "observations": 97,
+      "min_mib": 3.766,
+      "max_mib": 15.95
+    }
+  ],
+  "readiness_status": "supervised developer pilot; unattended acceptance remains open",
+  "long_run_passed": false
+}

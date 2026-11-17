@@ -1,0 +1,26 @@
+{
+  "started_at": "2026-11-17T23:09:12.6107345Z",
+  "finished_at": "2026-11-17T23:34:13.2227418Z",
+  "elapsed_minutes": 25.01,
+  "iterations": 30,
+  "runs": 48,
+  "failure": "Expected exactly one real scheduled job",
+  "outcomes": [
+    {
+      "status": "cancelled",
+      "count": 3
+    },
+    {
+      "status": "failed",
+      "count": 9
+    },
+    {
+      "status": "interrupted",
+      "count": 2
+    },
+    {
+      "status": "passed",
+      "count": 34
+    }
+  ]
+}

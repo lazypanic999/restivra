@@ -16,6 +16,7 @@
 
 ## Pilot acceptance — requires real users
 
+- [ ] Reproduce the desktop Docker stall and complete clean long-duration acceptance before unattended operation; see [incident evidence](docs/PILOT-READINESS.md).
 - [ ] One developer, their own computer, two authorized projects and one week of scheduled tests.
 - [ ] Validate extensions, dump versions and database sizing.
 - [ ] Observe installation, diagnosis and maintenance needs.

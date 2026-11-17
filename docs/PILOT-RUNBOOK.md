@@ -102,7 +102,8 @@ as concurrent workers against the same Docker engine**.
 5. Make a second project/check return `SELECT false` once. Verify it fails, then
    archive that synthetic test project. If using a webhook, verify delivery with
    your actual receiver and adapter before relying on alerts.
-6. Enable a daily schedule with an explicit IANA time zone. Confirm a real
+6. Choose a time when the computer is usually running, with an explicit IANA
+   time zone. Confirm a real
    scheduled run; missed days do not generate a backlog. Panel timestamps use
    the browser's time zone; project scheduling uses the configured zone.
 
@@ -187,6 +188,9 @@ Record seven days of scheduled outcomes, changed/unchanged fingerprints, runtime
 cleanup, host memory and notification delivery. Test one worker restart and a
 metadata restore drill. Ask the operator to complete installation and first
 verification from this guide without developer intervention. A successful local
-soak is evidence for starting this pilot, not a substitute for it.
+soak is evidence for starting this pilot, not a substitute for it. The current
+review includes an unexplained long-duration Docker stall: start with supervised
+manual tests and complete host-specific stability acceptance before depending
+on unattended schedules. See [readiness results](PILOT-READINESS.md).
 
 Webhook delivery can be repeated if delivery succeeds but the metadata update is interrupted. Receivers should deduplicate by job_id. A successful verification with no configured webhook does not imply alert delivery was tested.

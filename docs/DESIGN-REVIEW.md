@@ -39,4 +39,13 @@ Browser checks include initial English, Turkish persistence, localized forms/que
 
 ## Dependency note
 
+The pilot pass adds a compact access-token sign-in form, sign-out control and
+bilingual failure advice using the same Public Sans, controls and color tokens.
+Desktop scheduling explicitly describes computer/Docker downtime. The final
+source scan still reports zero P0/P1/P2 findings. New rendered evidence:
+[English sign-in](screenshots/sign-in-en.jpg),
+[desktop restore report](screenshots/desktop-pilot-report-en.jpg), and
+[Turkish failure advice](screenshots/pilot-failure-tr.jpg). API-restart form
+submission and authenticated JSON download were verified in the browser.
+
 The initially reported Vite/picomatch advisory has been resolved by removing Vite and its glob dependency chain entirely. The frontend now bundles directly with esbuild. The full `npm audit` (including development dependencies) reports zero known vulnerabilities, and CI enforces that check. No forced downgrade or audit suppression was used. See [BUILD-SECURITY.md](BUILD-SECURITY.md) for the migration and development workflow.

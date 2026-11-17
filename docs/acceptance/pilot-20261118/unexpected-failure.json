@@ -1,0 +1,60 @@
+{
+  "id": "236248bcce857381b606f0cdf7042843",
+  "project_id": "a9bb521c77bb499db803bafb9106ecbf",
+  "project_name": "Pilot commerce",
+  "backup_pattern": "commerce.dump",
+  "config": {
+    "timeout_seconds": 180,
+    "max_backup_bytes": 268435456,
+    "memory_mb": 1536,
+    "data_mb": 512,
+    "checks": [
+      {
+        "name": "Pilot commerce",
+        "sql": "SELECT count(*) = 100000 FROM public.order_items"
+      }
+    ]
+  },
+  "status": "failed",
+  "trigger": "manual",
+  "queued_at": "2026-11-17T23:02:32.902392Z",
+  "started_at": "2026-11-17T23:02:33.295217Z",
+  "finished_at": "2026-11-17T23:04:03.476032Z",
+  "heartbeat_at": "2026-11-17T23:03:28.305032Z",
+  "cancel_requested": false,
+  "report": {
+    "schema_version": 1,
+    "run_id": "236248bcce857381b606f0cdf7042843",
+    "status": "failed",
+    "stage": "start",
+    "started_at": "2026-11-17T23:02:33.446743944Z",
+    "finished_at": "2026-11-17T23:04:03.461662585Z",
+    "duration_ms": 90014,
+    "image": "postgres:17-bookworm",
+    "image_id": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+    "backup": {
+      "name": "commerce.dump",
+      "bytes": 530663,
+      "modified_at": "2026-11-17T19:51:15Z",
+      "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667"
+    },
+    "restore_status": "not_run",
+    "checks": [
+      {
+        "name": "Pilot commerce",
+        "status": "not_run"
+      }
+    ],
+    "cleanup_status": "failed",
+    "error": "Temporary resource cleanup failed. Worker stopped before accepting more jobs.",
+    "error_code": "cleanup_failed",
+    "warnings": [
+      "This verifies a logical restore and selected checks, not full application recovery, ownership, grants or point-in-time recovery.",
+      "File modification time is not a verified backup creation time. Compare SHA-256 values across runs to detect unchanged backups.",
+      "The tested backup is identical to the previous run; backup freshness was not established."
+    ]
+  },
+  "error": "Temporary resource cleanup failed. Worker stopped before accepting more jobs.",
+  "notification_status": "skipped",
+  "notification_attempts": 0
+}

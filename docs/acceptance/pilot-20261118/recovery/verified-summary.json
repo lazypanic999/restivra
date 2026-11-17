@@ -1,0 +1,15 @@
+{
+  "original_summary": "summary.json",
+  "raw_harness_failure": "Expected exactly one real scheduled job",
+  "harness_cause": "Invoke-RestMethod JSON array was filtered before explicit enumeration",
+  "elapsed_minutes": 25.01,
+  "iterations": 30,
+  "runtime_assertions": 48,
+  "scheduled_runs": 1,
+  "scheduled_job_id": "e019bdc9b8cd3b0b1d8bb41fdb0b87c5",
+  "scheduled_status": "passed",
+  "scheduled_cleanup": "passed",
+  "verified_assertions": 49,
+  "corrected_acceptance_passed": true,
+  "verified_at": "2026-11-17T23:36:04.3581983Z"
+}

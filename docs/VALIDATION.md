@@ -1,5 +1,10 @@
 # MVP validation — 2026-11-17
 
+Latest assessment: [2026-11-18 pilot readiness review](PILOT-READINESS.md).
+The longer desktop run found an unresolved Docker delay after 97.4 minutes;
+unattended acceptance remains open. Earlier passing checks below are individual
+engineering results, not a claim that the desktop long-duration run passed.
+
 Additional validation: [PostgreSQL 17.12 relational acceptance run](POSTGRES-ACCEPTANCE.md) with 135,500 synthetic rows, source-data loss and eight expected outcomes; [English/Turkish interface and design review](DESIGN-REVIEW.md).
 
 ## Completed locally

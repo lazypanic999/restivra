@@ -26,7 +26,7 @@ The interface defaults to **English**. Select **Türkçe** to switch; the prefer
 - Access-token sign-in with eight-hour HttpOnly sessions on fresh installations.
 - Readiness healthcheck, prerequisite diagnostics and metadata backup scripts.
 
-This is an early MVP. A passing run establishes a logical restore and your selected checks, not complete application recovery, original permissions, PITR or backup freshness. Real customer pilots and payment validation remain to be done.
+This is an early MVP for supervised developer pilots. Unattended stability remains open after a long-duration Docker delay; see the [readiness evidence](docs/PILOT-READINESS.md). A passing run establishes a logical restore and your selected checks, not complete application recovery, original permissions, PITR or backup freshness. Real customer pilots and payment validation remain to be done.
 
 ## Quick start
 

@@ -20,6 +20,8 @@ Linux'ta kurulum betiği `sh scripts/setup.sh`. Panel: **[http://127.0.0.1:7474]
 
 Yeni kurulumda özel `.env` dosyasındaki `RESTIVRA_AUTH_TOKEN` ile giriş yap. Mevcut `.env` değiştirilmez; eski kurulumda anahtar yoksa oturum açma kapalı kalır. İlk gerçek kullanıcı için [pilot işletim rehberi](docs/PILOT-RUNBOOK.md) ve [hazırlık incelemesi](docs/PILOT-READINESS.md).
 
+Teslim durumu: geliştiricinin gözetiminde manuel pilot. Uzun denemede 97. dakikada Docker işlemi takılıp çalışma güvenli biçimde durdu; kesintisiz iki saatlik kabul tamamlanmadı. Kendi bilgisayarında zamanlamaya güvenmeden önce bu kararlılık konusu doğrulanmalı. Bilgisayar/Docker kapalıyken test çalışmaz.
+
 ## İlk proje
 
 1. PostgreSQL 17 üzerinde `pg_dump` 17 ile `-Fc` formatında alınmış tamamlanmış yedeği `backups/` klasörüne koy.

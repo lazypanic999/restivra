@@ -47,10 +47,12 @@ the next product milestone. Public hosted SaaS readiness is a separate project.
 
 ## Release evidence
 
-Long-duration isolated Compose testing and final Linux CI results are recorded
-here once complete. The soak uses only synthetic commerce data, its own metadata
-and volumes, and a separate loopback port; it does not alter the existing local
-installation's archive/history volumes.
+The checks use synthetic commerce data, isolated metadata/volumes and a separate
+loopback port. Existing local archive/history volumes are preserved. Linux CI
+passed for the initial hardening and startup-gate commits. Windows integration,
+Linux race checks, npm audit and source/packaged-binary Go vulnerability scans
+also passed. The recovery-phase results below preserve the original test output
+and distinguish product failures from a test-harness false negative.
 
 An early candidate's soak stopped after 14.04 minutes and 26 asserted outcomes:
 an unplanned interrupted restore coincided with image extraction/compilation and
@@ -62,8 +64,61 @@ an explicit eight-second database pause during an active verification. Loss of
 the advisory-lock session continues to stop the worker rather than allowing
 concurrent restore ownership.
 
+The longer candidate then ran for **97.4 minutes**, asserting **169 expected
+outcomes** (120 passed, 36 intentionally failed, 11 cancelled, two intentionally
+interrupted). Its next routine restore unexpectedly failed during database
+startup: the run lasted 90 seconds, cleanup could not be confirmed within its
+budget, and the worker stopped before taking another job. Startup reconciliation
+subsequently recovered; no restore container remained when inspected. This is a
+**failed long-duration acceptance run**, not a clean two-hour soak.
+
+A 25.7-second control-database checkpoint overlapped the incident. The exact
+cause of the host/Docker delay is unresolved; available evidence does not prove
+a sleep event or a database-restore defect. The incident report and resource
+samples are preserved with the acceptance evidence.
+
+Evidence: [long-run summary](acceptance/pilot-20261118/summary.json),
+[unexpected failure](acceptance/pilot-20261118/unexpected-failure.json),
+[individual asserted runs](acceptance/pilot-20261118/runs.ndjson),
+[sampled resources](acceptance/pilot-20261118/resource-samples.ndjson),
+[readiness during a stall](acceptance/pilot-20261118/readiness-stall.json), and
+[135,500-row relational acceptance](acceptance/pilot-20261118/relational-acceptance.json).
+
+The 97 controller-resource observations sampled API usage at 8.28–10.76 MiB,
+worker usage at 3.77–15.95 MiB, and metadata PostgreSQL usage at 29.84–38.16 MiB.
+These exclude the temporary restore database and do not establish the cause of
+the Docker delay or prove absence of memory leaks.
+
+Inspection identified a separate cleanup bug: removal and absence confirmation
+shared the same context, so a timed-out removal left no time to confirm whether
+Docker had actually removed the container. Commit `633d55e` gives confirmation
+its own bounded context. A regression test simulates a removal deadline both
+with the container absent and still present. Unknown cleanup remains a stop
+condition. This corrects confirmation behavior; it does not establish the cause
+of the earlier Docker stall. A 25-minute recovery-phase run follows this fix.
+
+That phase completed **25.01 minutes / 30 iterations**, with **48 runtime
+assertions** at their expected outcomes (34 passed, nine intentionally failed,
+three cancelled, two intentionally interrupted). Its final scheduler assertion
+initially failed because PowerShell passed Invoke-RestMethod's JSON array to
+Where-Object as a single object. This was reproduced: direct filtering returned
+zero, while explicitly assigning/enumerating the same response returned one.
+The API and PostgreSQL independently confirmed the scheduled job ran exactly
+once, passed and cleaned up. The harness is corrected; the raw failed summary
+is retained alongside the [verified 49-assertion summary](acceptance/pilot-20261118/recovery/verified-summary.json).
+This shorter successful recovery phase is not a clean two-hour acceptance run.
+
+The updated local installation passed another real restore/data-check/cleanup
+smoke test. Final isolated-pilot inspection found zero active jobs, restore
+containers or private snapshot entries. Test containers were stopped; existing
+local data volumes were preserved. See [final cleanup evidence](acceptance/pilot-20261118/final-cleanup.json).
+Linux CI passed runtime commit `633d55e`, including integration tests and the
+vulnerability scan; the packaged Linux binary was independently scanned too.
+
 ## Remaining before wider availability
 
+- Investigate/reproduce the long-duration Docker delay and complete a clean
+  long-duration run on the pilot host before relying on unattended schedules.
 - Have an external operator complete a seven-day pilot using their real backup
   producer, actual database size and extensions, host and alert receiver.
 - Verify the actual receiver's webhook payload/adapter and delivery. Local tests
@@ -76,8 +131,8 @@ concurrent restore ownership.
 - Larger archives, PostgreSQL versions other than 17, extra extensions, PITR and
   application-level recovery remain outside the supported tested scope.
 
-Conclusion is intentionally scoped: completion of engineering checks supports
-an assisted technical pilot; it does not establish production SLA or recovery
-guarantees. See [earlier relational acceptance](POSTGRES-ACCEPTANCE.md) for the
+Readiness: offer an **assisted, manually supervised developer pilot**. Unattended
+reliability has not passed long-duration acceptance. See
+[earlier relational acceptance](POSTGRES-ACCEPTANCE.md) for the
 135,500-row source-loss/restore exercise and [build security](BUILD-SECURITY.md)
 for Vite removal.

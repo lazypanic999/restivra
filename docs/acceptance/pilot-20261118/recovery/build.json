@@ -1,0 +1,8 @@
+{
+  "source_commit": "633d55e4bcc02bd2b2a1b0223d88cd90a24edde4",
+  "compiler": "go1.27.4",
+  "app_image": "sha256:63a53d59c262b55f9b3e338f0ad757c5affcf72ee1cc5c8bd3b3796e9b601d8c",
+  "recorded_at": "2026-11-17T23:10:03.1857154Z",
+  "linux_binary_sha256": "285fcc30d2d07d70d510f86e2cc8e285118e961f2091f572bf905fb84c3c2c7c",
+  "packaged_binary_vulnerability_scan": "No known vulnerabilities found"
+}

@@ -1,0 +1,223 @@
+{
+  "source": {
+    "customers": 10000,
+    "products": 500,
+    "orders": 25000,
+    "order_items": 100000,
+    "revenue": 46337500.0,
+    "content_hash": "fbd89235fba940ddb5b3c4f63e9bf230",
+    "version": "PostgreSQL 17.12 (Debian 17.12-1.pgdg12+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 12.2.0-14+deb12u1) 12.2.0, 64-bit"
+  },
+  "source_orders_after_data_loss": 0,
+  "archive_bytes": 530663,
+  "archive_sha256": "74314d1cffb38c0d74f8ce8a633482aa5b59131bbf63c498006ee2e88db08b7d",
+  "scenarios": [
+    {
+      "scenario": "01-relational-restore",
+      "job_id": "22d8f03f513ea55e6a29fbdd8f621b70",
+      "status": "passed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "10,000 customers",
+          "status": "passed"
+        },
+        {
+          "name": "500 products",
+          "status": "passed"
+        },
+        {
+          "name": "25,000 orders",
+          "status": "passed"
+        },
+        {
+          "name": "100,000 order items",
+          "status": "passed"
+        },
+        {
+          "name": "Foreign keys restored",
+          "status": "passed"
+        },
+        {
+          "name": "Revenue view matches source",
+          "status": "passed"
+        },
+        {
+          "name": "Function restored",
+          "status": "passed"
+        },
+        {
+          "name": "Identity sequence restored",
+          "status": "passed"
+        },
+        {
+          "name": "Indexes restored",
+          "status": "passed"
+        },
+        {
+          "name": "JSONB data restored",
+          "status": "passed"
+        },
+        {
+          "name": "Data fingerprint matches source",
+          "status": "passed"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 5271,
+      "sha256": "74314d1cffb38c0d74f8ce8a633482aa5b59131bbf63c498006ee2e88db08b7d"
+    },
+    {
+      "scenario": "02-source-empty-backup-restores",
+      "job_id": "2677560fcd86b20a62a0deb8029ee431",
+      "status": "passed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "10,000 customers",
+          "status": "passed"
+        },
+        {
+          "name": "500 products",
+          "status": "passed"
+        },
+        {
+          "name": "25,000 orders",
+          "status": "passed"
+        },
+        {
+          "name": "100,000 order items",
+          "status": "passed"
+        },
+        {
+          "name": "Foreign keys restored",
+          "status": "passed"
+        },
+        {
+          "name": "Revenue view matches source",
+          "status": "passed"
+        },
+        {
+          "name": "Function restored",
+          "status": "passed"
+        },
+        {
+          "name": "Identity sequence restored",
+          "status": "passed"
+        },
+        {
+          "name": "Indexes restored",
+          "status": "passed"
+        },
+        {
+          "name": "JSONB data restored",
+          "status": "passed"
+        },
+        {
+          "name": "Data fingerprint matches source",
+          "status": "passed"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 4552,
+      "sha256": "74314d1cffb38c0d74f8ce8a633482aa5b59131bbf63c498006ee2e88db08b7d"
+    },
+    {
+      "scenario": "03-false-business-check",
+      "job_id": "2fd6fb69fd018cf0bd8f3d3837c8319e",
+      "status": "failed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "Wrong count",
+          "status": "failed",
+          "error_code": "check_false"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 3630,
+      "sha256": "74314d1cffb38c0d74f8ce8a633482aa5b59131bbf63c498006ee2e88db08b7d"
+    },
+    {
+      "scenario": "04-query-error",
+      "job_id": "189ee6b285406586bfdd270e638a7c92",
+      "status": "failed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "Missing table",
+          "status": "error",
+          "error": "query failed or exceeded its time limit",
+          "error_code": "object_missing"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 2889,
+      "sha256": "74314d1cffb38c0d74f8ce8a633482aa5b59131bbf63c498006ee2e88db08b7d"
+    },
+    {
+      "scenario": "05-write-blocked",
+      "job_id": "ca4aa8c0493f83fe6d4040669206568a",
+      "status": "failed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "Write attempt",
+          "status": "error",
+          "error": "query failed or exceeded its time limit",
+          "error_code": "read_only_violation"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 2695,
+      "sha256": "74314d1cffb38c0d74f8ce8a633482aa5b59131bbf63c498006ee2e88db08b7d"
+    },
+    {
+      "scenario": "06-query-timeout",
+      "job_id": "a218c2fe186c7aa97f5759076b017b5b",
+      "status": "failed",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "Slow query",
+          "status": "error",
+          "error": "query failed or exceeded its time limit",
+          "error_code": "query_timeout"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 12673,
+      "sha256": "74314d1cffb38c0d74f8ce8a633482aa5b59131bbf63c498006ee2e88db08b7d"
+    },
+    {
+      "scenario": "07-truncated-archive",
+      "job_id": "51866a8aaa02550090cfe9fd8172a278",
+      "status": "failed",
+      "restore": "failed",
+      "checks": [],
+      "cleanup": "passed",
+      "duration_ms": 1839,
+      "sha256": "526c7d2cdb656521a53bb830929542d7590c1e8893659d94a44253eb99ddf56c"
+    },
+    {
+      "scenario": "08-cancel-running-query",
+      "job_id": "e0cdfca1e40d089c70f9525df02a97ad",
+      "status": "cancelled",
+      "restore": "passed",
+      "checks": [
+        {
+          "name": "Cancelable query",
+          "status": "error",
+          "error": "query failed or exceeded its time limit",
+          "error_code": "query_error"
+        }
+      ],
+      "cleanup": "passed",
+      "duration_ms": 4230,
+      "sha256": "74314d1cffb38c0d74f8ce8a633482aa5b59131bbf63c498006ee2e88db08b7d"
+    }
+  ],
+  "synthetic_data": true,
+  "mock_database": false,
+  "created_at": "2026-11-17T21:33:35.9751372Z"
+}

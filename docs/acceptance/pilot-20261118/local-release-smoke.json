@@ -1,0 +1,58 @@
+{
+  "id": "7f13a8ad0a8d148f7d51f676d39d0d43",
+  "project_id": "d98de38a5af71c1741c99c80f0816d7a",
+  "project_name": "Demo · Release smoke 20261118",
+  "backup_pattern": "demo.dump",
+  "config": {
+    "timeout_seconds": 180,
+    "max_backup_bytes": 268435456,
+    "memory_mb": 1536,
+    "data_mb": 512,
+    "checks": [
+      {
+        "name": "Two synthetic customers",
+        "sql": "SELECT count(*) = 2 FROM public.customers"
+      }
+    ]
+  },
+  "status": "passed",
+  "trigger": "manual",
+  "queued_at": "2026-11-17T23:37:12.58848Z",
+  "started_at": "2026-11-17T23:37:12.96704Z",
+  "finished_at": "2026-11-17T23:37:15.363598Z",
+  "heartbeat_at": "2026-11-17T23:37:14.97307Z",
+  "cancel_requested": false,
+  "report": {
+    "schema_version": 1,
+    "run_id": "7f13a8ad0a8d148f7d51f676d39d0d43",
+    "status": "passed",
+    "stage": "complete",
+    "started_at": "2026-11-17T23:37:12.979249432Z",
+    "finished_at": "2026-11-17T23:37:15.361074604Z",
+    "duration_ms": 2381,
+    "image": "postgres:17-bookworm",
+    "image_id": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+    "backup": {
+      "name": "demo.dump",
+      "bytes": 1911,
+      "modified_at": "2026-11-17T16:47:29Z",
+      "sha256": "ea490c5bec0d9c7d1c987bc480d7a4f35054b6c570f93bfb93e256091f0e6d26",
+      "source_version": "17.12",
+      "dump_version": "17.12"
+    },
+    "restore_status": "passed",
+    "checks": [
+      {
+        "name": "Two synthetic customers",
+        "status": "passed"
+      }
+    ],
+    "cleanup_status": "passed",
+    "warnings": [
+      "This verifies a logical restore and selected checks, not full application recovery, ownership, grants or point-in-time recovery.",
+      "File modification time is not a verified backup creation time. Compare SHA-256 values across runs to detect unchanged backups."
+    ]
+  },
+  "notification_status": "skipped",
+  "notification_attempts": 0
+}

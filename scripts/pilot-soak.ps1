@@ -105,7 +105,10 @@ try {
         $remaining=($deadline-[DateTime]::UtcNow).TotalSeconds
         if($remaining -gt 0){Start-Sleep -Seconds ([Math]::Min(45,[Math]::Ceiling($remaining)))}
     }while([DateTime]::UtcNow -lt $deadline)
-    $scheduled=@(API "/jobs?project_id=$($schedule.id)"|Where-Object trigger -eq 'schedule')
+    # Invoke-RestMethod can emit a JSON array as one pipeline object. Assign
+    # first so Where-Object examines jobs rather than the array wrapper.
+    $projectJobs=API "/jobs?project_id=$($schedule.id)"
+    $scheduled=@($projectJobs|Where-Object trigger -eq 'schedule')
     if($Minutes -ge 3 -and $scheduled.Count -ne 1){throw 'Expected exactly one real scheduled job'}
     foreach($job in $scheduled){Assert-Job (Wait-Job $job.id) 'passed' 'wall_clock_schedule'}
 }catch{$failure=$_.Exception.Message;throw}

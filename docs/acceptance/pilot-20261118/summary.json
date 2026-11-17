@@ -1,0 +1,26 @@
+{
+  "started_at": "2026-11-17T21:26:40.7966030Z",
+  "finished_at": "2026-11-17T23:04:04.5802349Z",
+  "elapsed_minutes": 97.4,
+  "iterations": 116,
+  "runs": 169,
+  "failure": "repeat_restore expected passed; got failed",
+  "outcomes": [
+    {
+      "count": 11,
+      "status": "cancelled"
+    },
+    {
+      "count": 36,
+      "status": "failed"
+    },
+    {
+      "count": 2,
+      "status": "interrupted"
+    },
+    {
+      "count": 120,
+      "status": "passed"
+    }
+  ]
+}

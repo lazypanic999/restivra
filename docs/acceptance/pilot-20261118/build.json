@@ -1,0 +1,8 @@
+{
+  "source_commit": "955af5d1cc7b3aa8a0bfc1da138c54e6222f6f79",
+  "app_image": "sha256:10571ee3b42538b1f6a4139f6e13977b91f2621dddf0f04b32b0d8309d64429f",
+  "restore_image": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+  "linux_binary_sha256": "cadc9a6c879ce95ebbd0ce21e4d2670f3859ac27d12f05596faaae916a6218b3",
+  "compiler": "go1.27.4",
+  "recorded_at": "2026-11-17T21:32:01.0684640Z"
+}
