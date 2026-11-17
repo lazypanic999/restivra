@@ -4,7 +4,7 @@ Additional validation: [PostgreSQL 17.12 relational acceptance run](POSTGRES-ACC
 
 ## Completed locally
 
-- Frontend production build with Vite; runtime dependency audit is clean. The current development-chain advisory is documented in the design review.
+- Frontend production build with direct esbuild; the full npm dependency audit is clean, including development tools. Vite/picomatch removal and the development-asset boundary are documented in [BUILD-SECURITY.md](BUILD-SECURITY.md).
 - `go vet ./...` passed.
 - `RESTIVRA_INTEGRATION=1 go test -p 1 ./... -count=1 -timeout=10m` passed against real Docker/PostgreSQL 17 containers.
 - Multi-stage Docker build and Compose startup completed; API, application database and worker are running.

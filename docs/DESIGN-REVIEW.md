@@ -39,4 +39,4 @@ Browser checks include initial English, Turkish persistence, localized forms/que
 
 ## Dependency note
 
-`npm audit --omit=dev` reports zero runtime dependency vulnerabilities. The Vite development chain reports four high findings rooted in [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf); the advisory lists no patched release. No forced downgrade or audit suppression was applied. Production runs Go and static assets, not Vite; application backup patterns are handled in Go. Build trusted source and keep dev servers on loopback pending an upstream fix.
+The initially reported Vite/picomatch advisory has been resolved by removing Vite and its glob dependency chain entirely. The frontend now bundles directly with esbuild. The full `npm audit` (including development dependencies) reports zero known vulnerabilities, and CI enforces that check. No forced downgrade or audit suppression was used. See [BUILD-SECURITY.md](BUILD-SECURITY.md) for the migration and development workflow.

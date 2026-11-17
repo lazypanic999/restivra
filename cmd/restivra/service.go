@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/lazypanic999/restivra/internal/app"
+	"github.com/lazypanic999/restivra/internal/webui"
 )
 
 func env(key, fallback string) string {
@@ -24,6 +25,7 @@ func env(key, fallback string) string {
 func service(ctx context.Context, mode string, args []string) int {
 	flags := flag.NewFlagSet(mode, flag.ContinueOnError)
 	listen := flags.String("listen", env("RESTIVRA_LISTEN", "127.0.0.1:7474"), "HTTP listen address")
+	assetsDirectory := flags.String("assets-dir", "", "optional compiled frontend directory for local development")
 	if flags.Parse(args) != nil || flags.NArg() != 0 {
 		return 2
 	}
@@ -70,6 +72,15 @@ func service(ctx context.Context, mode string, args []string) int {
 		hosts[i] = strings.TrimSpace(hosts[i])
 	}
 	api := app.API{Store: store, AllowedHosts: hosts, Instance: instance}
+	if *assetsDirectory != "" {
+		handler, closeAssets, err := webui.DirectoryHandler(*assetsDirectory)
+		if err != nil {
+			log.Print("could not open frontend asset directory")
+			return 2
+		}
+		defer closeAssets()
+		api.Assets = handler
+	}
 	server := &http.Server{Addr: *listen, Handler: api.Handler(), ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 30 * time.Second, IdleTimeout: 60 * time.Second, MaxHeaderBytes: 16 << 10}
 	go func() {
 		<-ctx.Done()

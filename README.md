@@ -124,7 +124,11 @@ go run ./cmd/restivra verify --backup /path/customer.dump --config config.exampl
 
 Windows binary output: `work/restivra.exe`. Reports must not already exist. Without `--config`, only restore/connection checks run. CLI exit codes: `0` passed, `1` verification/runtime failure, `2` invalid command/config. Use a compiled binary for automation; `go run` wraps failure exits.
 
-To run services directly, set `RESTIVRA_DATABASE_URL`, then run `restivra serve` and `restivra worker` separately. Only the worker needs Docker/backup access. Frontend assets are embedded at Go build time; rebuild Go after frontend changes. For Vite development on 5173, add that exact local host/port to the API allowlist.
+To run services directly, set `RESTIVRA_DATABASE_URL`, then run `restivra serve` and `restivra worker` separately. Only the worker needs Docker/backup access. Production assets are bundled with esbuild and embedded at Go build time; rebuild Go after production frontend changes.
+
+For local frontend development, run `npm --prefix web run dev` in one terminal, then `go run ./cmd/restivra serve --assets-dir internal/webui/dist` in another (with the database environment configured). The first command watches imported JavaScript/CSS/fonts; it opens no HTTP port. The Go server reads compiled files from disk at the existing `127.0.0.1:7474` origin, keeping the host/origin/CSRF protections. Refresh the browser after a rebuild; there is no HMR. Restart the watcher after editing the HTML template or public files. Without `--assets-dir`, the server always uses embedded production assets.
+
+`npm audit --audit-level=low` checks **all** frontend dependencies, including development tools, and is enforced in CI. See [the build-security migration](docs/BUILD-SECURITY.md).
 
 ```sh
 go test ./...

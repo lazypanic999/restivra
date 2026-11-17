@@ -18,6 +18,7 @@ type API struct {
 	AllowedHosts []string
 	Instance     string
 	CSRFToken    string
+	Assets       http.Handler
 }
 
 func (a *API) Handler() http.Handler {
@@ -95,7 +96,11 @@ func (a *API) Handler() http.Handler {
 		jsonResponse(w, 202, map[string]bool{"cancel_requested": true})
 	})
 	mux.Handle("/api/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { jsonError(w, 404, "uç nokta bulunamadı") }))
-	mux.Handle("/", webui.Handler())
+	assets := a.Assets
+	if assets == nil {
+		assets = webui.Handler()
+	}
+	mux.Handle("/", assets)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("X-Frame-Options", "DENY")
