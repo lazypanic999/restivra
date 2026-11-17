@@ -3,6 +3,8 @@ package app
 import (
 	"context"
 	"encoding/json"
+	"errors"
+	"io"
 	"net"
 	"os"
 	"path/filepath"
@@ -117,6 +119,13 @@ func TestIntegrationApp(t *testing.T) {
 	if _, err = d.Run(ctx, nil, "create", "--name", "restivra-"+old.ID, "--label", "app=restivra", "--label", "restivra.run="+old.ID, "--label", "restivra.instance="+name, "--network", "none", verify.Image); err != nil {
 		t.Fatal("could not create abandoned restore fixture")
 	}
+	// Another database may use the same human-readable instance name. Its
+	// container must survive this worker's startup recovery.
+	foreignID := NewID()
+	if _, err = d.Run(ctx, nil, "create", "--name", "restivra-"+foreignID, "--label", "app=restivra", "--label", "restivra.run="+foreignID, "--label", "restivra.instance="+name, "--label", "restivra.installation="+NewID(), "--network", "none", verify.Image); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _, _ = d.Run(context.Background(), nil, "rm", "--force", "--volumes", "restivra-"+foreignID) }()
 	workerCtx, stopWorker := context.WithCancel(ctx)
 	done := make(chan error, 1)
 	worker := Worker{Store: store, BackupRoot: rootDir, WorkDir: work, Instance: name, RetentionDays: 30}
@@ -150,6 +159,9 @@ func TestIntegrationApp(t *testing.T) {
 		return Job{}
 	}
 	waitJob(old.ID, "interrupted")
+	if _, err = d.Run(ctx, nil, "inspect", "restivra-"+foreignID); err != nil {
+		t.Fatal("recovery deleted another installation's container")
+	}
 	leftovers, err := d.Run(ctx, nil, "ps", "--all", "--quiet", "--filter", "label=restivra.run="+old.ID)
 	if err != nil || strings.TrimSpace(leftovers) != "" {
 		t.Fatal("recovery left abandoned restore container")
@@ -257,5 +269,79 @@ func TestIntegrationApp(t *testing.T) {
 	if err != nil || notified.Status != "interrupted" || notified.NotificationStatus != "failed" || notified.NotificationAttempts != 3 {
 		t.Fatalf("notification retry state wrong: %+v %v", notified, err)
 	}
+	// A failed removal is a stop condition, never permission to claim the next
+	// queued job. Restart must reconcile the failed job's labelled container.
+	p.ScheduleTime = ""
+	p.Config.Checks = []verify.Check{{Name: "rows", SQL: "SELECT count(*)=2 FROM public.customers"}}
+	if _, err = store.SaveProject(ctx, p, false); err != nil {
+		t.Fatal(err)
+	}
+	blocked, err := store.Enqueue(ctx, p.ID, "manual")
+	if err != nil {
+		t.Fatal(err)
+	}
+	nextProject := p
+	nextProject.ID = ""
+	nextProject.Name = "After cleanup recovery"
+	nextProject, err = store.SaveProject(ctx, nextProject, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	next, err := store.Enqueue(ctx, nextProject.ID, "manual")
+	if err != nil {
+		t.Fatal(err)
+	}
+	broken := Worker{Store: store, BackupRoot: rootDir, WorkDir: work, Instance: name, Docker: rejectCleanup{d}}
+	if err = broken.Run(ctx); !errors.Is(err, ErrCleanupPending) {
+		t.Fatalf("worker did not stop on cleanup failure: %v", err)
+	}
+	failedJob, err := store.Job(ctx, blocked.ID)
+	if err != nil || failedJob.Status != "failed" || failedJob.Report == nil || failedJob.Report.ErrorCode != "cleanup_failed" {
+		t.Fatalf("cleanup failure not durable: %+v %v", failedJob, err)
+	}
+	nextJob, err := store.Job(ctx, next.ID)
+	if err != nil || nextJob.Status != "queued" {
+		t.Fatal("worker claimed another job after failed cleanup")
+	}
+	restartCtx, stopRestart := context.WithCancel(ctx)
+	restarted := Worker{Store: store, BackupRoot: rootDir, WorkDir: work, Instance: name}
+	restartedDone := make(chan error, 1)
+	go func() { restartedDone <- restarted.Run(restartCtx) }()
+	defer func() {
+		stopRestart()
+		if err := <-restartedDone; err != nil {
+			t.Error(err)
+		}
+	}()
+	waitJob(next.ID, "passed")
+	leftovers, err = d.Run(ctx, nil, "ps", "--all", "--quiet", "--filter", "label=restivra.run="+blocked.ID)
+	if err != nil || strings.TrimSpace(leftovers) != "" {
+		t.Fatal("restart did not reconcile failed cleanup")
+	}
+	listed, err := store.Projects(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	foundFailed, foundPassed := false, false
+	for _, project := range listed {
+		if project.ID == p.ID {
+			foundFailed = project.LastJob != nil && project.LastJob.ID == blocked.ID && project.LastJob.Report != nil && project.LastJob.Report.ErrorCode == "cleanup_failed"
+		}
+		if project.ID == nextProject.ID {
+			foundPassed = project.LastJob != nil && project.LastJob.ID == next.ID && project.LastJob.Status == "passed" && project.LastJob.ProjectName == "After cleanup recovery"
+		}
+	}
+	if !foundFailed || !foundPassed {
+		t.Fatal("project listing lost latest immutable job/report details")
+	}
+}
+
+type rejectCleanup struct{ verify.Commander }
+
+func (d rejectCleanup) Run(ctx context.Context, input io.Reader, args ...string) (string, error) {
+	if len(args) > 0 && args[0] == "rm" {
+		return "", errors.New("injected Docker removal failure")
+	}
+	return d.Commander.Run(ctx, input, args...)
 }
 func activeStatus(status string) bool { return status == "queued" || status == "running" }

@@ -23,6 +23,7 @@ jobs:
       - run: npm ci && npm audit --audit-level=low && npm test && npm run build
         working-directory: web
       - run: go vet ./...
+      - run: go run golang.org/x/vuln/cmd/govulncheck@v1.10.0 ./...
       - run: docker pull postgres:17-bookworm
       - run: go test -p 1 ./... -count=1 -timeout=10m
         env:

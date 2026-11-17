@@ -24,6 +24,10 @@ func run() int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	switch os.Args[1] {
+	case "doctor":
+		return doctor(ctx, os.Args[2:])
+	case "healthcheck":
+		return healthcheck(ctx, os.Args[2:])
 	case "serve", "worker":
 		return service(ctx, os.Args[1], os.Args[2:])
 	case "verify":
@@ -115,5 +119,5 @@ func run() int {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "Restivra — PostgreSQL 17 restore verification\n\n  restivra serve [--listen 127.0.0.1:7474]\n  restivra worker\n  restivra verify --backup file.dump [--config config.json] [--report work/report.json]\n  restivra cleanup --run-id <id>\n\nServices require RESTIVRA_DATABASE_URL. See README for installation.\nPrerequisite: Docker Linux engine; docker pull "+verify.Image+"\nExit codes: 0 passed, 1 verification/runtime failure, 2 invalid command/config.")
+	fmt.Fprintln(os.Stderr, "Restivra — PostgreSQL 17 restore verification\n\n  restivra serve [--listen 127.0.0.1:7474]\n  restivra worker\n  restivra doctor [--role worker]\n  restivra healthcheck [--url http://127.0.0.1:7474/healthz]\n  restivra verify --backup file.dump [--config config.json] [--report work/report.json]\n  restivra cleanup --run-id <id>\n\nServices require RESTIVRA_DATABASE_URL. See README for installation.\nPrerequisite: Docker Linux engine; docker pull "+verify.Image+"\nExit codes: 0 passed, 1 verification/runtime failure, 2 invalid command/config.")
 }

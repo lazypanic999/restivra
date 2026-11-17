@@ -11,14 +11,16 @@
 - [x] Failure webhook with persisted delivery retries.
 - [x] Docker Compose; Docker socket only in worker.
 - [x] Unit/security tests, real PostgreSQL integration tests and CI.
+- [x] Single-operator access-token sessions, worker diagnostics and API readiness.
+- [x] Database-scoped resource ownership, fail-stop cleanup and metadata exports.
 
 ## Pilot acceptance — requires real users
 
-- [ ] One agency, two authorized real projects, one week of scheduled tests.
+- [ ] One developer, their own computer, two authorized projects and one week of scheduled tests.
 - [ ] Validate extensions, dump versions and database sizing.
 - [ ] Observe installation, diagnosis and maintenance needs.
 - [ ] Offer a paid pilot and validate willingness to pay.
 
 ## Later
 
-S3, PDF, extra PostgreSQL versions/custom extension images, pagination, authenticated remote access, roles and billing. Hosted multi-tenancy and hostile-dump execution require a separate security design. Other engines and PITR require separate restore strategies.
+S3, PDF, extra PostgreSQL versions/custom extension images, pagination, public remote deployment, roles and billing. Hosted multi-tenancy and hostile-dump execution require a separate security design. Other engines and PITR require separate restore strategies.

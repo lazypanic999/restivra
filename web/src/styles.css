@@ -15,6 +15,10 @@
   font-size: 14px;
   line-height: 1.5;
 }
+.login-workspace { max-width: 440px; margin: 72px auto; padding: 0 24px; }
+.login-workspace > p { color: var(--muted); }
+.login-workspace form { margin-top: 28px; }
+.login-workspace .button { margin-top: 12px; }
 * {
   box-sizing: border-box;
 }

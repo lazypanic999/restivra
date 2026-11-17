@@ -6,7 +6,7 @@ Mevcut PostgreSQL 17 yedeğini geçici bir ortamda geri yükler, SQL kontrolleri
 
 ## Kurulum
 
-Docker'ın Linux konteyner motoru açık olmalı. PowerShell 7:
+Docker'ın Linux konteyner motoru açık olmalı. PowerShell 7.2+:
 
 ```powershell
 git clone https://github.com/lazypanic999/restivra.git
@@ -18,6 +18,8 @@ docker compose up --build -d
 
 Linux'ta kurulum betiği `sh scripts/setup.sh`. Panel: **[http://127.0.0.1:7474](http://127.0.0.1:7474)**.
 
+Yeni kurulumda özel `.env` dosyasındaki `RESTIVRA_AUTH_TOKEN` ile giriş yap. Mevcut `.env` değiştirilmez; eski kurulumda anahtar yoksa oturum açma kapalı kalır. İlk gerçek kullanıcı için [pilot işletim rehberi](docs/PILOT-RUNBOOK.md) ve [hazırlık incelemesi](docs/PILOT-READINESS.md).
+
 ## İlk proje
 
 1. PostgreSQL 17 üzerinde `pg_dump` 17 ile `-Fc` formatında alınmış tamamlanmış yedeği `backups/` klasörüne koy.
@@ -28,7 +30,7 @@ Linux'ta kurulum betiği `sh scripts/setup.sh`. Panel: **[http://127.0.0.1:7474]
 
 Birden fazla eşleşmede değiştirilme zamanı en yeni dosya seçilir. Yedeği önce başka uzantıya yazıp tamamlandığında seçilen ada atomik taşı. Dosya değiştirilme zamanı, yedeğin alınma zamanının kesin kanıtı değildir.
 
-Go 1.25+ kuruluysa `./scripts/seed-demo.ps1` iki hayali müşteri projesi oluşturur. **Demo** etiketli bu projelerde gerçek geri yükleme yapılır; biri geçer, diğeri bilerek yanlış kontrol nedeniyle başarısız olur. Zamanlamaları kapalıdır.
+Go 1.27.4+ kuruluysa `./scripts/seed-demo.ps1` iki hayali müşteri projesi oluşturur. **Demo** etiketli bu projelerde gerçek geri yükleme yapılır; biri geçer, diğeri bilerek yanlış kontrol nedeniyle başarısız olur. Zamanlamaları kapalıdır.
 
 ## MVP'de bulunanlar
 
@@ -39,10 +41,12 @@ Go 1.25+ kuruluysa `./scripts/seed-demo.ps1` iki hayali müşteri projesi oluşt
 - SHA-256, değişmeyen yedek ve eski dosya uyarıları.
 - İsteğe bağlı başarısızlık webhook'u; en fazla üç teslim denemesi.
 - Varsayılan 30 günlük tamamlanmış çalışma geçmişi.
+- Yeni kurulumda erişim anahtarıyla giriş, sekiz saatlik HttpOnly oturum ve çıkış.
+- Kurulum tanısı, API sağlık kontrolü ve Restivra metaverisini yedekleme betikleri.
 
 ## Sınırlar
 
-Panel yerel erişim içindir; kullanıcı girişi yoktur. Uzak sunucu için `ssh -L 7474:127.0.0.1:7474 user@server` kullan. Doğrudan internete açma.
+Panel yerel erişim içindir; yeni kurulumda ortak erişim anahtarıyla oturum açılır. Uzak sunucu için `ssh -L 7474:127.0.0.1:7474 user@server` kullan. Denenen pilot profili, kendi sunucusunda teknik kullanıcının işlettiği tek kurulumdur. Kullanıcı hesabı ve kiracı ayrımı yoktur.
 
 Yalnızca güvendiğin ve yetkili olduğun yedeklerle çalış. Dump çalıştırılabilir SQL içerebilir; konteyner düşmanca girdi için tam izolasyon değildir. Docker yetkisi yalnızca worker'dadır ve host üzerinde güçlü yetkidir.
 
@@ -58,7 +62,9 @@ docker compose restart worker
 docker compose down
 ```
 
-`down` veriyi korur; `down -v` geçmiş dahil named volume'leri siler. `RESTIVRA_INSTANCE` sabit kalmalı; aynı Docker motorundaki kurulumlarda benzersiz olmalı.
+`down` veriyi korur; `down -v` geçmiş dahil named volume'leri siler. `RESTIVRA_INSTANCE` sabit kalmalı. Geçici kaynak sahipliği ayrıca veritabanına özel kurulum kimliğiyle doğrulanır. Temizlik başarısızsa worker yeni iş almadan durur; yeniden başlarken kalan kaynakları toparlar.
+
+`docker compose exec worker restivra doctor --role worker` ön gereksinimleri kontrol eder. `docker compose exec api restivra healthcheck` API/veritabanı hazır olma kontrolüdür; worker bağlantısını ayrıca panelden izle. Proje ve rapor veritabanını yedeklemek için `./scripts/metadata-backup.ps1 -OutputPath work/metadata.dump` kullan; Linux karşılığı `sh scripts/metadata-backup.sh /private/metadata.dump`. Bu arşiv müşteri dump'larını ve `.env` dosyasını içermez.
 
 Bildirim için `.env` içindeki `RESTIVRA_WEBHOOK_URL` değerine genel JSON kabul eden açık HTTPS adresi yazıp worker'ı yeniden oluştur. Yerel/özel ağlar ve yönlendirmeler engellenir. Bildirim hatası test sonucunu değiştirmez.
 

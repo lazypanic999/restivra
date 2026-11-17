@@ -19,12 +19,20 @@ services:
     build: .
     image: restivra:local
     command: [serve, --listen, "0.0.0.0:7474"]
-    ports: ["127.0.0.1:7474:7474"]
+    ports: ["127.0.0.1:${RESTIVRA_PORT:-7474}:7474"]
     environment:
       RESTIVRA_DATABASE_URL: postgres://restivra:${POSTGRES_PASSWORD}@db:5432/restivra?sslmode=disable
       RESTIVRA_INSTANCE: ${RESTIVRA_INSTANCE:-restivra-main}
+      RESTIVRA_AUTH_TOKEN: ${RESTIVRA_AUTH_TOKEN:-}
+      RESTIVRA_ALLOWED_HOSTS: 127.0.0.1:7474,localhost:${RESTIVRA_PORT:-7474},127.0.0.1:${RESTIVRA_PORT:-7474},${RESTIVRA_ALLOWED_HOSTS:-[::1]:7474}
     depends_on:
       db: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, restivra, healthcheck]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     read_only: true
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]

@@ -1,10 +1,12 @@
+#Requires -Version 7.2
 # Real PostgreSQL / pg_dump / live API acceptance run. Synthetic data only.
 # Requires the Compose app to be running. Source and restore containers have no ports.
+param([string]$Base = 'http://127.0.0.1:7474')
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'api-session.ps1')
 $projectDir = Split-Path -Parent $PSScriptRoot
 $runSuffix = [guid]::NewGuid().ToString('N').Substring(0,8)
 $source = "restivra-commerce-source-$runSuffix"
-$base = 'http://127.0.0.1:7474'
 $evidenceDir = Join-Path $projectDir "work/acceptance-$runSuffix"
 $backupDir = Join-Path $projectDir "backups/acceptance-$runSuffix"
 New-Item -ItemType Directory -Path $evidenceDir,$backupDir -Force | Out-Null
@@ -28,7 +30,7 @@ function New-VerificationProject {
     $config.timeout_seconds = 180
     $config.checks = @($Checks)
     $body = @{name="Lab $runSuffix / $Name";backup_pattern=$Pattern;config=$config;schedule_time='';timezone='UTC'} | ConvertTo-Json -Depth 10
-    $project = Invoke-RestMethod "$base/api/projects" -Method Post -Headers $headers -ContentType 'application/json' -Body $body
+    $project = Invoke-RestMethod -WebSession $webSession "$base/api/projects" -Method Post -Headers $headers -ContentType 'application/json' -Body $body
     $createdProjects.Add($project)
     return $project
 }
@@ -36,7 +38,7 @@ function Wait-Verification {
     param([string]$JobID)
     $deadline = [DateTime]::UtcNow.AddMinutes(4)
     do {
-        $job = Invoke-RestMethod "$base/api/jobs/$JobID"
+        $job = Invoke-RestMethod -WebSession $webSession "$base/api/jobs/$JobID"
         if ($job.status -notin @('queued','running')) { return $job }
         Start-Sleep -Milliseconds 400
     } while ([DateTime]::UtcNow -lt $deadline)
@@ -45,7 +47,7 @@ function Wait-Verification {
 function Start-Verification {
     param([object]$Project)
     $body = @{project_id=$Project.id} | ConvertTo-Json
-    return Invoke-RestMethod "$base/api/jobs" -Method Post -Headers $headers -ContentType 'application/json' -Body $body
+    return Invoke-RestMethod -WebSession $webSession "$base/api/jobs" -Method Post -Headers $headers -ContentType 'application/json' -Body $body
 }
 function Assert-Verification {
     param([string]$Scenario,[object]$Job,[string]$Status,[string]$CheckStatus='')
@@ -61,9 +63,11 @@ function Assert-Verification {
 
 Push-Location $projectDir
 try {
-    $session = Invoke-RestMethod "$base/api/session"
+    $connection = New-RestivraSession -Base $base
+    $session = $connection.Session
+    $webSession = $connection.WebSession
     $headers = @{'X-CSRF-Token'=$session.csrf_token}
-    $health = Invoke-RestMethod "$base/api/health"
+    $health = Invoke-RestMethod -WebSession $webSession "$base/api/health"
     if (-not $health.worker_online) { throw 'Start the Compose worker before acceptance testing.' }
     Invoke-DockerChecked @('run','-d','--name',$source,'--network','none','--memory','768m','--cpus','1','--pids-limit','128','--env','POSTGRES_HOST_AUTH_METHOD=trust','--env','POSTGRES_DB=commerce','postgres:17-bookworm') | Out-Null
     $sourceCreated = $true
@@ -126,7 +130,7 @@ try {
     $cancelJob = Start-Verification $cancelProject
     $queryStarted = $false
     for ($attempt=0;$attempt -lt 100;$attempt++) {
-        $current = Invoke-RestMethod "$base/api/jobs/$($cancelJob.id)"
+        $current = Invoke-RestMethod -WebSession $webSession "$base/api/jobs/$($cancelJob.id)"
         if ($current.status -notin @('queued','running')) { throw 'Cancellation target finished unexpectedly.' }
         if ($current.status -eq 'running') {
             $activity = & docker exec "restivra-$($cancelJob.id)" psql -X -qAt -U postgres -d verification -c "SELECT count(*) FROM pg_stat_activity WHERE usename='restivra_verifier' AND state='active' AND query LIKE '%pg_sleep%'" 2>$null
@@ -135,7 +139,7 @@ try {
         Start-Sleep -Milliseconds 300
     }
     if (-not $queryStarted) { throw 'Could not observe the running verification query before cancellation.' }
-    Invoke-RestMethod "$base/api/jobs/$($cancelJob.id)/cancel" -Method Post -Headers $headers -ContentType 'application/json' -Body '{}' | Out-Null
+    Invoke-RestMethod -WebSession $webSession "$base/api/jobs/$($cancelJob.id)/cancel" -Method Post -Headers $headers -ContentType 'application/json' -Body '{}' | Out-Null
     Assert-Verification '08-cancel-running-query' (Wait-Verification $cancelJob.id) 'cancelled'
     $evidence = [ordered]@{source=$metrics;source_orders_after_data_loss=[int]$sourceOrders;archive_bytes=(Get-Item -LiteralPath $archive).Length;archive_sha256=(Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant();scenarios=$results;synthetic_data=$true;mock_database=$false;created_at=[DateTime]::UtcNow.ToString('o')}
     $evidence | ConvertTo-Json -Depth 20 | Set-Content -LiteralPath (Join-Path $evidenceDir 'summary.json') -Encoding utf8
@@ -150,7 +154,7 @@ finally {
     # retain their real run records and reports; no run history is deleted.
     foreach ($project in $createdProjects) {
         if ($project.name -like '*/ Commerce restore') { continue }
-        try { Invoke-RestMethod "$base/api/projects/$($project.id)" -Method Delete -Headers $headers -ContentType 'application/json' | Out-Null } catch { Write-Warning 'A lab project could not be archived.' }
+        try { Invoke-RestMethod -WebSession $webSession "$base/api/projects/$($project.id)" -Method Delete -Headers $headers -ContentType 'application/json' | Out-Null } catch { Write-Warning 'A lab project could not be archived.' }
     }
     Pop-Location
 }

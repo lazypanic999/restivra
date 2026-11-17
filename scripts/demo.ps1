@@ -1,3 +1,4 @@
+#Requires -Version 7.2
 # Creates only synthetic data, runs the real CLI, then removes the fixture container.
 $ErrorActionPreference = 'Stop'
 $projectDir = Split-Path -Parent $PSScriptRoot

@@ -75,9 +75,10 @@ func (c Config) Validate() error {
 }
 
 type CheckResult struct {
-	Name   string `json:"name"`
-	Status string `json:"status"`
-	Error  string `json:"error,omitempty"`
+	Name      string `json:"name"`
+	Status    string `json:"status"`
+	Error     string `json:"error,omitempty"`
+	ErrorCode string `json:"error_code,omitempty"`
 }
 
 type Backup struct {
@@ -104,5 +105,6 @@ type Report struct {
 	Checks        []CheckResult `json:"checks"`
 	CleanupStatus string        `json:"cleanup_status"`
 	Error         string        `json:"error,omitempty"`
+	ErrorCode     string        `json:"error_code,omitempty"`
 	Warnings      []string      `json:"warnings"`
 }

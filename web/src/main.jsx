@@ -46,8 +46,53 @@ function Empty({ title, text, children }) {
   );
 }
 
-function App() {
-  const { language, setLanguage, t, explain, formatDate } = useLanguage();
+function LanguageSwitch() {
+  const { language, setLanguage, t } = useLanguage();
+  return <label className="language-switch"><span>{t("language")}</span><select aria-label={t("language")} value={language} onChange={(e) => setLanguage(e.target.value)}><option value="en">English</option><option value="tr">Türkçe</option></select></label>;
+}
+
+// Refresh the per-process CSRF token before a mutation. Existing signed browser
+// sessions survive API restarts, while the old process's CSRF token does not.
+// Mutations are sent exactly once; ambiguous network failures are never replayed.
+async function currentCSRF() {
+  const response = await fetch("/api/auth", { cache: "no-store" });
+  if (!response.ok) throw Error("The request could not be completed.");
+  return (await response.json()).csrf_token;
+}
+
+function AuthGate() {
+  const { t } = useLanguage();
+  const [state, setState] = useState(null), [error, setError] = useState(""), [secret, setSecret] = useState(""), [busy, setBusy] = useState(false);
+  const bootstrap = useCallback(async () => {
+    try {
+      const response = await fetch("/api/auth", { cache: "no-store" });
+      if (!response.ok) throw Error();
+      setState(await response.json()); setError("");
+    } catch { setError("authUnavailable"); }
+  }, []);
+  useEffect(() => { bootstrap(); }, [bootstrap]);
+  const unauthorized = useCallback(() => { setState(null); bootstrap(); }, [bootstrap]);
+  async function login(event) {
+    event.preventDefault(); setBusy(true); setError("");
+    try {
+      const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": await currentCSRF() }, body: JSON.stringify({ token: secret }) });
+      if (!response.ok) { setError(response.status === 429 ? "authRateLimit" : response.status === 401 ? "authInvalid" : "authUnavailable"); return; }
+      setSecret(""); await bootstrap();
+    } catch { setError("authUnavailable"); } finally { setBusy(false); }
+  }
+  async function logout() {
+    try {
+      const response = await fetch("/api/auth/logout", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": await currentCSRF() }, body: "{}" });
+      if (!response.ok && response.status !== 401) throw Error();
+      setState(null); await bootstrap();
+    } catch { setError("authUnavailable"); }
+  }
+  if (state?.authenticated) return <><App onUnauthorized={unauthorized} onLogout={state.enabled ? logout : null} />{error && <div className="toast" role="alert">{t(error)}</div>}</>;
+  return <><header className="app-header"><div className="header-inner"><span className="wordmark">Restivra</span><LanguageSwitch /></div></header><main className="login-workspace"><h1>{t("signIn")}</h1><p>{t("signInDescription")}</p>{error && <p className="notice error-notice" role="alert">{t(error)}</p>}{state ? <form onSubmit={login}><label className="field">{t("accessToken")}<input type="password" name="access-token" autoComplete="current-password" required maxLength={256} value={secret} onChange={(e) => setSecret(e.target.value)} aria-describedby="token-help" /></label><p className="help-text" id="token-help">{t("accessTokenHelp")}</p><Button primary disabled={busy}>{t(busy ? "signingIn" : "signIn")}</Button></form> : <Button onClick={bootstrap}>{t(error ? "refresh" : "loading")}</Button>}</main></>;
+}
+
+function App({ onUnauthorized, onLogout }) {
+  const { language, t, explain, formatDate } = useLanguage();
   const [page, setPage] = useState("overview"),
     [projects, setProjects] = useState([]),
     [jobs, setJobs] = useState([]),
@@ -64,6 +109,7 @@ function App() {
     [updated, setUpdated] = useState(null);
   const token = useRef("");
   const api = useCallback(async (path, options = {}) => {
+    if (options.method) token.current = await currentCSRF();
     const response = await fetch(`/api${path}`, {
       ...options,
       headers: {
@@ -76,11 +122,12 @@ function App() {
         ...options.headers,
       },
     });
+    if (response.status === 401) onUnauthorized();
     const data = await response.json();
     if (!response.ok)
       throw Error(data.error || "The request could not be completed.");
     return data;
-  }, []);
+  }, [onUnauthorized]);
   const refresh = useCallback(async () => {
     try {
       const [p, j, h] = await Promise.all([
@@ -228,17 +275,8 @@ function App() {
               </button>
             ))}
           </nav>
-          <label className="language-switch">
-            <span>{t("language")}</span>
-            <select
-              aria-label={t("language")}
-              value={language}
-              onChange={(event) => setLanguage(event.target.value)}
-            >
-              <option value="en">English</option>
-              <option value="tr">Türkçe</option>
-            </select>
-          </label>
+          <LanguageSwitch />
+          {onLogout && <button className="text-button" onClick={onLogout}>{t("signOut")}</button>}
         </div>
       </header>
       <main id="records" className="workspace">
@@ -269,6 +307,7 @@ function App() {
             {t(health?.worker_online ? "workerOnline" : "workerOffline")}
           </span>
           {health && <span>{t("databaseOnline")}</span>}
+          {health && <span>{t(health.authentication_enabled ? "protectedAccess" : "localAccess")}</span>}
           <span>PostgreSQL 17</span>
           <div className="update-controls">
             {updated && (
@@ -714,6 +753,7 @@ function ProjectForm({ project, onClose, onSave, onArchive }) {
           <p className="format-note">{t("supportedFormat")}</p>
           <fieldset>
             <legend>{t("scheduling")}</legend>
+            <p className="help-text">{t("schedulingHelp")}</p>
             <label className="checkbox-label">
               <input
                 type="checkbox"
@@ -917,6 +957,7 @@ function Report({ job, duration, onClose, onCancel }) {
               ? t("reportRunning")
               : explain(job.error) || t("reportFailed")}
         </p>
+        {report?.error_code && <p className="notice">{t(`advice.${report.error_code}`)} <code>{report.error_code}</code></p>}
         <dl className="report-facts">
           <div>
             <dt>{t("started")}</dt>
@@ -956,7 +997,7 @@ function Report({ job, duration, onClose, onCancel }) {
                       <td>
                         <Status value={check.status} />
                       </td>
-                      <td>{check.error && explain(check.error)}</td>
+                      <td>{check.error_code ? t(`advice.${check.error_code}`) : check.error && explain(check.error)}</td>
                     </tr>
                   ))}
                   <tr>
@@ -1008,7 +1049,7 @@ function Report({ job, duration, onClose, onCancel }) {
               <code>{report.backup.sha256 || "—"}</code>
               {copyError && <p role="alert">{t("copyFailed")}</p>}
             </div>
-            <details className="advanced">
+            <details className="advanced" open={notices.length > 2}>
               <summary>{t("scope", { count: notices.length })}</summary>
               <ul className="warning-list">
                 {notices.map((notice, index) => (
@@ -1116,6 +1157,6 @@ function Setup() {
 
 createRoot(document.getElementById("root")).render(
   <LanguageProvider>
-    <App />
+    <AuthGate />
   </LanguageProvider>,
 );

@@ -46,7 +46,9 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS one_active_job ON jobs(project_id) WHERE status IN ('queued','running');
 CREATE INDEX IF NOT EXISTS job_history ON jobs(queued_at DESC);
+CREATE INDEX IF NOT EXISTS project_job_history ON jobs(project_id,queued_at DESC,id DESC);
 CREATE TABLE IF NOT EXISTS workers(instance text PRIMARY KEY, heartbeat_at timestamptz NOT NULL);
+CREATE TABLE IF NOT EXISTS installation(singleton boolean PRIMARY KEY DEFAULT true CHECK(singleton), id text NOT NULL UNIQUE);
 `
 
 func (s *Store) Migrate(ctx context.Context) error {
@@ -61,7 +63,19 @@ func (s *Store) Migrate(ctx context.Context) error {
 	if _, err = tx.ExecContext(ctx, schema); err != nil {
 		return err
 	}
+	if _, err = tx.ExecContext(ctx, "INSERT INTO installation(singleton,id) VALUES(true,$1) ON CONFLICT(singleton) DO NOTHING", NewID()); err != nil {
+		return err
+	}
 	return tx.Commit()
+}
+
+func (s *Store) InstallationID(ctx context.Context) (string, error) {
+	var id string
+	err := s.DB.QueryRowContext(ctx, "SELECT id FROM installation WHERE singleton=true").Scan(&id)
+	if err == nil && !ValidID(id) {
+		return "", errors.New("invalid installation identity")
+	}
+	return id, err
 }
 
 type scanner interface{ Scan(...any) error }
@@ -97,16 +111,26 @@ func scanJob(row scanner) (Job, error) {
 	return j, err
 }
 func (s *Store) Projects(ctx context.Context) ([]Project, error) {
-	rows, err := s.DB.QueryContext(ctx, "SELECT "+projectCols+" FROM projects WHERE NOT archived ORDER BY created_at DESC LIMIT 500")
+	// One consistent statement replaces an extra round-trip per project. The
+	// lateral lookup uses project_job_history and includes immutable job details.
+	rows, err := s.DB.QueryContext(ctx, `SELECT to_jsonb(p) || jsonb_build_object('last_job',latest.data)
+FROM (SELECT `+projectCols+` FROM projects WHERE NOT archived ORDER BY created_at DESC,id DESC LIMIT 500) p
+LEFT JOIN LATERAL (SELECT to_jsonb(j) AS data FROM jobs j WHERE j.project_id=p.id ORDER BY j.queued_at DESC,j.id DESC LIMIT 1) latest ON true
+ORDER BY p.created_at DESC,p.id DESC`)
 	if err != nil {
 		return nil, err
 	}
 	result := []Project{}
 	for rows.Next() {
-		p, e := scanProject(rows)
-		if e != nil {
+		var p Project
+		var raw []byte
+		if err := rows.Scan(&raw); err != nil {
 			rows.Close()
-			return nil, e
+			return nil, err
+		}
+		if err := json.Unmarshal(raw, &p); err != nil {
+			rows.Close()
+			return nil, err
 		}
 		result = append(result, p)
 	}
@@ -114,14 +138,6 @@ func (s *Store) Projects(ctx context.Context) ([]Project, error) {
 	rows.Close()
 	if err != nil {
 		return nil, err
-	}
-	for i := range result {
-		j, err := scanJob(s.DB.QueryRowContext(ctx, "SELECT "+jobCols+" FROM jobs WHERE project_id=$1 ORDER BY queued_at DESC LIMIT 1", result[i].ID))
-		if err == nil {
-			result[i].LastJob = &j
-		} else if !errors.Is(err, sql.ErrNoRows) {
-			return nil, err
-		}
 	}
 	return result, nil
 }

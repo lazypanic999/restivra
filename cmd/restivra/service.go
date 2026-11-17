@@ -72,6 +72,11 @@ func service(ctx context.Context, mode string, args []string) int {
 		hosts[i] = strings.TrimSpace(hosts[i])
 	}
 	api := app.API{Store: store, AllowedHosts: hosts, Instance: instance}
+	api.Auth, err = app.NewAuth(os.Getenv("RESTIVRA_AUTH_TOKEN"))
+	if err != nil {
+		log.Print(err)
+		return 2
+	}
 	if *assetsDirectory != "" {
 		handler, closeAssets, err := webui.DirectoryHandler(*assetsDirectory)
 		if err != nil {

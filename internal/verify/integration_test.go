@@ -98,6 +98,30 @@ func TestIntegrationPostgres17(t *testing.T) {
 			t.Fatalf("unexpected timeout result: %+v", report)
 		}
 	})
+	t.Run("restored data exceeds tmpfs capacity", func(t *testing.T) {
+		// EXTERNAL disables TOAST compression, so the restored relation exceeds
+		// 128 MiB although the compressed dump is small. Archive size alone is
+		// not a reliable estimate of restored database capacity.
+		if _, err := d.Run(ctx, nil, "exec", name, "psql", "-X", "-U", "postgres", "-v", "ON_ERROR_STOP=1", "-c", "CREATE TABLE capacity_probe(payload text); ALTER TABLE capacity_probe ALTER COLUMN payload SET STORAGE EXTERNAL; INSERT INTO capacity_probe SELECT repeat('capacity-probe',80000) FROM generate_series(1,128);"); err != nil {
+			t.Fatal("capacity fixture failed")
+		}
+		if _, err := d.Run(ctx, nil, "exec", name, "pg_dump", "-U", "postgres", "-Fc", "-f", "/tmp/capacity.dump", "postgres"); err != nil {
+			t.Fatal(err)
+		}
+		large := filepath.Join(dir, "capacity.dump")
+		if _, err := d.Run(ctx, nil, "cp", name+":/tmp/capacity.dump", large); err != nil {
+			t.Fatal(err)
+		}
+		cfg := DefaultConfig()
+		cfg.DataMB = 128
+		cfg.MemoryMB = 768
+		report := (Runner{WorkDir: filepath.Join(dir, "snapshots")}).Run(ctx, large, cfg)
+		// PostgreSQL may terminate its connection before pg_restore receives the
+		// disk-full diagnostic. Preserve the generic code rather than guessing.
+		if report.Status != "failed" || report.RestoreStatus != "failed" || (report.ErrorCode != "resource_limit" && report.ErrorCode != "restore_failed") || report.CleanupStatus != "passed" {
+			t.Fatalf("capacity failure was not diagnosed and cleaned: %+v", report)
+		}
+	})
 	entries, err := os.ReadDir(filepath.Join(dir, "snapshots"))
 	if err != nil || len(entries) != 0 {
 		t.Fatal("snapshot files leaked")

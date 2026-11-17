@@ -18,11 +18,12 @@ import (
 )
 
 type Runner struct {
-	Docker     Commander
-	WorkDir    string
-	RunID      string
-	Instance   string
-	OpenBackup func(string) (*os.File, error)
+	Docker       Commander
+	WorkDir      string
+	RunID        string
+	Instance     string
+	Installation string
+	OpenBackup   func(string) (*os.File, error)
 }
 
 func (r Runner) Run(parent context.Context, source string, cfg Config) (report Report) {
@@ -48,7 +49,7 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 		report.FinishedAt = time.Now().UTC()
 		report.DurationMS = time.Since(start).Milliseconds()
 	}()
-	fail := func(message string) { report.Error = message }
+	fail := func(message string) { report.Error = message; report.ErrorCode = stageErrorCode(report.Stage) }
 	if randomErr != nil {
 		fail("could not generate run ID")
 		return
@@ -60,12 +61,14 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 	ctx, cancel := context.WithTimeout(parent, time.Duration(cfg.TimeoutSeconds)*time.Second)
 	defer cancel()
 	defer func() {
-		if ctx.Err() != nil {
+		if ctx.Err() != nil && report.CleanupStatus != "failed" {
 			report.Status = "failed"
 			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
 				report.Error = "run exceeded its time limit"
+				report.ErrorCode = "run_timeout"
 			} else {
 				report.Error = "run was cancelled"
+				report.ErrorCode = "cancelled"
 			}
 		}
 	}()
@@ -90,6 +93,7 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 		if err := os.Remove(snapshot.Name()); err != nil {
 			report.Status = "failed"
 			report.CleanupStatus = "failed"
+			report.ErrorCode = "cleanup_failed"
 			report.Error = "could not remove private backup snapshot; remove it from work directory"
 		}
 	}()
@@ -116,6 +120,7 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 			if listErr != nil || strings.TrimSpace(ids) != "" {
 				report.Status = "failed"
 				report.CleanupStatus = "failed"
+				report.ErrorCode = "cleanup_failed"
 				report.Error = "container cleanup failed; use cleanup --run-id " + report.RunID
 				return
 			}
@@ -126,6 +131,7 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 	_, err = r.Docker.Run(ctx, nil, "create", "--name", name,
 		"--label", "app=restivra", "--label", "restivra.run="+report.RunID,
 		"--label", "restivra.instance="+r.Instance,
+		"--label", "restivra.installation="+r.Installation,
 		"--network", "none", "--read-only", "--user", "999:999",
 		"--cap-drop", "ALL", "--security-opt", "no-new-privileges=true",
 		"--memory", strconv.Itoa(cfg.MemoryMB)+"m", "--memory-swap", strconv.Itoa(cfg.MemoryMB)+"m",
@@ -167,6 +173,7 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 	report.Backup.DumpVersion = archiveVersion(listing, "Dumped by pg_dump version:")
 	if major(report.Backup.SourceVersion) != "17" || major(report.Backup.DumpVersion) != "17" {
 		fail("only PostgreSQL 17 backups created with pg_dump 17 are supported")
+		report.ErrorCode = "unsupported_version"
 		return
 	}
 	if _, err = snapshot.Seek(0, io.SeekStart); err != nil {
@@ -177,6 +184,10 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 	report.RestoreStatus = "failed"
 	if _, err = r.Docker.Run(ctx, snapshot, "exec", "--interactive", name, "pg_restore", "--username=postgres", "--dbname=verification", "--no-owner", "--no-privileges", "--exit-on-error", "--no-password"); err != nil {
 		fail("pg_restore failed; archive may be corrupt, require unavailable extensions, or exceed resource limits")
+		var commandError *CommandError
+		if errors.As(err, &commandError) && commandError.Category != "command_failed" {
+			report.ErrorCode = commandError.Category
+		}
 		return
 	}
 	report.RestoreStatus = "passed"
@@ -205,15 +216,22 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 		switch {
 		case err != nil:
 			report.Checks[i].Status = "error"
+			report.Checks[i].ErrorCode = "query_error"
+			var commandError *CommandError
+			if errors.As(err, &commandError) && commandError.Category != "command_failed" {
+				report.Checks[i].ErrorCode = commandError.Category
+			}
 			report.Checks[i].Error = "query failed or exceeded its time limit"
 			checksPassed = false
 		case strings.TrimSpace(out) == "t":
 			report.Checks[i].Status = "passed"
 		case strings.TrimSpace(out) == "f":
 			report.Checks[i].Status = "failed"
+			report.Checks[i].ErrorCode = "check_false"
 			checksPassed = false
 		default:
 			report.Checks[i].Status = "error"
+			report.Checks[i].ErrorCode = "invalid_check_result"
 			report.Checks[i].Error = "query must return exactly one non-null boolean"
 			checksPassed = false
 		}
@@ -228,6 +246,27 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 	report.Status = "passed"
 	report.Stage = "complete"
 	return
+}
+
+func stageErrorCode(stage string) string {
+	switch stage {
+	case "validate":
+		return "backup_invalid"
+	case "image":
+		return "image_unavailable"
+	case "start":
+		return "database_start_failed"
+	case "archive":
+		return "archive_invalid"
+	case "restore":
+		return "restore_failed"
+	case "connect":
+		return "database_connection_failed"
+	case "checks":
+		return "checks_failed"
+	default:
+		return "verification_failed"
+	}
 }
 
 func archiveVersion(listing, label string) string {

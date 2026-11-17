@@ -1,7 +1,9 @@
 package app
 
 import (
+	"context"
 	"crypto/subtle"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"io"
@@ -19,6 +21,7 @@ type API struct {
 	Instance     string
 	CSRFToken    string
 	Assets       http.Handler
+	Auth         *Auth
 }
 
 func (a *API) Handler() http.Handler {
@@ -26,6 +29,21 @@ func (a *API) Handler() http.Handler {
 		a.CSRFToken = NewID() + NewID()
 	}
 	mux := http.NewServeMux()
+	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		defer cancel()
+		if a.Store == nil || a.Store.DB.PingContext(ctx) != nil {
+			jsonError(w, 503, "unavailable")
+			return
+		}
+		jsonResponse(w, 200, map[string]string{"status": "ready"})
+	})
+	mux.HandleFunc("GET /api/auth", a.authState)
+	mux.HandleFunc("POST /api/auth/login", a.login)
+	mux.HandleFunc("POST /api/auth/logout", func(w http.ResponseWriter, r *http.Request) {
+		clearSession(w, r)
+		jsonResponse(w, 200, map[string]bool{"authenticated": false})
+	})
 	mux.HandleFunc("GET /api/session", func(w http.ResponseWriter, r *http.Request) {
 		jsonResponse(w, 200, map[string]any{"csrf_token": a.CSRFToken, "default_config": verify.DefaultConfig(), "version": "0.1.0"})
 	})
@@ -135,8 +153,15 @@ func (a *API) Handler() http.Handler {
 					return
 				}
 			}
+			publicAuth := r.URL.Path == "/api/auth" || r.URL.Path == "/api/auth/login"
+			if !publicAuth && !a.Auth.authenticated(r) {
+				jsonError(w, 401, "authentication required")
+				return
+			}
 		}
-		mux.ServeHTTP(w, r)
+		ctx, cancel := context.WithTimeout(r.Context(), 20*time.Second)
+		defer cancel()
+		mux.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 func (a *API) saveProject(w http.ResponseWriter, r *http.Request) {
@@ -188,14 +213,20 @@ func (a *API) job(w http.ResponseWriter, r *http.Request) {
 	jsonResponse(w, 200, j)
 }
 func (a *API) health(w http.ResponseWriter, r *http.Request) {
-	if err := a.Store.DB.PingContext(r.Context()); err != nil {
+	ctx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+	defer cancel()
+	if err := a.Store.DB.PingContext(ctx); err != nil {
 		jsonError(w, 503, "veritabanı erişilemiyor")
 		return
 	}
 	var beat *time.Time
-	_ = a.Store.DB.QueryRowContext(r.Context(), "SELECT heartbeat_at FROM workers WHERE instance=$1", a.Instance).Scan(&beat)
-	online := beat != nil && time.Since(*beat) < 15*time.Second
-	jsonResponse(w, 200, map[string]any{"database": "online", "worker_online": online, "worker_heartbeat": beat})
+	err := a.Store.DB.QueryRowContext(ctx, "SELECT heartbeat_at FROM workers WHERE instance=$1", a.Instance).Scan(&beat)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		jsonError(w, 503, "worker state unavailable")
+		return
+	}
+	online := beat != nil && time.Since(*beat) < 30*time.Second
+	jsonResponse(w, 200, map[string]any{"database": "online", "worker_online": online, "worker_heartbeat": beat, "authentication_enabled": a.Auth != nil})
 }
 func decodeJSON(w http.ResponseWriter, r *http.Request, dst any) error {
 	d := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20))

@@ -35,3 +35,18 @@ go run ./cmd/restivra serve --assets-dir internal/webui/dist
 ```
 
 Open `http://127.0.0.1:7474` and refresh after a successful rebuild. There is no hot module replacement. Restart the watcher for HTML template or public-file changes. The default host allowlist is unchanged; port 5173 is no longer used.
+
+## Go toolchain review — 2026-11-18
+
+The first `govulncheck` scan found reachable standard-library advisory
+[GO-2026-6859](https://pkg.go.dev/vuln/GO-2026-6859) in the local Go 1.27.3
+compiler. The previous Docker builder still used the unsupported Go 1.25 line.
+The module's minimum compiler, Docker builder and CI now use Go 1.27.4.
+[Go's release history](https://go.dev/doc/devel/release#go1.27.4) documents its
+HTTP security fixes and the supported-release policy.
+
+`go run golang.org/x/vuln/cmd/govulncheck@v1.10.0 ./...` reports no known
+vulnerabilities with the patched compiler. CI repeats this scan on Linux as well
+as the full npm audit. These checks cover the application's reachable Go code and
+npm dependency tree; they do not claim a comprehensive host/container security
+audit. Keep Docker, PostgreSQL and operating-system images maintained too.
