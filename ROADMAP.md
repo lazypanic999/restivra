@@ -13,10 +13,12 @@
 - [x] Unit/security tests, real PostgreSQL integration tests and CI.
 - [x] Single-operator access-token sessions, worker diagnostics and API readiness.
 - [x] Database-scoped resource ownership, fail-stop cleanup and metadata exports.
+- [x] Durable bounded infrastructure retries, preserved attempt history and retry cancellation.
+- [x] Fixed-image two-hour desktop acceptance and real Docker/metadata fault recovery.
 
 ## Pilot acceptance — requires real users
 
-- [ ] Reproduce the desktop Docker stall and complete clean long-duration acceptance before unattended operation; see [incident evidence](docs/PILOT-READINESS.md).
+- [ ] Continue host-level investigation if the Desktop stall recurs; its exact trigger is still unproven. [Recovery acceptance](docs/PILOT-READINESS.md) passed.
 - [ ] One developer, their own computer, two authorized projects and one week of scheduled tests.
 - [ ] Validate extensions, dump versions and database sizing.
 - [ ] Observe installation, diagnosis and maintenance needs.

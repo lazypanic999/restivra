@@ -6,6 +6,48 @@ computer, with Docker Desktop Linux containers and localhost access. PowerShell
 A real customer pilot remains
 the next product milestone. Public hosted SaaS readiness is a separate project.
 
+## Current decision: unattended local developer pilot
+
+Runtime `5ef8f0a` completed a fresh **120.01-minute / 143-iteration** acceptance
+run on this Windows/Docker Desktop host. All **210 asserted outcomes** matched:
+151 passed, 45 intentionally failed checks/archives and 14 cancellations. Two
+intentional worker SIGKILLs recovered through preserved interrupted attempts and
+fresh successful restores. Two metadata restarts, an eight-second metadata pause
+and a real wall-clock schedule also passed. No other automatic retries or manual
+retry actions occurred. API/worker container IDs and image identities stayed
+unchanged throughout. Final inspection found zero active jobs, temporary restore
+containers and private snapshot entries.
+
+See the [verified summary](acceptance/unattended-20261118/soak/verified-summary.json),
+[attempt-enriched outcomes](acceptance/unattended-20261118/soak/enriched-runs.ndjson),
+[runtime identity](acceptance/unattended-20261118/soak/runtime.json) and
+[resource samples](acceptance/unattended-20261118/soak/resource-samples.ndjson).
+Shorter candidates stopped for a test-harness image-recreation issue and a
+cancelled-retry metadata correction are excluded from this two-hour result.
+
+A separate release-candidate fault drill delayed Docker start/removal/list by
+35 seconds, paused metadata for 25 seconds during a restore, and cancelled a
+pending retry. Recovery required no manual retry; cancellation stayed final
+beyond its original deadline. The later metadata export/restore preserved ten
+synthetic jobs and eighteen attempts with no orphan records.
+[Fault evidence](acceptance/unattended-20261118/release-chaos/summary.json) and
+[stall analysis](DOCKER-STALL-ANALYSIS.md) distinguish the observed host delay,
+the corrected application recovery gap and the still-unproven Windows trigger.
+
+This supports an **unattended local developer pilot while the computer and Docker
+are running**, using trusted PostgreSQL 17 archives within tested sizing. It is
+not a seven-day external-user acceptance or a guarantee that Docker/Windows
+cannot stall. The exact host trigger remains unresolved; Restivra now handles
+the observed transient failure mode autonomously and preserves attempt evidence.
+
+The existing localhost installation was exported before upgrade. All fourteen
+original job statuses/reports retained the same aggregate fingerprint after
+migration. A new real two-row restore passed with one preserved attempt and clean
+resources; its synthetic project was archived. The local API/database are healthy
+and the worker is online. Test stacks were removed without deleting user volumes.
+See [local upgrade proof](acceptance/unattended-20261118/local-upgrade.json) and
+[final cleanup](acceptance/unattended-20261118/final-cleanup.json).
+
 ## Fixed in this review
 
 - Database-scoped installation identity replaces shared instance names as
@@ -45,7 +87,7 @@ the next product milestone. Public hosted SaaS readiness is a separate project.
 - [Pilot runbook](PILOT-RUNBOOK.md) covers setup, first checks, sizing, access,
   metadata backup, recovery and week-long user acceptance.
 
-## Release evidence
+## Earlier acceptance attempts — historical evidence
 
 The checks use synthetic commerce data, isolated metadata/volumes and a separate
 loopback port. Existing local archive/history volumes are preserved. Linux CI
@@ -117,8 +159,9 @@ vulnerability scan; the packaged Linux binary was independently scanned too.
 
 ## Remaining before wider availability
 
-- Investigate/reproduce the long-duration Docker delay and complete a clean
-  long-duration run on the pilot host before relying on unattended schedules.
+- Continue host-level diagnosis if the Desktop delay recurs; its exact Windows
+  trigger is not established. The bounded recovery and two-hour acceptance above
+  address the observed application failure propagation.
 - Have an external operator complete a seven-day pilot using their real backup
   producer, actual database size and extensions, host and alert receiver.
 - Verify the actual receiver's webhook payload/adapter and delivery. Local tests
@@ -131,8 +174,8 @@ vulnerability scan; the packaged Linux binary was independently scanned too.
 - Larger archives, PostgreSQL versions other than 17, extra extensions, PITR and
   application-level recovery remain outside the supported tested scope.
 
-Readiness: offer an **assisted, manually supervised developer pilot**. Unattended
-reliability has not passed long-duration acceptance. See
+Readiness: offer an **unattended local developer pilot within the scope above**.
+Complete the external seven-day pilot before broad availability. See
 [earlier relational acceptance](POSTGRES-ACCEPTANCE.md) for the
 135,500-row source-loss/restore exercise and [build security](BUILD-SECURITY.md)
 for Vite removal.

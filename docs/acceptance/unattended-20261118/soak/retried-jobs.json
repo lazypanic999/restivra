@@ -1,0 +1,286 @@
+[
+  {
+    "id": "425b9f94eaed4b7b381e49962bd12c9e",
+    "project_id": "82c913f6c543a8a6b81c97c97b4359d1",
+    "project_name": "Pilot interruption",
+    "backup_pattern": "commerce.dump",
+    "config": {
+      "timeout_seconds": 180,
+      "max_backup_bytes": 268435456,
+      "memory_mb": 1536,
+      "data_mb": 512,
+      "checks": [
+        {
+          "name": "Pilot interruption",
+          "sql": "SELECT true FROM (SELECT pg_sleep(8)) AS waited"
+        }
+      ]
+    },
+    "status": "passed",
+    "trigger": "manual",
+    "queued_at": "2026-11-18T05:36:31.833467Z",
+    "started_at": "2026-11-18T05:37:04.867715Z",
+    "finished_at": "2026-11-18T05:37:16.250298Z",
+    "heartbeat_at": "2026-11-18T05:37:15.902575Z",
+    "cancel_requested": false,
+    "report": {
+      "command_timings": [
+        {
+          "operation": "exec",
+          "duration_ms": 126,
+          "outcome": "command_failed"
+        },
+        {
+          "operation": "exec",
+          "duration_ms": 95,
+          "outcome": "command_failed"
+        },
+        {
+          "operation": "exec",
+          "duration_ms": 8155,
+          "outcome": "passed"
+        }
+      ],
+      "attempt": 2,
+      "schema_version": 1,
+      "run_id": "425b9f94eaed4b7b381e49962bd12c9e",
+      "status": "passed",
+      "stage": "complete",
+      "started_at": "2026-11-18T05:37:04.901840317Z",
+      "finished_at": "2026-11-18T05:37:16.240637336Z",
+      "duration_ms": 11338,
+      "image": "postgres:17-bookworm",
+      "image_id": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+      "backup": {
+        "name": "commerce.dump",
+        "bytes": 530663,
+        "modified_at": "2026-11-17T19:51:15Z",
+        "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667",
+        "source_version": "17.12",
+        "dump_version": "17.12"
+      },
+      "restore_status": "passed",
+      "checks": [
+        {
+          "name": "Pilot interruption",
+          "status": "passed"
+        }
+      ],
+      "cleanup_status": "passed",
+      "warnings": [
+        "This verifies a logical restore and selected checks, not full application recovery, ownership, grants or point-in-time recovery.",
+        "File modification time is not a verified backup creation time. Compare SHA-256 values across runs to detect unchanged backups."
+      ]
+    },
+    "notification_status": "skipped",
+    "notification_attempts": 0,
+    "attempt_count": 2,
+    "attempts": [
+      {
+        "number": 1,
+        "status": "interrupted",
+        "started_at": "2026-11-18T05:36:32.825821Z",
+        "finished_at": "2026-11-18T05:36:34.856055Z",
+        "error": "Previous worker stopped before finishing. Temporary resources were reconciled."
+      },
+      {
+        "number": 2,
+        "status": "passed",
+        "started_at": "2026-11-18T05:37:04.867715Z",
+        "finished_at": "2026-11-18T05:37:16.248179Z",
+        "report": {
+          "command_timings": [
+            {
+              "operation": "exec",
+              "duration_ms": 126,
+              "outcome": "command_failed"
+            },
+            {
+              "operation": "exec",
+              "duration_ms": 95,
+              "outcome": "command_failed"
+            },
+            {
+              "operation": "exec",
+              "duration_ms": 8155,
+              "outcome": "passed"
+            }
+          ],
+          "attempt": 2,
+          "schema_version": 1,
+          "run_id": "425b9f94eaed4b7b381e49962bd12c9e",
+          "status": "passed",
+          "stage": "complete",
+          "started_at": "2026-11-18T05:37:04.901840317Z",
+          "finished_at": "2026-11-18T05:37:16.240637336Z",
+          "duration_ms": 11338,
+          "image": "postgres:17-bookworm",
+          "image_id": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+          "backup": {
+            "name": "commerce.dump",
+            "bytes": 530663,
+            "modified_at": "2026-11-17T19:51:15Z",
+            "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667",
+            "source_version": "17.12",
+            "dump_version": "17.12"
+          },
+          "restore_status": "passed",
+          "checks": [
+            {
+              "name": "Pilot interruption",
+              "status": "passed"
+            }
+          ],
+          "cleanup_status": "passed",
+          "warnings": [
+            "This verifies a logical restore and selected checks, not full application recovery, ownership, grants or point-in-time recovery.",
+            "File modification time is not a verified backup creation time. Compare SHA-256 values across runs to detect unchanged backups."
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "4e9b634cca87ada3c87e98befd98f140",
+    "project_id": "82c913f6c543a8a6b81c97c97b4359d1",
+    "project_name": "Pilot interruption",
+    "backup_pattern": "commerce.dump",
+    "config": {
+      "timeout_seconds": 180,
+      "max_backup_bytes": 268435456,
+      "memory_mb": 1536,
+      "data_mb": 512,
+      "checks": [
+        {
+          "name": "Pilot interruption",
+          "sql": "SELECT true FROM (SELECT pg_sleep(8)) AS waited"
+        }
+      ]
+    },
+    "status": "passed",
+    "trigger": "manual",
+    "queued_at": "2026-11-18T06:00:10.626972Z",
+    "started_at": "2026-11-18T06:00:43.629142Z",
+    "finished_at": "2026-11-18T06:00:54.605354Z",
+    "heartbeat_at": "2026-11-18T06:00:53.674645Z",
+    "cancel_requested": false,
+    "report": {
+      "command_timings": [
+        {
+          "operation": "exec",
+          "duration_ms": 122,
+          "outcome": "command_failed"
+        },
+        {
+          "operation": "exec",
+          "duration_ms": 86,
+          "outcome": "command_failed"
+        },
+        {
+          "operation": "exec",
+          "duration_ms": 8169,
+          "outcome": "passed"
+        }
+      ],
+      "attempt": 2,
+      "schema_version": 1,
+      "run_id": "4e9b634cca87ada3c87e98befd98f140",
+      "status": "passed",
+      "stage": "complete",
+      "started_at": "2026-11-18T06:00:43.675200729Z",
+      "finished_at": "2026-11-18T06:00:54.595296986Z",
+      "duration_ms": 10920,
+      "image": "postgres:17-bookworm",
+      "image_id": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+      "backup": {
+        "name": "commerce.dump",
+        "bytes": 530663,
+        "modified_at": "2026-11-17T19:51:15Z",
+        "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667",
+        "source_version": "17.12",
+        "dump_version": "17.12"
+      },
+      "restore_status": "passed",
+      "checks": [
+        {
+          "name": "Pilot interruption",
+          "status": "passed"
+        }
+      ],
+      "cleanup_status": "passed",
+      "warnings": [
+        "This verifies a logical restore and selected checks, not full application recovery, ownership, grants or point-in-time recovery.",
+        "File modification time is not a verified backup creation time. Compare SHA-256 values across runs to detect unchanged backups.",
+        "The tested backup is identical to the previous run; backup freshness was not established."
+      ]
+    },
+    "notification_status": "skipped",
+    "notification_attempts": 0,
+    "attempt_count": 2,
+    "attempts": [
+      {
+        "number": 1,
+        "status": "interrupted",
+        "started_at": "2026-11-18T06:00:11.277238Z",
+        "finished_at": "2026-11-18T06:00:13.584946Z",
+        "error": "Previous worker stopped before finishing. Temporary resources were reconciled."
+      },
+      {
+        "number": 2,
+        "status": "passed",
+        "started_at": "2026-11-18T06:00:43.629142Z",
+        "finished_at": "2026-11-18T06:00:54.603531Z",
+        "report": {
+          "command_timings": [
+            {
+              "operation": "exec",
+              "duration_ms": 122,
+              "outcome": "command_failed"
+            },
+            {
+              "operation": "exec",
+              "duration_ms": 86,
+              "outcome": "command_failed"
+            },
+            {
+              "operation": "exec",
+              "duration_ms": 8169,
+              "outcome": "passed"
+            }
+          ],
+          "attempt": 2,
+          "schema_version": 1,
+          "run_id": "4e9b634cca87ada3c87e98befd98f140",
+          "status": "passed",
+          "stage": "complete",
+          "started_at": "2026-11-18T06:00:43.675200729Z",
+          "finished_at": "2026-11-18T06:00:54.595296986Z",
+          "duration_ms": 10920,
+          "image": "postgres:17-bookworm",
+          "image_id": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+          "backup": {
+            "name": "commerce.dump",
+            "bytes": 530663,
+            "modified_at": "2026-11-17T19:51:15Z",
+            "sha256": "8c2bbf550de1f5a1b4a0c6657893302c619aa2d5948b3af399960aede07ab667",
+            "source_version": "17.12",
+            "dump_version": "17.12"
+          },
+          "restore_status": "passed",
+          "checks": [
+            {
+              "name": "Pilot interruption",
+              "status": "passed"
+            }
+          ],
+          "cleanup_status": "passed",
+          "warnings": [
+            "This verifies a logical restore and selected checks, not full application recovery, ownership, grants or point-in-time recovery.",
+            "File modification time is not a verified backup creation time. Compare SHA-256 values across runs to detect unchanged backups.",
+            "The tested backup is identical to the previous run; backup freshness was not established."
+          ]
+        }
+      }
+    ]
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "private_snapshot_entries": 0,
+  "user_volumes_preserved": true,
+  "checked_at": "2026-11-18T07:37:43.1885787Z",
+  "restore_containers": 0,
+  "test_stacks_removed": true,
+  "metadata": {
+    "projects": 13,
+    "jobs": 15,
+    "reports": 15,
+    "active_jobs": 0,
+    "attempts": 1
+  }
+}

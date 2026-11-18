@@ -1,0 +1,19 @@
+{
+  "linux_race": "passed",
+  "ui_languages": [
+    "en",
+    "tr"
+  ],
+  "metadata_restore_attempts": 18,
+  "metadata_orphan_attempts": 0,
+  "browser_errors_or_warnings": 0,
+  "packaged_binary_govulncheck": "No vulnerabilities found",
+  "npm_audit_vulnerabilities": 0,
+  "real_postgres_integration": "passed",
+  "metadata_restore_jobs": 10,
+  "packaged_binary_sha256": "bf0071291416312cbe0dab00c05e71252ca11cdd1ebdbfef14cd24af7fad3cea",
+  "npm_tests": 6,
+  "go_vet": "passed",
+  "ci": "https://github.com/lazypanic999/restivra/actions/runs/44245140103",
+  "runtime_source": "5ef8f0afecf057aaad31c311a1be22831c9cb7f9"
+}

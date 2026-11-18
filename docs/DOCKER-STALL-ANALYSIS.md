@@ -63,6 +63,10 @@ as a passing run after recovery changes.
   open. Slow/failed command timings record only a fixed operation name, elapsed
   milliseconds and safe outcome: no SQL, command arguments or raw stderr.
 
+An individual `exec` timing can fail during the initial database readiness poll
+and still be followed by a passing restore. Use the report's final status,
+stage/error code, checks and cleanup result to assess the verification.
+
 An engine or host that remains unavailable cannot be repaired by the application.
 It can keep retrying startup reconciliation, but cannot certify cleanup or run
 new work until infrastructure is accessible. A permanently unremovable resource
@@ -79,6 +83,7 @@ unpublished isolated Docker network, delayed start/removal/list operations for
 | --- | --- | --- |
 | Docker start/removal/list delayed 35 s, job timeout 10 s | `failed`, `cleanup_failed`; timing records show start/rm/ps deadlines | Attempt 2 passed restore, 100,000-item check and cleanup |
 | Metadata database paused 25 s during active work | `interrupted`, connection/liveness loss | Worker reconciled; attempt 2 passed restore, check and cleanup |
+| Cancel a delayed retry after Docker timeout | Original failed attempt retained | No second attempt after the original retry deadline; container reconciled |
 
 Neither scenario submitted a new manual verification or pressed a Retry button.
 Each finished with no remaining job container. A metadata export was restored
@@ -87,9 +92,28 @@ failed/interrupted attempts, two passing attempts and zero orphan attempts.
 English and Turkish report histories and the previous failed JSON download were
 checked in the browser with no console errors or warnings.
 
-The two-hour normal-engine soak is recorded separately from these controlled
-faults. Its final counts and runtime image identity belong in the accompanying
-acceptance evidence; a fault-proxy success alone is not a long-duration pass.
+The cancellation drill exposed stale retry text/time on an already-cancelled
+job. Cancellation now clears its retry deadline and records the cancellation
+message atomically. Both real SQL coverage and the Docker drill assert that
+state, as well as suppression of the next attempt.
+
+The release-candidate drill repeated all three scenarios on runtime `5ef8f0a`.
+[Evidence](acceptance/unattended-20261118/release-chaos/summary.json) includes
+[cancelled retry](acceptance/unattended-20261118/release-chaos/cancelled-retry.json),
+Docker/metadata recovery reports and a second metadata export/restore check.
+That later archive contained ten synthetic jobs and eighteen preserved attempts,
+including earlier drill repetitions, with zero orphan attempts. The isolated
+fault proxy and its application stack were removed after those checks.
+
+The separate normal-engine soak completed **120.01 minutes / 143 iterations /
+210 expected outcomes**: 151 passed, 45 intentionally failed and 14 cancelled.
+Two planned worker SIGKILLs recovered automatically; no other jobs needed retry.
+The original API/worker container IDs and pinned image identities stayed stable.
+At the end, no active job, restore container or private snapshot remained.
+[Verified duration evidence](acceptance/unattended-20261118/soak/verified-summary.json)
+is separate from controlled fault-proxy evidence. Earlier shorter candidates
+stopped for harness/image isolation and retry-cancellation metadata corrections
+are excluded from this two-hour claim.
 
 ## Reproduce in a disposable environment
 

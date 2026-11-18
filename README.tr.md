@@ -20,7 +20,7 @@ Linux'ta kurulum betiği `sh scripts/setup.sh`. Panel: **[http://127.0.0.1:7474]
 
 Yeni kurulumda özel `.env` dosyasındaki `RESTIVRA_AUTH_TOKEN` ile giriş yap. Mevcut `.env` değiştirilmez; eski kurulumda anahtar yoksa oturum açma kapalı kalır. İlk gerçek kullanıcı için [pilot işletim rehberi](docs/PILOT-RUNBOOK.md) ve [hazırlık incelemesi](docs/PILOT-READINESS.md).
 
-Teslim durumu: geliştiricinin gözetiminde manuel pilot. Uzun denemede 97. dakikada Docker işlemi takılıp çalışma güvenli biçimde durdu; kesintisiz iki saatlik kabul tamamlanmadı. Kendi bilgisayarında zamanlamaya güvenmeden önce bu kararlılık konusu doğrulanmalı. Bilgisayar/Docker kapalıyken test çalışmaz.
+Teslim durumu: bilgisayar ve Docker açıkken gözetimsiz yerel geliştirici pilotuna hazır. Sabit imajla iki saatlik testte 210 beklenen sonuç doğrulandı; ayrıca Docker takılması ve metaveri bağlantı kaybından otomatik toparlandı. Önceki 97. dakika hatası ve Windows'taki kesin tetikleyicinin hâlâ belirsiz olması [hazırlık incelemesinde](docs/PILOT-READINESS.md) korunuyor. Dış kullanıcıyla bir haftalık pilot henüz yapılmadı. Bilgisayar/Docker kapalıyken test çalışmaz.
 
 ## İlk proje
 

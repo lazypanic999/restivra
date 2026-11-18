@@ -1,0 +1,8 @@
+{
+  "cancelled_retry_suppressed": true,
+  "docker_stall_seconds": 35,
+  "passed": true,
+  "finished_at": "2026-11-18T05:38:11.1227101Z",
+  "manual_retry_required": false,
+  "metadata_stall_seconds": 25
+}

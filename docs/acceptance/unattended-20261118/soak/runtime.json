@@ -1,0 +1,9 @@
+{
+  "runtime_source": "5ef8f0a",
+  "containers": [
+    "/restivra-pilot-unattended-release-api-1 06a52938f98dd1c3f65bca16b90236adb3e682827b144bec0d30bcc81cebc4e1 sha256:7465cb2abc40acddc478adf0f4a5e23c45e02fef2bd7c7b32904eea82ef84326",
+    "/restivra-pilot-unattended-release-worker-1 bc230d836295a0a2a1ed2e2a2b1dc04bc938eec8de1bbd18c71b0aad87da31fc sha256:7465cb2abc40acddc478adf0f4a5e23c45e02fef2bd7c7b32904eea82ef84326"
+  ],
+  "captured_at": "2026-11-18T05:35:37.1209234Z",
+  "image_pin": "restivra:unattended-5ef8f0a"
+}

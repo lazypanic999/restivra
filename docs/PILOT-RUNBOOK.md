@@ -108,7 +108,9 @@ as concurrent workers against the same Docker engine**.
    the browser's time zone; project scheduling uses the configured zone.
 
 Default limits: 256 MiB archive, 512 MiB RAM-backed restored data, 1536 MiB
-container memory, 180 seconds total, one CPU, 128 PIDs. The database volume counts
+container memory, a 180-second verification budget plus bounded cleanup, one CPU,
+128 PIDs. Each automatic attempt has its own verification budget; backoff and
+reconciliation add elapsed time. The database volume counts
 toward container memory. A small compressed dump can expand far beyond 512 MiB.
 Raise `data_mb` and `memory_mb` together, with at least 256 MiB headroom, after
 checking host capacity. One private archive snapshot also needs local disk.
@@ -208,8 +210,10 @@ cleanup, host memory and notification delivery. Test one worker restart and a
 metadata restore drill. Ask the operator to complete installation and first
 verification from this guide without developer intervention. A successful local
 soak is evidence for starting this pilot, not a substitute for it. The current
-review includes an unexplained long-duration Docker stall: start with supervised
-manual tests and complete host-specific stability acceptance before depending
-on unattended schedules. See [readiness results](PILOT-READINESS.md).
+review includes a passing two-hour fixed-image desktop run and separate automatic
+fault recovery. Begin each new installation with manual checks and confirm an
+actual schedule on that operator's host before leaving it unattended. The exact
+Windows trigger behind the earlier stall remains unproven. See
+[readiness results](PILOT-READINESS.md).
 
 Webhook delivery can be repeated if delivery succeeds but the metadata update is interrupted. Receivers should deduplicate by job_id. A successful verification with no configured webhook does not imply alert delivery was tested.
