@@ -2,9 +2,13 @@ package app
 
 import (
 	"context"
-	"github.com/lazypanic999/restivra/internal/verify"
+	"encoding/json"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/lazypanic999/restivra/internal/verify"
 )
 
 func TestRetryClassification(t *testing.T) {
@@ -57,6 +61,8 @@ func testRetryPolicy(t *testing.T, ctx context.Context, store *Store, template P
 		}
 	}
 	j := enqueue()
+	api := API{Store: store, AllowedHosts: []string{"localhost:7474"}, CSRFToken: NewID()}
+	handler := api.Handler()
 	for n := 1; n <= MaxAttempts; n++ {
 		claim(j.ID, n)
 		finish(j.ID, "database_start_failed")
@@ -67,7 +73,18 @@ func testRetryPolicy(t *testing.T, ctx context.Context, store *Store, template P
 		if len(state.Attempts) != n {
 			t.Fatal("attempt evidence was lost")
 		}
+		// A previous failed report stays downloadable while a fresh retry has
+		// no current result. Downloads must identify the selected attempt.
+		path := "/api/jobs/" + j.ID + "/report"
+		response := requestJSON(t, handler, "GET", path+"?attempt="+strconv.Itoa(n), nil, "")
+		var exported verify.Report
+		if response.Code != 200 || json.Unmarshal(response.Body.Bytes(), &exported) != nil || exported.Attempt != n || exported.Status != "failed" || !strings.Contains(response.Header().Get("Content-Disposition"), "-attempt-"+strconv.Itoa(n)+".json") {
+			t.Fatal("previous attempt download lost identity or failure evidence")
+		}
 		if n < MaxAttempts {
+			if response = requestJSON(t, handler, "GET", path, nil, ""); response.Code != 409 {
+				t.Fatal("queued retry exposed a previous report as its current result")
+			}
 			if state.Status != "queued" || state.RetryAt == nil || !state.RetryAt.After(time.Now()) || state.NotificationStatus != "skipped" {
 				t.Fatalf("retry not durably delayed: %+v", state)
 			}
@@ -79,6 +96,12 @@ func testRetryPolicy(t *testing.T, ctx context.Context, store *Store, template P
 			}
 		} else if state.Status != "failed" || state.NotificationStatus != "pending" || state.RetryAt != nil {
 			t.Fatal("retry budget/notification boundary failed")
+		}
+	}
+	for _, value := range []string{"0", "4", "-1", "invalid"} {
+		response := requestJSON(t, handler, "GET", "/api/jobs/"+j.ID+"/report?attempt="+value, nil, "")
+		if response.Code != 400 {
+			t.Fatal("invalid attempt number accepted")
 		}
 	}
 	for _, code := range []string{"checks_failed", "archive_invalid", "resource_limit"} {

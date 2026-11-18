@@ -963,14 +963,14 @@ function Report({ job, duration, onClose, onCancel }) {
         </p>
         {report?.error_code && <p className="notice">{t(`advice.${report.error_code}`)} <code>{report.error_code}</code></p>}
         {job.retry_at && <p className="notice">{t("retryExplanation",{time:formatDate(job.retry_at,true)})}</p>}
-        {job.attempts?.length>0 && (job.attempt_count>1 || job.retry_at) && <section aria-label={t("attemptHistory")}><h3>{t("attemptHistory")}</h3><div className="table-scroll"><table><thead><tr><th>{t("attempt")}</th><th>{t("result")}</th><th>{t("details")}</th><th>JSON</th></tr></thead><tbody>{job.attempts.map(a=><tr key={a.number}><td>{a.number}</td><td><Status value={a.status}/></td><td>{explain(a.error)||formatDate(a.finished_at,true)}</td><td>{a.report && <a href={`/api/jobs/${job.id}/report?attempt=${a.number}`} download>{t("download")}</a>}</td></tr>)}</tbody></table></div></section>}
+        {job.attempts?.length>0 && (job.attempt_count>1 || job.retry_at) && <section aria-label={t("attemptHistory")}><h3>{t("attemptHistory")}</h3><div className="table-scroll"><table className="attempt-history"><thead><tr><th>{t("attempt")}</th><th>{t("result")}</th><th>{t("details")}</th><th>JSON</th></tr></thead><tbody>{job.attempts.map(a=><tr key={a.number}><td>{a.number}</td><td><Status value={a.status}/></td><td>{explain(a.error)||formatDate(a.finished_at,true)}</td><td>{a.report && <a href={`/api/jobs/${job.id}/report?attempt=${a.number}`} download>{t("download")}</a>}</td></tr>)}</tbody></table></div></section>}
         <dl className="report-facts">
           <div>
             <dt>{t("started")}</dt>
             <dd>{formatDate(job.started_at || job.queued_at, true)}</dd>
           </div>
           <div>
-            <dt>{t("duration")}</dt>
+            <dt>{t(job.attempt_count>1 ? "latestAttemptDuration" : "duration")}</dt>
             <dd>{duration}</dd>
           </div>
           <div>

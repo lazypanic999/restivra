@@ -20,6 +20,11 @@
 .login-workspace form { margin-top: 28px; }
 .login-workspace .button { margin-top: 12px; }
 .attempt-info { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
+.attempt-history { white-space: normal; table-layout: fixed; }
+.attempt-history th:first-child { width: 80px; }
+.attempt-history th:nth-child(2) { width: 115px; }
+.attempt-history th:last-child { width: 105px; }
+.attempt-history td { overflow-wrap: anywhere; }
 * {
   box-sizing: border-box;
 }

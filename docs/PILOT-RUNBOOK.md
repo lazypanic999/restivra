@@ -126,19 +126,37 @@ docker compose logs --tail=100 api worker
 docker compose restart worker
 ```
 
-An abrupt worker exit leaves a job `interrupted` after reconciliation, never
-successful. Startup removes containers carrying this database's installation
+An abrupt worker exit preserves an `interrupted` attempt after reconciliation.
+The job can then retry automatically; only a fresh successful restore can pass.
+Startup removes containers carrying this database's installation
 label and exact legacy running-job containers, then known private snapshots.
 Another installation sharing the same human-readable instance name is excluded.
 An unremovable resource stops startup or the worker before another job can run.
 
-For `cleanup_failed`, restore Docker/work-directory access and restart the
-worker. Confirm cleanup and a new manual verification before re-enabling reliance
-on schedules. A missing archive fails before restore and can have no full report.
+Transient infrastructure failures get at most three attempts with persisted
+30/60-second retry delays. The report shows previous attempts and their JSON
+downloads. A queued retry has no current result; a recovered pass does not erase
+the first failure. Cancellation suppresses further retries. The third failure is
+final, so repair its cause before starting a new manual verification.
+
+For `cleanup_failed`, the worker stops and Compose restarts it for owned-resource
+reconciliation. When Docker becomes responsive again and cleanup succeeds, an
+eligible queued retry runs automatically. If cleanup remains unknown, the worker
+stays unavailable and starts no restores. Repair Docker/work-directory access;
+inspect logs and confirm worker health. A manual restart is a recovery tool when
+infrastructure is repaired, not a required step after every brief outage.
+
+A missing archive fails before restore and can have no full report.
 For `restore_failed`, inspect archive compatibility, extensions and restored-data
 capacity. PostgreSQL may close its connection without reporting the original
 disk/memory cause, so that code intentionally remains broad. Raw row-bearing
 PostgreSQL errors are never retained.
+
+Bad archives, failed SQL checks, capacity failures and restore-stage timeouts are
+not retried. Failure notifications wait for the final verification outcome;
+their delivery attempts are a separate counter. Safe slow/failed Docker timings
+in JSON reports help distinguish engine/start/cleanup delays without retaining
+SQL or command arguments. See [stall analysis](DOCKER-STALL-ANALYSIS.md).
 
 `docker compose down` preserves named volumes. `down -v` deletes metadata and
 history; do not use it to restart a real installation. Completed jobs expire
@@ -171,7 +189,8 @@ For a restore drill, use a **new isolated PostgreSQL 17 database** and
 counts, relationships and the `installation` row. Do not start a worker from a
 clone while the original runs. The engineering acceptance drill restored both
 Windows- and Linux-generated metadata archives into separate databases and
-confirmed intact relationships.
+confirmed intact relationships. Exports also include `job_attempts`; check that
+attempt histories survive and have no orphan job references.
 
 For actual host replacement: stop the original API/worker; preserve its volumes
 and files; provision a fresh isolated installation; stop the new API/worker;

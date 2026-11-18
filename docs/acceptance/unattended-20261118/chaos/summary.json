@@ -1,0 +1,7 @@
+{
+  "metadata_stall_seconds": 25,
+  "passed": true,
+  "docker_stall_seconds": 35,
+  "manual_retry_required": false,
+  "finished_at": "2026-11-18T04:59:03.7599443Z"
+}

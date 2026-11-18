@@ -1,6 +1,7 @@
 export const messages = {
   attempt: ["Attempt", "Deneme"],
-  attemptNumber: ["Attempt {number} of 3", "3 denemeden {number}."],
+  attemptNumber: ["Attempt {number} of 3", "Deneme {number}/3"],
+  latestAttemptDuration: ["Latest attempt duration", "Son denemenin süresi"],
   retryAt: ["Retry: {time}", "Yeniden deneme: {time}"],
   attemptHistory: ["Attempt history", "Deneme geçmişi"],
   retryExplanation: ["A temporary infrastructure failure stopped the previous attempt. The next attempt is scheduled for {time}. Earlier results are kept below; a queued retry is not a successful verification.", "Geçici altyapı hatası önceki denemeyi durdurdu. Sonraki deneme {time} için planlandı. Önceki sonuçlar aşağıda korunur; sıradaki deneme başarılı doğrulama anlamına gelmez."],
