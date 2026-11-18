@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -106,6 +105,22 @@ func (w *Worker) Run(ctx context.Context) error {
 			return err
 		}
 		if job != nil {
+			if job.AttemptCount > 1 {
+				// Reconcile an ambiguous late Docker create before reusing this
+				// job's container name. Never overlap attempts.
+				cleanCtx, stopClean := context.WithTimeout(ctx, 30*time.Second)
+				found, e := w.Docker.Run(cleanCtx, nil, "ps", "--all", "--quiet", "--filter", "name=^/restivra-"+job.ID+"$", "--filter", "label=app=restivra")
+				if e == nil && strings.TrimSpace(found) != "" {
+					e = (verify.Runner{Docker: w.Docker}).Cleanup(cleanCtx, job.ID)
+				}
+				if e == nil {
+					e = cleanSnapshotDir(w.WorkDir, job.ID)
+				}
+				stopClean()
+				if e != nil {
+					return ErrCleanupPending
+				}
+			}
 			if err = w.execute(ctx, conn, root, *job); err != nil {
 				return err
 			}
@@ -195,12 +210,7 @@ func (w *Worker) recover(ctx context.Context) error {
 			return err
 		}
 	}
-	notify := "skipped"
-	if w.WebhookURL != "" {
-		notify = "pending"
-	}
-	_, err = w.Store.DB.ExecContext(ctx, `UPDATE jobs SET status='interrupted',finished_at=clock_timestamp(),error='Previous worker stopped before finishing. Temporary resources were reconciled.',notification_status=$1,notification_next_at=clock_timestamp() WHERE status='running'`, notify)
-	return err
+	return w.Store.RecoverAttempts(ctx, w.WebhookURL != "")
 }
 
 func cleanSnapshotDir(work, id string) error {
@@ -368,20 +378,7 @@ func (w *Worker) execute(parent context.Context, conn *sql.Conn, root *os.Root, 
 			report.ErrorCode = "cleanup_failed"
 		}
 	}
-	var raw any
-	if report != nil {
-		data, err := json.Marshal(report)
-		if err != nil {
-			return err
-		}
-		raw = data
-	}
-	notification := "skipped"
-	if (status == "failed" || status == "interrupted") && w.WebhookURL != "" {
-		notification = "pending"
-	}
-	_, err := w.Store.DB.ExecContext(finalCtx, `UPDATE jobs SET status=$2,finished_at=clock_timestamp(),report=$3,error=$4,notification_status=$5,notification_next_at=clock_timestamp() WHERE id=$1 AND status='running'`, job.ID, status, raw, errorText, notification)
-	if err != nil {
+	if err := w.Store.FinishAttempt(finalCtx, job.ID, status, errorText, report, w.WebhookURL != ""); err != nil {
 		return err
 	}
 	if cleanupFailed {

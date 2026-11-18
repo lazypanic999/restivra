@@ -19,6 +19,7 @@
 .login-workspace > p { color: var(--muted); }
 .login-workspace form { margin-top: 28px; }
 .login-workspace .button { margin-top: 12px; }
+.attempt-info { display: block; color: var(--muted); font-size: 12px; margin-top: 4px; }
 * {
   box-sizing: border-box;
 }

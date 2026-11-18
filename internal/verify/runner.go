@@ -75,6 +75,7 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 	if r.Docker == nil {
 		r.Docker = Docker{}
 	}
+	r.Docker = tracedDocker{r.Docker, &report.CommandTimings}
 	if r.WorkDir == "" {
 		r.WorkDir = "work"
 	}
@@ -97,6 +98,7 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 			report.Error = "could not remove private backup snapshot; remove it from work directory"
 		}
 	}()
+	report.Stage = "engine"
 	if _, err = r.Docker.Run(ctx, nil, "info", "--format", "{{.OSType}}"); err != nil {
 		fail("Docker engine unavailable; start Docker with Linux containers")
 		return
@@ -262,6 +264,8 @@ func cleanupCreatedContainer(docker Commander, name string, removalBudget time.D
 
 func stageErrorCode(stage string) string {
 	switch stage {
+	case "engine":
+		return "engine_unavailable"
 	case "validate":
 		return "backup_invalid"
 	case "image":

@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -202,12 +203,29 @@ func (a *API) job(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if strings.HasSuffix(r.URL.Path, "/report") {
-		if j.Report == nil {
+		report := j.Report
+		suffix := ""
+		if value := r.URL.Query().Get("attempt"); value != "" {
+			n, e := strconv.Atoi(value)
+			if e != nil || n < 1 || n > MaxAttempts {
+				jsonError(w, 400, "invalid attempt number")
+				return
+			}
+			report = nil
+			for _, attempt := range j.Attempts {
+				if attempt.Number == n {
+					report = attempt.Report
+					break
+				}
+			}
+			suffix = "-attempt-" + strconv.Itoa(n)
+		}
+		if report == nil {
 			jsonError(w, 409, "bu çalışma için henüz geri yükleme raporu yok")
 			return
 		}
-		w.Header().Set("Content-Disposition", `attachment; filename="restivra-`+id+`.json"`)
-		jsonResponse(w, 200, j.Report)
+		w.Header().Set("Content-Disposition", `attachment; filename="restivra-`+id+suffix+`.json"`)
+		jsonResponse(w, 200, report)
 		return
 	}
 	jsonResponse(w, 200, j)

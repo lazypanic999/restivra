@@ -6,6 +6,7 @@ import (
 	"io"
 	"os/exec"
 	"strings"
+	"time"
 )
 
 // Command never invokes a shell. stderr is deliberately not included in reports:
@@ -62,6 +63,7 @@ func (b *limitedBuffer) Write(p []byte) (int, error) {
 
 func (Docker) Run(ctx context.Context, stdin io.Reader, args ...string) (string, error) {
 	cmd := exec.CommandContext(ctx, "docker", args...)
+	cmd.WaitDelay = 3 * time.Second
 	cmd.Stdin = stdin
 	var out limitedBuffer
 	var diagnostic limitedBuffer

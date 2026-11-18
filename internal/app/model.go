@@ -44,6 +44,18 @@ type Job struct {
 	Error                string         `json:"error,omitempty"`
 	NotificationStatus   string         `json:"notification_status"`
 	NotificationAttempts int            `json:"notification_attempts"`
+	AttemptCount         int            `json:"attempt_count"`
+	RetryAt              *time.Time     `json:"retry_at,omitempty"`
+	Attempts             []Attempt      `json:"attempts,omitempty"`
+}
+
+type Attempt struct {
+	Number     int            `json:"number"`
+	Status     string         `json:"status"`
+	StartedAt  *time.Time     `json:"started_at,omitempty"`
+	FinishedAt time.Time      `json:"finished_at"`
+	Report     *verify.Report `json:"report,omitempty"`
+	Error      string         `json:"error,omitempty"`
 }
 
 func NewID() string {

@@ -91,20 +91,22 @@ type Backup struct {
 }
 
 type Report struct {
-	SchemaVersion int           `json:"schema_version"`
-	RunID         string        `json:"run_id"`
-	Status        string        `json:"status"`
-	Stage         string        `json:"stage"`
-	StartedAt     time.Time     `json:"started_at"`
-	FinishedAt    time.Time     `json:"finished_at"`
-	DurationMS    int64         `json:"duration_ms"`
-	Image         string        `json:"image"`
-	ImageID       string        `json:"image_id,omitempty"`
-	Backup        Backup        `json:"backup"`
-	RestoreStatus string        `json:"restore_status"`
-	Checks        []CheckResult `json:"checks"`
-	CleanupStatus string        `json:"cleanup_status"`
-	Error         string        `json:"error,omitempty"`
-	ErrorCode     string        `json:"error_code,omitempty"`
-	Warnings      []string      `json:"warnings"`
+	CommandTimings []CommandTiming `json:"command_timings,omitempty"`
+	Attempt        int             `json:"attempt,omitempty"`
+	SchemaVersion  int             `json:"schema_version"`
+	RunID          string          `json:"run_id"`
+	Status         string          `json:"status"`
+	Stage          string          `json:"stage"`
+	StartedAt      time.Time       `json:"started_at"`
+	FinishedAt     time.Time       `json:"finished_at"`
+	DurationMS     int64           `json:"duration_ms"`
+	Image          string          `json:"image"`
+	ImageID        string          `json:"image_id,omitempty"`
+	Backup         Backup          `json:"backup"`
+	RestoreStatus  string          `json:"restore_status"`
+	Checks         []CheckResult   `json:"checks"`
+	CleanupStatus  string          `json:"cleanup_status"`
+	Error          string          `json:"error,omitempty"`
+	ErrorCode      string          `json:"error_code,omitempty"`
+	Warnings       []string        `json:"warnings"`
 }

@@ -26,6 +26,10 @@ function Status({ value }) {
     </span>
   );
 }
+function RunState({ job }) {
+  const { t, formatDate } = useLanguage();
+  return <><Status value={job.status} />{job.retry_at ? <small className="attempt-info">{t("retryAt",{time:formatDate(job.retry_at,true)})}</small> : job.attempt_count>1 && <small className="attempt-info">{t("attemptNumber",{number:job.attempt_count})}</small>}</>;
+}
 function Button({ children, primary = false, className = "", ...props }) {
   return (
     <button
@@ -166,11 +170,11 @@ function App({ onUnauthorized, onLogout }) {
     return () => clearTimeout(timer);
   }, [toast]);
   useEffect(() => {
-    if (selected) {
-      const current = jobs.find((job) => job.id === selected.id);
-      if (current) setSelected(current);
-    }
-  }, [jobs]);
+    if (!selected?.id) return;
+    let disposed=false;
+    api(`/jobs/${selected.id}`).then(job=>{if(!disposed)setSelected(job);}).catch(()=>{});
+    return ()=>{disposed=true;};
+  }, [jobs,selected?.id,api]);
   const perform = async (key, action) => {
     setBusy(key);
     try {
@@ -403,7 +407,7 @@ function App({ onUnauthorized, onLogout }) {
                                   className="status-button"
                                   onClick={() => inspect(project.last_job)}
                                 >
-                                  <Status value={project.last_job.status} />
+                                  <RunState job={project.last_job} />
                                 </button>
                               ) : (
                                 <span className="secondary">
@@ -531,7 +535,7 @@ function App({ onUnauthorized, onLogout }) {
                                 </code>
                               </td>
                               <td>
-                                <Status value={job.status} />
+                                <RunState job={job} />
                               </td>
                               <td>
                                 {formatDate(job.started_at || job.queued_at)}
@@ -941,7 +945,7 @@ function Report({ job, duration, onClose, onCancel }) {
     <Modal title={t("report")} description={job.project_name} onClose={onClose}>
       <div className="modal-body report-body">
         <div className="report-outcome">
-          <Status value={job.status} />
+          <RunState job={job} />
           <code>{job.id}</code>
         </div>
         <p
@@ -958,6 +962,8 @@ function Report({ job, duration, onClose, onCancel }) {
               : explain(job.error) || t("reportFailed")}
         </p>
         {report?.error_code && <p className="notice">{t(`advice.${report.error_code}`)} <code>{report.error_code}</code></p>}
+        {job.retry_at && <p className="notice">{t("retryExplanation",{time:formatDate(job.retry_at,true)})}</p>}
+        {job.attempts?.length>0 && (job.attempt_count>1 || job.retry_at) && <section aria-label={t("attemptHistory")}><h3>{t("attemptHistory")}</h3><div className="table-scroll"><table><thead><tr><th>{t("attempt")}</th><th>{t("result")}</th><th>{t("details")}</th><th>JSON</th></tr></thead><tbody>{job.attempts.map(a=><tr key={a.number}><td>{a.number}</td><td><Status value={a.status}/></td><td>{explain(a.error)||formatDate(a.finished_at,true)}</td><td>{a.report && <a href={`/api/jobs/${job.id}/report?attempt=${a.number}`} download>{t("download")}</a>}</td></tr>)}</tbody></table></div></section>}
         <dl className="report-facts">
           <div>
             <dt>{t("started")}</dt>

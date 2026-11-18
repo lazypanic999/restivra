@@ -1,4 +1,11 @@
 export const messages = {
+  attempt: ["Attempt", "Deneme"],
+  attemptNumber: ["Attempt {number} of 3", "3 denemeden {number}."],
+  retryAt: ["Retry: {time}", "Yeniden deneme: {time}"],
+  attemptHistory: ["Attempt history", "Deneme geçmişi"],
+  retryExplanation: ["A temporary infrastructure failure stopped the previous attempt. The next attempt is scheduled for {time}. Earlier results are kept below; a queued retry is not a successful verification.", "Geçici altyapı hatası önceki denemeyi durdurdu. Sonraki deneme {time} için planlandı. Önceki sonuçlar aşağıda korunur; sıradaki deneme başarılı doğrulama anlamına gelmez."],
+  "advice.engine_unavailable": ["The Docker engine is unavailable. Check Docker Desktop or the engine service.", "Docker motoruna erişilemiyor. Docker Desktop veya motor servisini kontrol et."],
+  "advice.infrastructure_interrupted": ["The worker lost its execution session. Owned temporary resources are reconciled before retrying.", "Worker çalışma oturumunu kaybetti. Yeniden denemeden önce geçici kaynaklar toparlanır."],
   protectedAccess: ["Sign-in required", "Oturum açma gerekli"],
   localAccess: ["Local access · sign-in disabled", "Yerel erişim · oturum açma kapalı"],
   "advice.resource_limit": ["The temporary database reached a storage or memory limit. Increase restore limits or test a smaller database.", "Geçici veritabanı depolama veya bellek sınırına ulaştı. Geri yükleme sınırlarını artır veya daha küçük bir veritabanı dene."],
@@ -289,6 +296,7 @@ export function text(language, key, values = {}) {
 }
 
 const errorPairs = [
+  ["Temporary infrastructure failure; retry scheduled.", "Geçici altyapı hatası; yeniden deneme planlandı."],
   ["Temporary resource cleanup failed. Worker stopped before accepting more jobs.", "Geçici kaynaklar temizlenemedi. Worker yeni iş kabul etmeden durdu."],
   ["worker heartbeat timed out; active restore was stopped", "worker bağlantı kontrolünün süresi doldu; aktif geri yükleme durduruldu"],
   ["Failed to fetch", "Sunucuya bağlanılamadı"],

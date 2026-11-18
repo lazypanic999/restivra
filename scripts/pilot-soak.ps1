@@ -55,7 +55,7 @@ $good=Project 'Pilot commerce' 'commerce.dump' 'SELECT count(*) = 100000 FROM pu
 $falseProject=Project 'Pilot false check' 'commerce.dump' 'SELECT false'
 $missing=Project 'Pilot missing archive' 'missing.dump' 'SELECT true'
 $bad=Project 'Pilot corrupt archive' 'bad.dump' 'SELECT true'
-$slow=Project 'Pilot interruption' 'commerce.dump' 'SELECT pg_sleep(8) IS NULL'
+$slow=Project 'Pilot interruption' 'commerce.dump' 'SELECT true FROM (SELECT pg_sleep(8)) AS waited'
 $iteration=0
 $failure=$null
 try {
@@ -74,7 +74,9 @@ try {
             if($current.status -ne 'running'){throw 'Could not interrupt a running job'}
             DC @('kill','--signal','SIGKILL','worker')|Out-Null
             DC @('up','-d','worker')|Out-Null
-            Assert-Job (Wait-Job $job.id) 'interrupted' 'worker_sigkill'
+            $recovered=Wait-Job $job.id
+            Assert-Job $recovered 'passed' 'worker_sigkill_recovered'
+            if($recovered.attempt_count -lt 2 -or $recovered.attempts[0].status -ne 'interrupted'){throw 'Worker recovery lost prior attempt evidence'}
             Run-Project $good 'passed' 'restore_after_worker_recovery'
         }
         if($iteration -eq 5 -or $iteration -eq 45) {

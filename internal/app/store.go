@@ -49,6 +49,14 @@ CREATE INDEX IF NOT EXISTS job_history ON jobs(queued_at DESC);
 CREATE INDEX IF NOT EXISTS project_job_history ON jobs(project_id,queued_at DESC,id DESC);
 CREATE TABLE IF NOT EXISTS workers(instance text PRIMARY KEY, heartbeat_at timestamptz NOT NULL);
 CREATE TABLE IF NOT EXISTS installation(singleton boolean PRIMARY KEY DEFAULT true CHECK(singleton), id text NOT NULL UNIQUE);
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS attempt_count integer NOT NULL DEFAULT 0;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS retry_at timestamptz;
+UPDATE jobs SET attempt_count=1 WHERE attempt_count=0 AND started_at IS NOT NULL;
+CREATE TABLE IF NOT EXISTS job_attempts (
+ job_id text NOT NULL REFERENCES jobs(id) ON DELETE CASCADE, number integer NOT NULL,
+ status text NOT NULL, started_at timestamptz, finished_at timestamptz NOT NULL DEFAULT clock_timestamp(),
+ report jsonb, error text NOT NULL DEFAULT '', PRIMARY KEY(job_id,number)
+);
 `
 
 func (s *Store) Migrate(ctx context.Context) error {
@@ -93,12 +101,12 @@ func scanProject(row scanner) (Project, error) {
 	return p, err
 }
 
-const jobCols = `id,project_id,project_name,backup_pattern,config,status,trigger,queued_at,started_at,finished_at,heartbeat_at,cancel_requested,report,error,notification_status,notification_attempts`
+const jobCols = `id,project_id,project_name,backup_pattern,config,status,trigger,queued_at,started_at,finished_at,heartbeat_at,cancel_requested,report,error,notification_status,notification_attempts,attempt_count,retry_at`
 
 func scanJob(row scanner) (Job, error) {
 	var j Job
 	var cfg, report []byte
-	err := row.Scan(&j.ID, &j.ProjectID, &j.ProjectName, &j.BackupPattern, &cfg, &j.Status, &j.Trigger, &j.QueuedAt, &j.StartedAt, &j.FinishedAt, &j.HeartbeatAt, &j.CancelRequested, &report, &j.Error, &j.NotificationStatus, &j.NotificationAttempts)
+	err := row.Scan(&j.ID, &j.ProjectID, &j.ProjectName, &j.BackupPattern, &cfg, &j.Status, &j.Trigger, &j.QueuedAt, &j.StartedAt, &j.FinishedAt, &j.HeartbeatAt, &j.CancelRequested, &report, &j.Error, &j.NotificationStatus, &j.NotificationAttempts, &j.AttemptCount, &j.RetryAt)
 	if err != nil {
 		return j, err
 	}
@@ -234,6 +242,9 @@ func (s *Store) Job(ctx context.Context, id string) (Job, error) {
 	if errors.Is(err, sql.ErrNoRows) {
 		return j, ErrNotFound
 	}
+	if err == nil {
+		j.Attempts, err = s.Attempts(ctx, id)
+	}
 	return j, err
 }
 func (s *Store) Cancel(ctx context.Context, id string) error {
@@ -254,13 +265,13 @@ func (s *Store) Claim(ctx context.Context) (*Job, error) {
 	}
 	defer tx.Rollback()
 	var id string
-	if err = tx.QueryRowContext(ctx, "SELECT id FROM jobs WHERE status='queued' ORDER BY queued_at FOR UPDATE SKIP LOCKED LIMIT 1").Scan(&id); errors.Is(err, sql.ErrNoRows) {
+	if err = tx.QueryRowContext(ctx, "SELECT id FROM jobs WHERE status='queued' AND (retry_at IS NULL OR retry_at<=clock_timestamp()) ORDER BY queued_at FOR UPDATE SKIP LOCKED LIMIT 1").Scan(&id); errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, err
 	}
-	j, err := scanJob(tx.QueryRowContext(ctx, "UPDATE jobs SET status='running',started_at=clock_timestamp(),heartbeat_at=clock_timestamp() WHERE id=$1 RETURNING "+jobCols, id))
+	j, err := scanJob(tx.QueryRowContext(ctx, "UPDATE jobs SET status='running',started_at=clock_timestamp(),heartbeat_at=clock_timestamp(),attempt_count=attempt_count+1,retry_at=NULL,report=NULL,error='' WHERE id=$1 RETURNING "+jobCols, id))
 	if err != nil {
 		return nil, err
 	}

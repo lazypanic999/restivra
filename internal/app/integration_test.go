@@ -158,7 +158,24 @@ func TestIntegrationApp(t *testing.T) {
 		t.Fatal("job did not finish")
 		return Job{}
 	}
-	waitJob(old.ID, "interrupted")
+	// Startup recovery persists the interrupted attempt and schedules a retry.
+	for attempts := 0; attempts < 120; attempts++ {
+		recovered, e := store.Job(ctx, old.ID)
+		if e != nil {
+			t.Fatal(e)
+		}
+		if recovered.Status == "queued" && len(recovered.Attempts) == 1 {
+			if recovered.RetryAt == nil || !recovered.RetryAt.After(time.Now()) || recovered.Attempts[0].Status != "interrupted" {
+				t.Fatal("recovery retry lost its backoff/audit")
+			}
+			if _, e = store.DB.ExecContext(ctx, "UPDATE jobs SET retry_at=clock_timestamp() WHERE id=$1", old.ID); e != nil {
+				t.Fatal(e)
+			}
+			break
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	waitJob(old.ID, "passed")
 	if _, err = d.Run(ctx, nil, "inspect", "restivra-"+foreignID); err != nil {
 		t.Fatal("recovery deleted another installation's container")
 	}
@@ -266,7 +283,7 @@ func TestIntegrationApp(t *testing.T) {
 		}
 	}
 	notified, err := store.Job(ctx, old.ID)
-	if err != nil || notified.Status != "interrupted" || notified.NotificationStatus != "failed" || notified.NotificationAttempts != 3 {
+	if err != nil || notified.Status != "passed" || notified.NotificationStatus != "failed" || notified.NotificationAttempts != 3 {
 		t.Fatalf("notification retry state wrong: %+v %v", notified, err)
 	}
 	// A failed removal is a stop condition, never permission to claim the next
@@ -296,7 +313,7 @@ func TestIntegrationApp(t *testing.T) {
 		t.Fatalf("worker did not stop on cleanup failure: %v", err)
 	}
 	failedJob, err := store.Job(ctx, blocked.ID)
-	if err != nil || failedJob.Status != "failed" || failedJob.Report == nil || failedJob.Report.ErrorCode != "cleanup_failed" {
+	if err != nil || failedJob.Status != "queued" || len(failedJob.Attempts) != 1 || failedJob.Attempts[0].Report == nil || failedJob.Attempts[0].Report.ErrorCode != "cleanup_failed" {
 		t.Fatalf("cleanup failure not durable: %+v %v", failedJob, err)
 	}
 	nextJob, err := store.Job(ctx, next.ID)
@@ -306,8 +323,12 @@ func TestIntegrationApp(t *testing.T) {
 	restartCtx, stopRestart := context.WithCancel(ctx)
 	restarted := Worker{Store: store, BackupRoot: rootDir, WorkDir: work, Instance: name}
 	restartedDone := make(chan error, 1)
+	restartStopped := false
 	go func() { restartedDone <- restarted.Run(restartCtx) }()
 	defer func() {
+		if restartStopped {
+			return
+		}
 		stopRestart()
 		if err := <-restartedDone; err != nil {
 			t.Error(err)
@@ -325,7 +346,7 @@ func TestIntegrationApp(t *testing.T) {
 	foundFailed, foundPassed := false, false
 	for _, project := range listed {
 		if project.ID == p.ID {
-			foundFailed = project.LastJob != nil && project.LastJob.ID == blocked.ID && project.LastJob.Report != nil && project.LastJob.Report.ErrorCode == "cleanup_failed"
+			foundFailed = project.LastJob != nil && project.LastJob.ID == blocked.ID && project.LastJob.AttemptCount >= 1
 		}
 		if project.ID == nextProject.ID {
 			foundPassed = project.LastJob != nil && project.LastJob.ID == next.ID && project.LastJob.Status == "passed" && project.LastJob.ProjectName == "After cleanup recovery"
@@ -334,6 +355,15 @@ func TestIntegrationApp(t *testing.T) {
 	if !foundFailed || !foundPassed {
 		t.Fatal("project listing lost latest immutable job/report details")
 	}
+	stopRestart()
+	if err = <-restartedDone; err != nil {
+		t.Fatal(err)
+	}
+	restartStopped = true
+	if _, err = store.DB.ExecContext(ctx, "UPDATE jobs SET status='cancelled',finished_at=clock_timestamp() WHERE status='queued'"); err != nil {
+		t.Fatal(err)
+	}
+	testRetryPolicy(t, ctx, store, p)
 }
 
 type rejectCleanup struct{ verify.Commander }
