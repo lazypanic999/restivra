@@ -73,7 +73,9 @@ try {
             do {$current=API "/jobs/$($job.id)";if($current.status -eq 'running'){break};Start-Sleep -Milliseconds 200}while([DateTime]::UtcNow -lt $limit)
             if($current.status -ne 'running'){throw 'Could not interrupt a running job'}
             DC @('kill','--signal','SIGKILL','worker')|Out-Null
-            DC @('up','-d','worker')|Out-Null
+            # Restart the same container/image: 'up' can silently recreate it
+            # after an unrelated local presentation build moves an image tag.
+            DC @('start','worker')|Out-Null
             $recovered=Wait-Job $job.id
             Assert-Job $recovered 'passed' 'worker_sigkill_recovered'
             if($recovered.attempt_count -lt 2 -or $recovered.attempts[0].status -ne 'interrupted'){throw 'Worker recovery lost prior attempt evidence'}

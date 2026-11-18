@@ -18,6 +18,7 @@ The interface defaults to **English**. Select **Türkçe** to switch; the prefer
 - PostgreSQL-backed queue, immutable run settings, cancellation and one active run per project.
 - One restore worker per application database, enforced by a PostgreSQL session advisory lock.
 - Worker heartbeats and startup reconciliation of interrupted jobs, owned containers and private snapshots.
+- Bounded automatic infrastructure recovery: three attempts, persisted backoff and downloadable attempt history.
 - Daily schedules with explicit IANA time zones; missed intervals do not create a backlog.
 - SHA-256 fingerprints, unchanged-file warnings and file-age warnings.
 - Optional failure webhook, with three persisted delivery attempts and independent delivery status.
@@ -99,7 +100,7 @@ React dashboard → Go API → PostgreSQL projects/jobs
 
 The API has no Docker socket or backup mount. Worker files are opened with `os.Root`, rejecting traversal and symlinks escaping the backup root. Archives stream into restore containers; neither host paths nor the Docker socket are mounted there.
 
-Jobs snapshot the project name, path and checks. Edits affect future jobs. Already-active projects are not scheduled twice. On worker restart, interrupted jobs are reconciled and marked `interrupted`, not successful. Notification delivery state is separate.
+Jobs snapshot the project name, path and checks. Edits affect future jobs. Already-active projects are not scheduled twice. On worker restart, interrupted attempts are preserved and owned resources reconciled. Eligible jobs retry automatically, at most three attempts with 30/60-second delays; only a fresh successful restore can pass. Invalid archives, failed SQL checks, resource failures and restore-stage timeouts stay final. Cancellation suppresses retries. Notification delivery state is separate. See [recovery behavior and evidence](docs/DOCKER-STALL-ANALYSIS.md).
 
 Recovery uses the metadata database's installation ID and exact legacy running-job IDs. It does not delete another installation's resources based on a shared instance name. Failed cleanup stops the worker before it claims another job; restart reconciles remaining resources first.
 

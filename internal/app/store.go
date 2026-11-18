@@ -248,7 +248,7 @@ func (s *Store) Job(ctx context.Context, id string) (Job, error) {
 	return j, err
 }
 func (s *Store) Cancel(ctx context.Context, id string) error {
-	result, err := s.DB.ExecContext(ctx, `UPDATE jobs SET cancel_requested=true,status=CASE WHEN status='queued' THEN 'cancelled' ELSE status END,finished_at=CASE WHEN status='queued' THEN clock_timestamp() ELSE finished_at END WHERE id=$1 AND status IN ('queued','running')`, id)
+	result, err := s.DB.ExecContext(ctx, `UPDATE jobs SET cancel_requested=true,retry_at=NULL,error=CASE WHEN status='queued' THEN 'Cancelled by user.' ELSE error END,status=CASE WHEN status='queued' THEN 'cancelled' ELSE status END,finished_at=CASE WHEN status='queued' THEN clock_timestamp() ELSE finished_at END WHERE id=$1 AND status IN ('queued','running')`, id)
 	if err != nil {
 		return err
 	}

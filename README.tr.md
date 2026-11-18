@@ -40,6 +40,7 @@ Go 1.27.4+ kuruluysa `./scripts/seed-demo.ps1` iki hayali müşteri projesi olu�
 - Kalıcı PostgreSQL iş kuyruğu; aynı anda tek geri yükleme.
 - Proje başına tek aktif iş, manuel/günlük çalışma ve iptal.
 - Worker yeniden başlayınca yarım işlerin ve geçici kaynakların toparlanması.
+- Geçici altyapı hatalarında 30/60 saniye arayla en fazla üç otomatik deneme; önceki denemeler ve raporları korunur.
 - SHA-256, değişmeyen yedek ve eski dosya uyarıları.
 - İsteğe bağlı başarısızlık webhook'u; en fazla üç teslim denemesi.
 - Varsayılan 30 günlük tamamlanmış çalışma geçmişi.

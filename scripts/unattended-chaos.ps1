@@ -37,4 +37,19 @@ docker pause restivra-pilot-chaos-db-1|Out-Null
 if($LASTEXITCODE -ne 0){throw 'Could not pause isolated metadata database'}
 try{Start-Sleep -Seconds 25}finally{docker unpause restivra-pilot-chaos-db-1|Out-Null}
 Assert-Recovered (Wait-Final $job.id) 'metadata-stall'
-@{passed=$true;docker_stall_seconds=35;metadata_stall_seconds=25;manual_retry_required=$false;finished_at=[DateTime]::UtcNow.ToString('o')}|ConvertTo-Json|Set-Content (Join-Path $EvidenceDirectory 'summary.json')
+$third=New-ChaosProject 'Chaos · cancel scheduled retry' 10 'SELECT true'
+docker exec restivra-fault-proxy /fault-proxy arm|Out-Null
+if($LASTEXITCODE -ne 0){throw 'Could not arm cancellation fault'}
+$job=API '/jobs' 'Post' @{project_id=$third.id}
+$limit=[DateTime]::UtcNow.AddMinutes(2)
+do{$state=API "/jobs/$($job.id)";if($state.status -eq 'queued' -and $state.attempt_count -eq 1 -and $state.retry_at){break};Start-Sleep -Milliseconds 300}while([DateTime]::UtcNow -lt $limit)
+if($state.status -ne 'queued' -or -not $state.retry_at){throw 'No delayed retry to cancel'}
+API "/jobs/$($job.id)/cancel" 'Post'|Out-Null
+# Observe beyond the persisted 30-second deadline, while cleanup reconciles.
+Start-Sleep -Seconds 35
+$state=API "/jobs/$($job.id)"
+if($state.status -ne 'cancelled' -or $state.retry_at -or $state.error -ne 'Cancelled by user.' -or $state.attempt_count -ne 1 -or $state.attempts.Count -ne 1){throw 'Cancelled delayed retry ran again, retained retry metadata or lost its evidence'}
+if(docker ps -aq --filter "label=restivra.run=$($job.id)"){throw 'Cancelled retry left a restore container'}
+$state|ConvertTo-Json -Depth 20|Set-Content (Join-Path $EvidenceDirectory 'cancelled-retry.json')
+Write-Output 'Delayed retry remained cancelled after its original deadline; cleanup passed.'
+@{passed=$true;docker_stall_seconds=35;metadata_stall_seconds=25;cancelled_retry_suppressed=$true;manual_retry_required=$false;finished_at=[DateTime]::UtcNow.ToString('o')}|ConvertTo-Json|Set-Content (Join-Path $EvidenceDirectory 'summary.json')

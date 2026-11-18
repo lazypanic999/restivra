@@ -48,4 +48,11 @@ source scan still reports zero P0/P1/P2 findings. New rendered evidence:
 [Turkish failure advice](screenshots/pilot-failure-tr.jpg). API-restart form
 submission and authenticated JSON download were verified in the browser.
 
+Automatic recovery adds a compact attempt table within the existing report.
+Queued retries show their next time; completed runs identify repeated attempts.
+The table wraps long failure advice and keeps both previous and successful JSON
+downloads visible. English and Turkish rendered checks passed with no browser
+console warnings/errors: [English](screenshots/automatic-recovery-en.jpg),
+[Turkish](screenshots/automatic-recovery-tr.jpg). Source re-scan remains zero.
+
 The initially reported Vite/picomatch advisory has been resolved by removing Vite and its glob dependency chain entirely. The frontend now bundles directly with esbuild. The full `npm audit` (including development dependencies) reports zero known vulnerabilities, and CI enforces that check. No forced downgrade or audit suppression was used. See [BUILD-SECURITY.md](BUILD-SECURITY.md) for the migration and development workflow.

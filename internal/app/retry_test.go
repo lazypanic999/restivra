@@ -119,8 +119,9 @@ func testRetryPolicy(t *testing.T, ctx context.Context, store *Store, template P
 	if err = store.Cancel(ctx, j.ID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err = store.DB.ExecContext(ctx, "UPDATE jobs SET retry_at=clock_timestamp() WHERE id=$1", j.ID); err != nil {
-		t.Fatal(err)
+	cancelled, e := store.Job(ctx, j.ID)
+	if e != nil || cancelled.Status != "cancelled" || cancelled.RetryAt != nil || cancelled.Error != "Cancelled by user." || len(cancelled.Attempts) != 1 {
+		t.Fatal("cancelled retry retained a future retry or lost attempt evidence")
 	}
 	if next, e := store.Claim(ctx); e != nil || next != nil {
 		t.Fatal("cancelled retry ran")
