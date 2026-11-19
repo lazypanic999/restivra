@@ -189,6 +189,8 @@ The logo is a crimson R whose counter is a cream return arrow. The palette is cr
 
 Logo, mark, favicon sources and the mascot are in [docs/brand](docs/brand). Interface rules, including the dark character layer, are in [DESIGN.md](DESIGN.md).
 
+The badger also has [six transparent expression poses](docs/branding): sleeping, proud, panicking, refusing, approving and waving, with a downloadable PNG pack and generation prompts.
+
 ## Remaining work
 
 Real developer pilots on their own computers, extension compatibility, larger-database sizing and payment validation. S3, PDF, extra database engines/major versions, PITR and hosted multi-tenant operation are outside the MVP. See [ROADMAP.md](ROADMAP.md).

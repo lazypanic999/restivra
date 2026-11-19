@@ -1,0 +1,38 @@
+[
+  {
+    "file": "approving.png",
+    "width": 1254,
+    "height": 1254,
+    "transparent_corners": true
+  },
+  {
+    "file": "panicking.png",
+    "width": 1254,
+    "height": 1254,
+    "transparent_corners": true
+  },
+  {
+    "file": "proud.png",
+    "width": 1254,
+    "height": 1254,
+    "transparent_corners": true
+  },
+  {
+    "file": "refusing.png",
+    "width": 1254,
+    "height": 1254,
+    "transparent_corners": true
+  },
+  {
+    "file": "sleeping.png",
+    "width": 1254,
+    "height": 1254,
+    "transparent_corners": true
+  },
+  {
+    "file": "waving.png",
+    "width": 1254,
+    "height": 1254,
+    "transparent_corners": true
+  }
+]
