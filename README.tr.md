@@ -4,6 +4,10 @@ Arayüz varsayılan olarak **İngilizce** açılır. Sağ üstteki dil seçicisi
 
 Mevcut PostgreSQL 17 yedeğini geçici bir ortamda geri yükler, SQL kontrollerini çalıştırır ve sonucu raporlar. İlk pilot, geliştiricinin kendi bilgisayarında Docker Desktop ile çalıştırması için hazırlanmıştır.
 
+![Türkçe arayüzde örnek doğrulama kayıtları](docs/screenshots/dashboard-tr.jpg)
+
+Görüntülerdeki projeler sentetik demo verisidir. Başarısız bir SQL kontrolünün raporu için [rapor ekranına](docs/screenshots/report.jpg), telefon görünümü için [mobil ekrana](docs/screenshots/dashboard-mobile.jpg) bakabilirsin.
+
 ## Kurulum
 
 Docker'ın Linux konteyner motoru açık olmalı. PowerShell 7.2+:

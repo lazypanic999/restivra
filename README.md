@@ -12,6 +12,12 @@ The interface defaults to **English**. Select **Türkçe** to switch; the prefer
 
 ![Restivra dashboard with synthetic demo results](docs/screenshots/dashboard.jpg)
 
+| Report for a failed SQL check | Phone |
+| --- | --- |
+| ![Verification report with one failed SQL check](docs/screenshots/report.jpg) | ![Dashboard on a 390 px wide screen](docs/screenshots/dashboard-mobile.jpg) |
+
+All screenshots use synthetic demo projects. The [sign-in page](docs/screenshots/sign-in.jpg) and the [Turkish interface](docs/screenshots/dashboard-tr.jpg) have their own captures.
+
 ## Features
 
 - React dashboard: overview, project settings, recent runs, report details and JSON downloads.
