@@ -1,12 +1,18 @@
+<h1 align="center"><img src="docs/brand/restivra-lockup.png" alt="Restivra" width="460"></h1>
+
 # Restivra — Türkçe kullanım
 
 Arayüz varsayılan olarak **İngilizce** açılır. Sağ üstteki dil seçicisinden **Türkçe** seçebilirsin; tercihin tarayıcıda saklanır. Yeni tasarım ve gerçek PostgreSQL denemesinin ayrıntıları: [tasarım incelemesi](docs/DESIGN-REVIEW.md), [sekiz senaryolu kabul testi](docs/POSTGRES-ACCEPTANCE.md).
 
 Mevcut PostgreSQL 17 yedeğini geçici bir ortamda geri yükler, SQL kontrollerini çalıştırır ve sonucu raporlar. İlk pilot, geliştiricinin kendi bilgisayarında Docker Desktop ile çalıştırması için hazırlanmıştır.
 
+[![Tanıtım videosu: proje oluşturma, geri yükleme testi, rapor ve bayat yedeğin yakalanması](docs/media/restivra-walkthrough-poster.jpg)](docs/media/restivra-walkthrough.mp4)
+
+51 saniyelik tanıtım videosunda bir proje oluşturuluyor, geri yükleme testi çalıştırılıyor, rapor açılıyor ve en yeni kaydı üç gün önceye ait bayat bir yedek yakalanıyor. Video sesli ve İngilizce arayüzle çekildi.
+
 ![Türkçe arayüzde örnek doğrulama kayıtları](docs/screenshots/dashboard-tr.jpg)
 
-Görüntülerdeki projeler sentetik demo verisidir. Başarısız bir SQL kontrolünün raporu için [rapor ekranına](docs/screenshots/report.jpg), telefon görünümü için [mobil ekrana](docs/screenshots/dashboard-mobile.jpg) bakabilirsin.
+Video ve görüntülerdeki projeler sentetik demo verisidir. Başarısız bir SQL kontrolünün raporu için [rapor ekranına](docs/screenshots/report.jpg), telefon görünümü için [mobil ekrana](docs/screenshots/dashboard-mobile.jpg) bakabilirsin.
 
 ## Kurulum
 
@@ -84,3 +90,11 @@ Vite ve sorunlu glob bağımlılıkları kaldırıldı; derleme doğrudan esbuil
 İçe aktarılan JS/CSS/yazı tipi değişiklikleri otomatik derlenir; tarayıcıyı elle yenile. HTML şablonu veya public dosyaları değişince izleyiciyi yeniden başlat. Üretim varsayılanı, ikili içine gömülmüş dosyalardır.
 
 Geliştirme araçları dahil tüm npm ağacı `npm audit --audit-level=low` ile CI'da denetlenir. [Güvenlik değişikliği](docs/BUILD-SECURITY.md).
+
+## Marka
+
+<img src="docs/brand/restivra-badger.png" alt="Restivra maskotu porsuk" width="160" align="right">
+
+Logo, iç boşluğu krem renkli bir dönüş oku olan kırmızı bir R. Renkler kırmızı `#d2324d`, krem `#ede3dc` ve siyah; arayüz yazıları Fira Code. Tanıtım videosundaki porsuk projenin maskotu.
+
+Logo, işaret, favicon kaynakları ve maskot [docs/brand](docs/brand) klasöründe. Koyu tema dahil arayüz kuralları [DESIGN.md](DESIGN.md) içinde.

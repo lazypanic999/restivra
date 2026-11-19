@@ -1,4 +1,4 @@
-# Restivra
+<h1 align="center"><img src="docs/brand/restivra-lockup.png" alt="Restivra" width="460"></h1>
 
 [![CI](https://github.com/lazypanic999/restivra/actions/workflows/ci.yml/badge.svg)](https://github.com/lazypanic999/restivra/actions/workflows/ci.yml)
 
@@ -10,17 +10,21 @@ Self-hosted PostgreSQL 17 backup verification for small teams and agencies. Rest
 
 The interface defaults to **English**. Select **Türkçe** to switch; the preference is remembered locally. See the [design review](docs/DESIGN-REVIEW.md) and [real PostgreSQL acceptance results](docs/POSTGRES-ACCEPTANCE.md).
 
+[![Walkthrough video: create a project, run a restore test, read the report, catch a stale backup](docs/media/restivra-walkthrough-poster.jpg)](docs/media/restivra-walkthrough.mp4)
+
+The 51-second walkthrough creates a project, runs a restore test, opens the report and catches a stale backup whose newest row is three days old. It has sound.
+
 ![Restivra dashboard with synthetic demo results](docs/screenshots/dashboard.jpg)
 
 | Report for a failed SQL check | Phone |
 | --- | --- |
 | ![Verification report with one failed SQL check](docs/screenshots/report.jpg) | ![Dashboard on a 390 px wide screen](docs/screenshots/dashboard-mobile.jpg) |
 
-All screenshots use synthetic demo projects. The [sign-in page](docs/screenshots/sign-in.jpg) and the [Turkish interface](docs/screenshots/dashboard-tr.jpg) have their own captures.
+The video and all screenshots use synthetic demo projects. The [sign-in page](docs/screenshots/sign-in.jpg) and the [Turkish interface](docs/screenshots/dashboard-tr.jpg) have their own captures.
 
 ## Features
 
-- React dashboard: overview, project settings, recent runs, report details and JSON downloads.
+- React dashboard in English and Turkish: overview, project settings, recent runs, report details and JSON downloads.
 - PostgreSQL-backed queue, immutable run settings, cancellation and one active run per project.
 - One restore worker per application database, enforced by a PostgreSQL session advisory lock.
 - Worker heartbeats and startup reconciliation of interrupted jobs, owned containers and private snapshots.
@@ -176,6 +180,14 @@ go run ./cmd/restivra cleanup --run-id <32-character-run-id>
 ```
 
 Manual cleanup verifies the exact ownership label. Do not target active jobs. Hard-killed standalone snapshots may need removal from their CLI work directory; worker recovery does not touch unrelated CLI work.
+
+## Brand
+
+<img src="docs/brand/restivra-badger.png" alt="Restivra badger mascot" width="170" align="right">
+
+The logo is a crimson R whose counter is a cream return arrow. The palette is crimson `#d2324d`, cream `#ede3dc` and black, and interface text is set in Fira Code. The badger from the walkthrough is the project mascot.
+
+Logo, mark, favicon sources and the mascot are in [docs/brand](docs/brand). Interface rules, including the dark character layer, are in [DESIGN.md](DESIGN.md).
 
 ## Remaining work
 
