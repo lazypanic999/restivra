@@ -4,6 +4,7 @@ import "@fontsource/public-sans/400.css";
 import "@fontsource/public-sans/600.css";
 import { LanguageProvider, useLanguage } from "./language.jsx";
 import "./styles.css";
+import "./character.css";
 
 const active = (job) => job && ["queued", "running"].includes(job.status);
 const size = (value) =>
@@ -92,7 +93,7 @@ function AuthGate() {
     } catch { setError("authUnavailable"); }
   }
   if (state?.authenticated) return <><App onUnauthorized={unauthorized} onLogout={state.enabled ? logout : null} />{error && <div className="toast" role="alert">{t(error)}</div>}</>;
-  return <><header className="app-header"><div className="header-inner"><span className="wordmark">Restivra</span><LanguageSwitch /></div></header><main className="login-workspace"><h1>{t("signIn")}</h1><p>{t("signInDescription")}</p>{error && <p className="notice error-notice" role="alert">{t(error)}</p>}{state ? <form onSubmit={login}><label className="field">{t("accessToken")}<input type="password" name="access-token" autoComplete="current-password" required maxLength={256} value={secret} onChange={(e) => setSecret(e.target.value)} aria-describedby="token-help" /></label><p className="help-text" id="token-help">{t("accessTokenHelp")}</p><Button primary disabled={busy}>{t(busy ? "signingIn" : "signIn")}</Button></form> : <Button onClick={bootstrap}>{t(error ? "refresh" : "loading")}</Button>}</main></>;
+  return <><header className="app-header"><div className="header-inner"><span className="wordmark" role="img" aria-label="Restivra">Rest<span className="wordmark-i" aria-hidden="true">ı</span>vra</span><LanguageSwitch /></div></header><main className="login-workspace"><h1>{t("signIn")}</h1><p>{t("signInDescription")}</p>{error && <p className="notice error-notice" role="alert">{t(error)}</p>}{state ? <form onSubmit={login}><label className="field">{t("accessToken")}<input type="password" name="access-token" autoComplete="current-password" required maxLength={256} value={secret} onChange={(e) => setSecret(e.target.value)} aria-describedby="token-help" /></label><p className="help-text" id="token-help">{t("accessTokenHelp")}</p><Button primary disabled={busy}>{t(busy ? "signingIn" : "signIn")}</Button></form> : <Button onClick={bootstrap}>{t(error ? "refresh" : "loading")}</Button>}</main></>;
 }
 
 function App({ onUnauthorized, onLogout }) {
@@ -260,13 +261,14 @@ function App({ onUnauthorized, onLogout }) {
         <div className="header-inner">
           <a
             className="wordmark"
+            aria-label="Restivra"
             href="#"
             onClick={(event) => {
               event.preventDefault();
               go("overview");
             }}
           >
-            Restivra
+            Rest<span className="wordmark-i" aria-hidden="true">ı</span>vra
           </a>
           <nav aria-label="Restivra">
             {["overview", "projects", "history", "setup"].map((id) => (

@@ -72,3 +72,13 @@ Shared Button, Status, ProjectTable, JobTable, Modal and Field primitives. Langu
 - Do not substitute another template: no cream/terracotta, neon terminal theme, decorative mono labels, broadsheet masthead, slogan hero, equal feature-card grid or decorative numbering.
 - Use a symbol only when it communicates an operation or state; controls primarily use explicit text.
 - Re-scan source and inspect rendered English/Turkish pages, forms and reports before delivery.
+
+## Character layer (black, crimson, cream)
+
+`web/src/character.css` loads after `styles.css` and replaces the light ledger look with a dark one modeled on the Odysseus workspace: charcoal page with a faint crimson dot grid, black panels with oxblood outlines and Fira Code for interface text. Long sentences (page descriptions, help text, notices) stay in Public Sans. Layout, spacing and behavior are unchanged. Removing the import in `main.jsx` restores the original look.
+
+Colors come from the logo. Crimson `#d2324d` is used for the mark, the current-page underline, focus rings and the dot grid. Cream `#ede3dc` is the text color. Crimson text needs a lighter tint to pass AA on dark ground, so links use `#ec5f74`. Primary buttons are `#b02840` with cream text. A failed run is orange `#ff9157` with a diamond marker and its label, so failure never looks like a brand element.
+
+The mark is a crimson R whose counter is a cream return arrow: the backup coming back. The wordmark is cream Fira Code; its i is a dotless ı with a crimson square on top (`.wordmark-i`), matching the logo. Files are in `docs/brand/`. Fira Code ships under the SIL OFL 1.1 (`web/public/licenses/Fira-Code-LICENSE.txt`).
+
+This layer overrides two earlier rules on purpose: monospace is now the interface face, and controls use 8px corners, panels 12px.
