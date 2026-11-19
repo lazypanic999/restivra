@@ -15,6 +15,7 @@
 - [x] Database-scoped resource ownership, fail-stop cleanup and metadata exports.
 - [x] Durable bounded infrastructure retries, preserved attempt history and retry cancellation.
 - [x] Fixed-image two-hour desktop acceptance and real Docker/metadata fault recovery.
+- [x] Dark black-and-crimson interface layer, new logo, README screenshots and walkthrough video.
 
 ## Pilot acceptance — requires real users
 

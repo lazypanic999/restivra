@@ -81,4 +81,6 @@ Colors come from the logo. Crimson `#d2324d` is used for the mark, the current-p
 
 The mark is a crimson R whose counter is a cream return arrow: the backup coming back. The wordmark is cream Fira Code; its i is a dotless ı with a crimson square on top (`.wordmark-i`), matching the logo. Files are in `docs/brand/`. Fira Code ships under the SIL OFL 1.1 (`web/public/licenses/Fira-Code-LICENSE.txt`).
 
+The mascot is a badger in a crimson vest carrying a case with the return arrow (`docs/brand/restivra-badger.png`). It belongs to marketing material such as the walkthrough video and the README; the product interface does not show it.
+
 This layer overrides two earlier rules on purpose: monospace is now the interface face, and controls use 8px corners, panels 12px.

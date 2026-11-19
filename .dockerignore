@@ -7,3 +7,4 @@ internal/webui/dist
 *.dump
 *.backup
 *.log
+docs/media
