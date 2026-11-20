@@ -1,0 +1,23 @@
+{
+  "synthetic": true,
+  "project_archived": true,
+  "redacted_evidence": true,
+  "verified_at": "2026-11-20T02:55:43.5727933Z",
+  "project_id": "8972a5c0d808befd6310bd1491735dad",
+  "authentication_setting_preserved": false,
+  "outcomes": [
+    {
+      "status": "passed",
+      "id": "167c8c8d432b203bcecfd83ff1ac1cad",
+      "cleanup": "passed",
+      "sha256": "ea490c5bec0d9c7d1c987bc480d7a4f35054b6c570f93bfb93e256091f0e6d26"
+    },
+    {
+      "status": "failed",
+      "id": "9fcfb5f1fcb0d7363156b4706e1a489a",
+      "cleanup": "passed",
+      "sha256": "ea490c5bec0d9c7d1c987bc480d7a4f35054b6c570f93bfb93e256091f0e6d26"
+    }
+  ],
+  "comparison_rule_change": true
+}

@@ -217,6 +217,11 @@ docker compose down
 
 `down` preserves volumes. Metadata lives in `app-data`; private worker snapshots use `worker-data`. Back up the application database separately if history matters. `down -v` discards those volumes.
 
+`scripts/metadata-check.ps1` restores a completed Restivra metadata archive into
+isolated PostgreSQL, checks schema/counts and removes the temporary database.
+It never starts a cloned worker or replaces the running database.
+[Metadata verification](docs/METADATA-CHECK.md).
+
 After a hard kill, restart the worker to reconcile service-managed resources automatically. Keep `RESTIVRA_INSTANCE` stable. For standalone CLI runs:
 
 ```sh

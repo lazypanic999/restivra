@@ -1,0 +1,12 @@
+{
+  "application_binary_sha256": "7245006f6a0a39b5d8b38abfdc1c925f9930d541ad952b067fa5efc10ef749ab",
+  "postgres_image": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+  "compose": "5.1.4",
+  "qualification_uses_same_image": true,
+  "docker_client_server": "29.5.3 / 29.5.3",
+  "source_notes": "Application image was built from the production files subsequently committed at this source revision. Docker embeds no Git revision automatically; image/binary fingerprints identify the tested artifact.",
+  "production_source_commit": "0f6ba6cdc7f63e97e7cb1044a8c5508a30b46bf6",
+  "application_image": "sha256:b879f56640f0c35e947ba7d10a7748c803adb739b3eef337aa33f89cf7431338",
+  "captured_at": "2026-11-20T03:02:18.1661941Z",
+  "s3_fixture_image": "sha256:b81d16a90ee25bd9511280127ca1471788c6e874cf0f0da759645f46b2dc1d74"
+}

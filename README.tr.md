@@ -52,6 +52,11 @@ Eski `./scripts/seed-demo.ps1` geliştirici demosu ise Go 1.27.4+ ister.
 
 ## MVP'de bulunanlar
 
+Restivra'nın kendi metaveri yedeğini ayrı PostgreSQL'de denemek için
+`./scripts/metadata-check.ps1 -Archive work/state.dump` kullanılabilir. Mevcut
+veritabanına dokunmaz; klon worker başlatmadan tabloları, ilişkileri ve sayıları
+kontrol eder. [Metaveri doğrulama rehberi](docs/METADATA-CHECK.md).
+
 Proje formundaki hazır kontrol şablonları kayıt sayısı, güncel uygulama verisi ve
 gerekli sütunlar için düzenlenebilir SQL üretir. Önizlemeyi şemana göre inceleyip
 ekleyebilirsin; [şablonların kapsamı ve sınırları](docs/CHECK-TEMPLATES.md).

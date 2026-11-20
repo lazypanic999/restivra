@@ -1,0 +1,19 @@
+{
+  "project_id": "b0fe94def0634ffc369910830efd7bb0",
+  "checks": [
+    {
+      "name": "Table contains rows",
+      "sql": "SELECT EXISTS (SELECT 1 FROM \"public\".\"customers\")"
+    },
+    {
+      "name": "Minimum row count",
+      "sql": "SELECT count(*) >= 2 FROM (SELECT 1 FROM \"public\".\"customers\" LIMIT 2) AS required_rows"
+    }
+  ],
+  "synthetic": true,
+  "status": "passed",
+  "archive_sha256": "ea490c5bec0d9c7d1c987bc480d7a4f35054b6c570f93bfb93e256091f0e6d26",
+  "browser_warnings_errors": 0,
+  "job_id": "dbe47ac4508117a30a4e5d17e76ea21f",
+  "cleanup": "passed"
+}

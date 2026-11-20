@@ -4,6 +4,10 @@
 
 ### Added
 
+- Docker-only metadata backup verification with isolated PostgreSQL, schema/count
+  checks, source hashing, owned cleanup and structured JSON. Local Docker-context
+  guards and bounded, private native-process I/O are exercised in CI.
+
 - Private project settings export/import with an editable review, new project
   identity, disabled imported schedules and strict version/shape/credential-field
   checks. Worker keys and run history are excluded.

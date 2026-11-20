@@ -195,6 +195,18 @@ a completed archive. Export can run while the application operates; PostgreSQL
 provides a consistent logical snapshot. Protect the archive: it contains project
 names, SQL checks and reports. Snapshots are deleted, not securely erased.
 
+PowerShell users can check a completed archive without replacing the running
+installation:
+
+```powershell
+./scripts/metadata-check.ps1 -Archive work/restivra-20261118.dump -ReportPath work/metadata-check.json
+```
+
+The [metadata checker](METADATA-CHECK.md) uses a local, network-isolated temporary
+PostgreSQL instance, validates schema/counts/relationships and removes it. It does
+not launch a cloned worker. A successful check covers this logical metadata
+restore; private configuration and actual application-state recovery remain separate.
+
 For a restore drill, use a **new isolated PostgreSQL 17 database** and
 `pg_restore --no-owner --no-privileges --exit-on-error`. Check project/job/report
 counts, relationships and the `installation` row. Do not start a worker from a

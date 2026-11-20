@@ -36,7 +36,7 @@ Existing saved checks keep their original SQL. The PostgreSQL test inserts
 most one row for existence and 25 rows for a threshold of 25. This checks the
 amount of work directly, without relying on timing thresholds on a shared host.
 
-![Editable template with SQL preview](screenshots/check-templates-en.jpg)
+![Editable template with SQL preview](screenshots/check-templates-bounded-en.jpg)
 
 ## Validation
 
@@ -50,3 +50,6 @@ A browser-created synthetic project also passed a real local archive restore
 with two generated row checks. An invalid, unused minimum in the builder did not
 block saving those valid checks. The feature is on `main`; the earlier
 `v0.1.0-pilot.1` tag remains unchanged.
+
+The final local image also passed both bounded templates through the browser and
+real archive restore. [Native browser evidence](acceptance/development-upgrade-20261120/bounded-browser.json).
