@@ -46,6 +46,8 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 CREATE UNIQUE INDEX IF NOT EXISTS one_active_job ON jobs(project_id) WHERE status IN ('queued','running');
 CREATE INDEX IF NOT EXISTS job_history ON jobs(queued_at DESC);
+CREATE INDEX IF NOT EXISTS job_history_cursor ON jobs(queued_at DESC,id DESC);
+CREATE INDEX IF NOT EXISTS job_status_history ON jobs(status,queued_at DESC,id DESC);
 CREATE INDEX IF NOT EXISTS project_job_history ON jobs(project_id,queued_at DESC,id DESC);
 CREATE TABLE IF NOT EXISTS workers(instance text PRIMARY KEY, heartbeat_at timestamptz NOT NULL);
 CREATE TABLE IF NOT EXISTS installation(singleton boolean PRIMARY KEY DEFAULT true CHECK(singleton), id text NOT NULL UNIQUE);
@@ -88,12 +90,12 @@ func (s *Store) InstallationID(ctx context.Context) (string, error) {
 
 type scanner interface{ Scan(...any) error }
 
-const projectCols = `id,name,backup_pattern,config,schedule_time,timezone,next_run_at,created_at`
+const projectCols = `id,name,backup_pattern,config,schedule_time,timezone,next_run_at,created_at,archived`
 
 func scanProject(row scanner) (Project, error) {
 	var p Project
 	var raw []byte
-	err := row.Scan(&p.ID, &p.Name, &p.BackupPattern, &raw, &p.ScheduleTime, &p.Timezone, &p.NextRunAt, &p.CreatedAt)
+	err := row.Scan(&p.ID, &p.Name, &p.BackupPattern, &raw, &p.ScheduleTime, &p.Timezone, &p.NextRunAt, &p.CreatedAt, &p.Archived)
 	if err != nil {
 		return p, err
 	}
@@ -119,12 +121,16 @@ func scanJob(row scanner) (Job, error) {
 	return j, err
 }
 func (s *Store) Projects(ctx context.Context) ([]Project, error) {
+	return s.ProjectList(ctx, false)
+}
+
+func (s *Store) ProjectList(ctx context.Context, archived bool) ([]Project, error) {
 	// One consistent statement replaces an extra round-trip per project. The
 	// lateral lookup uses project_job_history and includes immutable job details.
 	rows, err := s.DB.QueryContext(ctx, `SELECT to_jsonb(p) || jsonb_build_object('last_job',latest.data)
-FROM (SELECT `+projectCols+` FROM projects WHERE NOT archived ORDER BY created_at DESC,id DESC LIMIT 500) p
+FROM (SELECT `+projectCols+` FROM projects WHERE archived=$1 ORDER BY created_at DESC,id DESC LIMIT 500) p
 LEFT JOIN LATERAL (SELECT to_jsonb(j) AS data FROM jobs j WHERE j.project_id=p.id ORDER BY j.queued_at DESC,j.id DESC LIMIT 1) latest ON true
-ORDER BY p.created_at DESC,p.id DESC`)
+ORDER BY p.created_at DESC,p.id DESC`, archived)
 	if err != nil {
 		return nil, err
 	}
@@ -150,6 +156,7 @@ ORDER BY p.created_at DESC,p.id DESC`)
 	return result, nil
 }
 func (s *Store) SaveProject(ctx context.Context, p Project, create bool) (Project, error) {
+	p.Archived = false
 	raw, err := json.Marshal(p.Config)
 	if err != nil {
 		return p, err
@@ -190,6 +197,17 @@ func (s *Store) Archive(ctx context.Context, id string) error {
 	}
 	return tx.Commit()
 }
+
+// An explicit restore preserves source/settings/history but never silently
+// resumes the old schedule. Operators choose a new schedule after review.
+func (s *Store) RestoreProject(ctx context.Context, id string) (Project, error) {
+	p, err := scanProject(s.DB.QueryRowContext(ctx, `UPDATE projects SET archived=false,schedule_time='',next_run_at=NULL WHERE id=$1 AND archived RETURNING `+projectCols, id))
+	if errors.Is(err, sql.ErrNoRows) {
+		return p, ErrNotFound
+	}
+	return p, err
+}
+
 func (s *Store) Enqueue(ctx context.Context, id, trigger string) (Job, error) {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
@@ -222,7 +240,7 @@ func enqueue(ctx context.Context, tx *sql.Tx, p Project, trigger string) (Job, e
 	return j, err
 }
 func (s *Store) Jobs(ctx context.Context, projectID string) ([]Job, error) {
-	rows, err := s.DB.QueryContext(ctx, "SELECT "+jobCols+" FROM jobs WHERE ($1='' OR project_id=$1) ORDER BY queued_at DESC LIMIT 100", projectID)
+	rows, err := s.DB.QueryContext(ctx, "SELECT "+jobCols+" FROM jobs WHERE ($1='' OR project_id=$1) ORDER BY queued_at DESC,id DESC LIMIT 100", projectID)
 	if err != nil {
 		return nil, err
 	}

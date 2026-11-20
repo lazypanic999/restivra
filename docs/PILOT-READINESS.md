@@ -6,7 +6,24 @@ computer, with Docker Desktop Linux containers and localhost access. PowerShell
 A real customer pilot remains
 the next product milestone. Public hosted SaaS readiness is a separate project.
 
-## Current decision: unattended local developer pilot
+## November 20 operator update
+
+The current candidate adds [retained history, CSV and archived-project recovery](HISTORY.md).
+Real PostgreSQL integration tests cover tied-time pagination beyond 100 records,
+literal search, date bounds, export limits and stale-attempt completion fencing.
+English/Turkish browser checks cover saved filters, five history pages, CSV,
+project recovery and the 390-pixel layout. See [browser evidence](acceptance/history-20261120/history-browser.json).
+
+A cancelled Docker create can finish after its caller stops waiting. The worker
+now reconciles installation-owned resources before each run and every 30 idle
+seconds. A live test removed a late container and snapshot without restarting,
+while preserving another installation's container. See [cleanup evidence](acceptance/history-20261120/idle-reconciliation.json).
+
+The two-hour result below belongs to runtime `5ef8f0a`; it is historical evidence,
+not a two-hour acceptance of this newer candidate. External customer acceptance
+and the unresolved Windows host trigger remain open.
+
+## Previous unattended local developer pilot acceptance
 
 Runtime `5ef8f0a` completed a fresh **120.01-minute / 143-iteration** acceptance
 run on this Windows/Docker Desktop host. All **210 asserted outcomes** matched:

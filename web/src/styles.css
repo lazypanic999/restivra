@@ -434,6 +434,27 @@ td strong {
   font-size: 12px;
   min-height: 34px;
 }
+.history-filters {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.history-filters .search-field input { width: auto; max-width: 100%; }
+.history-search { flex: 1 1 220px; }
+.history-filters .history-search input { width: 100%; }
+.history-toolbar, .history-pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0 12px;
+}
+.history-toolbar p { flex: 1; margin: 0; }
+.history-counts { color: var(--muted); font-size: 12px; margin: 0 0 12px; }
+.history-pagination { justify-content: flex-end; }
+.history-pagination span { font-size: 12px; color: var(--muted); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .empty-state {
   padding: 35px 25px;
   border: 1px dashed var(--rule);

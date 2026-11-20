@@ -16,6 +16,10 @@
 - [x] Durable bounded infrastructure retries, preserved attempt history and retry cancellation.
 - [x] Fixed-image two-hour desktop acceptance and real Docker/metadata fault recovery.
 - [x] Dark black-and-crimson interface layer, new logo, README screenshots and walkthrough video.
+- [x] Retained-history search, cursor pagination, date/result filters and bounded CSV export.
+- [x] Archived-project browsing and restoration with scheduling disabled.
+- [x] Idle reconciliation of late Docker resources and stale-attempt completion fencing.
+- [x] Six transparent mascot poses, prompt sources and downloadable pack.
 
 ## Pilot acceptance — requires real users
 
@@ -27,4 +31,4 @@
 
 ## Later
 
-S3, PDF, extra PostgreSQL versions/custom extension images, pagination, public remote deployment, roles and billing. Hosted multi-tenancy and hostile-dump execution require a separate security design. Other engines and PITR require separate restore strategies.
+S3, PDF, extra PostgreSQL versions/custom extension images, project-list pagination beyond 500 entries, public remote deployment, roles and billing. Hosted multi-tenancy and hostile-dump execution require a separate security design. Other engines and PITR require separate restore strategies.

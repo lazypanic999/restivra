@@ -46,7 +46,8 @@ Go 1.27.4+ kuruluysa `./scripts/seed-demo.ps1` iki hayali müşteri projesi olu�
 
 ## MVP'de bulunanlar
 
-- Genel bakış, proje ayarları, son 100 çalışma, rapor ve JSON indirme.
+- Genel bakış, proje ayarları, saklanan geçmişin tamamında arama, tarih/sonuç filtresi, sayfalama, rapor ve JSON indirme.
+- Filtrelenmiş geçmişi CSV olarak indirme; arşivlenmiş projeyi zamanlaması kapalı biçimde geri getirme.
 - Kalıcı PostgreSQL iş kuyruğu; aynı anda tek geri yükleme.
 - Proje başına tek aktif iş, manuel/günlük çalışma ve iptal.
 - Worker yeniden başlayınca yarım işlerin ve geçici kaynakların toparlanması.
@@ -76,6 +77,10 @@ docker compose down
 ```
 
 `down` veriyi korur; `down -v` geçmiş dahil named volume'leri siler. `RESTIVRA_INSTANCE` sabit kalmalı. Geçici kaynak sahipliği ayrıca veritabanına özel kurulum kimliğiyle doğrulanır. Temizlik başarısızsa worker yeni iş almadan durur; yeniden başlarken kalan kaynakları toparlar.
+
+**Çalışmalar** son 100 kayıtla sınırlı değildir. Tarihler sıraya alınma zamanına ve cihazının saat dilimine göredir; bitiş günü dahildir. Filtreler bağlantıda korunur. CSV indirme tüm eşleşmeleri kapsar; en fazla 10.000 kayıt için filtreyi daraltabilirsin. CSV zamanları UTC'dir. **Projeler → Arşivlenmiş projeler** içinden kaynak geri getirilebilir; kontrolleri ve geçmişi korunur, günlük zamanlama kapalı kalır. [Kullanım ve API](docs/HISTORY.md).
+
+Worker yeni iş öncesinde ve boşta yaklaşık 30 saniyede bir sahip olduğu geçici kaynakları kontrol eder. İptalden sonra gecikerek oluşan konteyner ve kopyaları yeniden başlamadan temizler. Önceki denemenin gecikmiş sonucu yeni bir denemenin üzerine yazılamaz.
 
 `docker compose exec worker restivra doctor --role worker` ön gereksinimleri kontrol eder. `docker compose exec api restivra healthcheck` API/veritabanı hazır olma kontrolüdür; worker bağlantısını ayrıca panelden izle. Proje ve rapor veritabanını yedeklemek için `./scripts/metadata-backup.ps1 -OutputPath work/metadata.dump` kullan; Linux karşılığı `sh scripts/metadata-backup.sh /private/metadata.dump`. Bu arşiv müşteri dump'larını ve `.env` dosyasını içermez.
 

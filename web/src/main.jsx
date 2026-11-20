@@ -3,6 +3,8 @@ import { createRoot } from "react-dom/client";
 import "@fontsource/public-sans/400.css";
 import "@fontsource/public-sans/600.css";
 import { LanguageProvider, useLanguage } from "./language.jsx";
+import { History } from "./history.jsx";
+import { initialPage, emptyHistoryFilters } from "./history.js";
 import "./styles.css";
 import "./character.css";
 
@@ -29,7 +31,22 @@ function Status({ value }) {
 }
 function RunState({ job }) {
   const { t, formatDate } = useLanguage();
-  return <><Status value={job.status} />{job.retry_at ? <small className="attempt-info">{t("retryAt",{time:formatDate(job.retry_at,true)})}</small> : job.attempt_count>1 && <small className="attempt-info">{t("attemptNumber",{number:job.attempt_count})}</small>}</>;
+  return (
+    <>
+      <Status value={job.status} />
+      {job.retry_at ? (
+        <small className="attempt-info">
+          {t("retryAt", { time: formatDate(job.retry_at, true) })}
+        </small>
+      ) : (
+        job.attempt_count > 1 && (
+          <small className="attempt-info">
+            {t("attemptNumber", { number: job.attempt_count })}
+          </small>
+        )
+      )}
+    </>
+  );
 }
 function Button({ children, primary = false, className = "", ...props }) {
   return (
@@ -53,7 +70,19 @@ function Empty({ title, text, children }) {
 
 function LanguageSwitch() {
   const { language, setLanguage, t } = useLanguage();
-  return <label className="language-switch"><span>{t("language")}</span><select aria-label={t("language")} value={language} onChange={(e) => setLanguage(e.target.value)}><option value="en">English</option><option value="tr">Türkçe</option></select></label>;
+  return (
+    <label className="language-switch">
+      <span>{t("language")}</span>
+      <select
+        aria-label={t("language")}
+        value={language}
+        onChange={(e) => setLanguage(e.target.value)}
+      >
+        <option value="en">English</option>
+        <option value="tr">Türkçe</option>
+      </select>
+    </label>
+  );
 }
 
 // Refresh the per-process CSRF token before a mutation. Existing signed browser
@@ -67,40 +96,153 @@ async function currentCSRF() {
 
 function AuthGate() {
   const { t } = useLanguage();
-  const [state, setState] = useState(null), [error, setError] = useState(""), [secret, setSecret] = useState(""), [busy, setBusy] = useState(false);
+  const [state, setState] = useState(null),
+    [error, setError] = useState(""),
+    [secret, setSecret] = useState(""),
+    [busy, setBusy] = useState(false);
   const bootstrap = useCallback(async () => {
     try {
       const response = await fetch("/api/auth", { cache: "no-store" });
       if (!response.ok) throw Error();
-      setState(await response.json()); setError("");
-    } catch { setError("authUnavailable"); }
+      setState(await response.json());
+      setError("");
+    } catch {
+      setError("authUnavailable");
+    }
   }, []);
-  useEffect(() => { bootstrap(); }, [bootstrap]);
-  const unauthorized = useCallback(() => { setState(null); bootstrap(); }, [bootstrap]);
+  useEffect(() => {
+    bootstrap();
+  }, [bootstrap]);
+  const unauthorized = useCallback(() => {
+    setState(null);
+    bootstrap();
+  }, [bootstrap]);
   async function login(event) {
-    event.preventDefault(); setBusy(true); setError("");
+    event.preventDefault();
+    setBusy(true);
+    setError("");
     try {
-      const response = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": await currentCSRF() }, body: JSON.stringify({ token: secret }) });
-      if (!response.ok) { setError(response.status === 429 ? "authRateLimit" : response.status === 401 ? "authInvalid" : "authUnavailable"); return; }
-      setSecret(""); await bootstrap();
-    } catch { setError("authUnavailable"); } finally { setBusy(false); }
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": await currentCSRF(),
+        },
+        body: JSON.stringify({ token: secret }),
+      });
+      if (!response.ok) {
+        setError(
+          response.status === 429
+            ? "authRateLimit"
+            : response.status === 401
+              ? "authInvalid"
+              : "authUnavailable",
+        );
+        return;
+      }
+      setSecret("");
+      await bootstrap();
+    } catch {
+      setError("authUnavailable");
+    } finally {
+      setBusy(false);
+    }
   }
   async function logout() {
     try {
-      const response = await fetch("/api/auth/logout", { method: "POST", headers: { "Content-Type": "application/json", "X-CSRF-Token": await currentCSRF() }, body: "{}" });
+      const response = await fetch("/api/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": await currentCSRF(),
+        },
+        body: "{}",
+      });
       if (!response.ok && response.status !== 401) throw Error();
-      setState(null); await bootstrap();
-    } catch { setError("authUnavailable"); }
+      setState(null);
+      await bootstrap();
+    } catch {
+      setError("authUnavailable");
+    }
   }
-  if (state?.authenticated) return <><App onUnauthorized={unauthorized} onLogout={state.enabled ? logout : null} />{error && <div className="toast" role="alert">{t(error)}</div>}</>;
-  return <><header className="app-header"><div className="header-inner"><span className="wordmark" role="img" aria-label="Restivra">Rest<span className="wordmark-i" aria-hidden="true">ı</span>vra</span><LanguageSwitch /></div></header><main className="login-workspace"><h1>{t("signIn")}</h1><p>{t("signInDescription")}</p>{error && <p className="notice error-notice" role="alert">{t(error)}</p>}{state ? <form onSubmit={login}><label className="field">{t("accessToken")}<input type="password" name="access-token" autoComplete="current-password" required maxLength={256} value={secret} onChange={(e) => setSecret(e.target.value)} aria-describedby="token-help" /></label><p className="help-text" id="token-help">{t("accessTokenHelp")}</p><Button primary disabled={busy}>{t(busy ? "signingIn" : "signIn")}</Button></form> : <Button onClick={bootstrap}>{t(error ? "refresh" : "loading")}</Button>}</main></>;
+  if (state?.authenticated)
+    return (
+      <>
+        <App
+          onUnauthorized={unauthorized}
+          onLogout={state.enabled ? logout : null}
+        />
+        {error && (
+          <div className="toast" role="alert">
+            {t(error)}
+          </div>
+        )}
+      </>
+    );
+  return (
+    <>
+      <header className="app-header">
+        <div className="header-inner">
+          <span className="wordmark" role="img" aria-label="Restivra">
+            Rest
+            <span className="wordmark-i" aria-hidden="true">
+              ı
+            </span>
+            vra
+          </span>
+          <LanguageSwitch />
+        </div>
+      </header>
+      <main className="login-workspace">
+        <h1>{t("signIn")}</h1>
+        <p>{t("signInDescription")}</p>
+        {error && (
+          <p className="notice error-notice" role="alert">
+            {t(error)}
+          </p>
+        )}
+        {state ? (
+          <form onSubmit={login}>
+            <label className="field">
+              {t("accessToken")}
+              <input
+                type="password"
+                name="access-token"
+                autoComplete="current-password"
+                required
+                maxLength={256}
+                value={secret}
+                onChange={(e) => setSecret(e.target.value)}
+                aria-describedby="token-help"
+              />
+            </label>
+            <p className="help-text" id="token-help">
+              {t("accessTokenHelp")}
+            </p>
+            <Button primary disabled={busy}>
+              {t(busy ? "signingIn" : "signIn")}
+            </Button>
+          </form>
+        ) : (
+          <Button onClick={bootstrap}>
+            {t(error ? "refresh" : "loading")}
+          </Button>
+        )}
+      </main>
+    </>
+  );
 }
 
 function App({ onUnauthorized, onLogout }) {
   const { language, t, explain, formatDate } = useLanguage();
-  const [page, setPage] = useState("overview"),
+  const [page, setPage] = useState(() => initialPage(location.search)),
     [projects, setProjects] = useState([]),
+    [archivedProjects, setArchivedProjects] = useState([]),
+    [showArchived, setShowArchived] = useState(false),
+    [archiveLoading, setArchiveLoading] = useState(false),
+    [archiveError, setArchiveError] = useState(""),
     [jobs, setJobs] = useState([]),
+    [runSummary, setRunSummary] = useState(null),
     [health, setHealth] = useState(null),
     [session, setSession] = useState(null),
     [error, setError] = useState(""),
@@ -108,40 +250,43 @@ function App({ onUnauthorized, onLogout }) {
     [form, setForm] = useState(null),
     [selected, setSelected] = useState(null),
     [search, setSearch] = useState(""),
-    [filter, setFilter] = useState("all"),
     [busy, setBusy] = useState(""),
     [toast, setToast] = useState(""),
     [updated, setUpdated] = useState(null);
   const token = useRef("");
-  const api = useCallback(async (path, options = {}) => {
-    if (options.method) token.current = await currentCSRF();
-    const response = await fetch(`/api${path}`, {
-      ...options,
-      headers: {
-        ...(options.method
-          ? {
-              "Content-Type": "application/json",
-              "X-CSRF-Token": token.current,
-            }
-          : {}),
-        ...options.headers,
-      },
-    });
-    if (response.status === 401) onUnauthorized();
-    const data = await response.json();
-    if (!response.ok)
-      throw Error(data.error || "The request could not be completed.");
-    return data;
-  }, [onUnauthorized]);
+  const api = useCallback(
+    async (path, options = {}) => {
+      if (options.method) token.current = await currentCSRF();
+      const response = await fetch(`/api${path}`, {
+        ...options,
+        headers: {
+          ...(options.method
+            ? {
+                "Content-Type": "application/json",
+                "X-CSRF-Token": token.current,
+              }
+            : {}),
+          ...options.headers,
+        },
+      });
+      if (response.status === 401) onUnauthorized();
+      const data = await response.json();
+      if (!response.ok)
+        throw Error(data.error || "The request could not be completed.");
+      return data;
+    },
+    [onUnauthorized],
+  );
   const refresh = useCallback(async () => {
     try {
-      const [p, j, h] = await Promise.all([
+      const [p, history, h] = await Promise.all([
         api("/projects"),
-        api("/jobs"),
+        api("/history?limit=6"),
         api("/health"),
       ]);
       setProjects(p);
-      setJobs(j);
+      setJobs(history.items);
+      setRunSummary(history.summary);
       setHealth(h);
       setError("");
       setUpdated(new Date().toISOString());
@@ -166,16 +311,42 @@ function App({ onUnauthorized, onLogout }) {
     return () => clearInterval(timer);
   }, [api, refresh]);
   useEffect(() => {
+    if (page !== "projects" || !showArchived) return;
+    let disposed = false;
+    api("/projects?archived=true")
+      .then((data) => {
+        if (!disposed) {
+          setArchivedProjects(data);
+          setArchiveError("");
+        }
+      })
+      .catch((e) => {
+        if (!disposed) setArchiveError(e.message);
+      })
+      .finally(() => {
+        if (!disposed) setArchiveLoading(false);
+      });
+    return () => {
+      disposed = true;
+    };
+  }, [api, page, showArchived, updated]);
+  useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(""), 5000);
     return () => clearTimeout(timer);
   }, [toast]);
   useEffect(() => {
     if (!selected?.id) return;
-    let disposed=false;
-    api(`/jobs/${selected.id}`).then(job=>{if(!disposed)setSelected(job);}).catch(()=>{});
-    return ()=>{disposed=true;};
-  }, [jobs,selected?.id,api]);
+    let disposed = false;
+    api(`/jobs/${selected.id}`)
+      .then((job) => {
+        if (!disposed) setSelected(job);
+      })
+      .catch(() => {});
+    return () => {
+      disposed = true;
+    };
+  }, [jobs, selected?.id, api]);
   const perform = async (key, action) => {
     setBusy(key);
     try {
@@ -222,34 +393,49 @@ function App({ onUnauthorized, onLogout }) {
           },
     );
   };
-  const go = (destination) => {
+  const go = (destination, projectID = "") => {
     setPage(destination);
     setSearch("");
-    setFilter("all");
+    const query = new URLSearchParams(location.search);
+    if (destination === "history") {
+      query.set("view", "history");
+      if (projectID) {
+        for (const key of Object.keys(emptyHistoryFilters)) query.delete(key);
+        query.set("project_id", projectID);
+      }
+    } else {
+      query.delete("view");
+      for (const key of Object.keys(emptyHistoryFilters)) query.delete(key);
+    }
+    window.history.replaceState(
+      null,
+      "",
+      `${location.pathname}${query.size ? `?${query}` : ""}${location.hash}`,
+    );
   };
-  const passed = jobs.filter((job) => job.status === "passed").length,
-    failed = jobs.filter((job) =>
-      ["failed", "interrupted"].includes(job.status),
-    ).length,
-    running = jobs.filter(active).length;
+  const passed = runSummary?.passed || 0,
+    failed = (runSummary?.failed || 0) + (runSummary?.interrupted || 0),
+    running = (runSummary?.queued || 0) + (runSummary?.running || 0);
   const matches = (name) =>
     name
       .toLocaleLowerCase(language)
       .includes(search.toLocaleLowerCase(language));
-  const listedProjects = projects.filter((project) => matches(project.name));
-  const listedJobs = jobs.filter(
-    (job) =>
-      matches(job.project_name) && (filter === "all" || job.status === filter),
+  const visibleProjects =
+    page === "projects" && showArchived ? archivedProjects : projects;
+  const listedProjects = visibleProjects.filter((project) =>
+    matches(project.name),
   );
   const seconds = (job) =>
-    job.report
-      ? (job.report.duration_ms / 1000).toFixed(1)
-      : job.started_at && job.finished_at
-        ? (
-            (new Date(job.finished_at) - new Date(job.started_at)) /
-            1000
-          ).toFixed(1)
-        : null;
+    job.duration_ms != null
+      ? (job.duration_ms / 1000).toFixed(1)
+      : job.report
+        ? (job.report.duration_ms / 1000).toFixed(1)
+        : job.started_at && job.finished_at
+          ? (
+              (new Date(job.finished_at) - new Date(job.started_at)) /
+              1000
+            ).toFixed(1)
+          : null;
   const runDuration = (job) =>
     seconds(job) !== null ? `${seconds(job)} ${t("seconds")}` : "—";
   return (
@@ -268,7 +454,11 @@ function App({ onUnauthorized, onLogout }) {
               go("overview");
             }}
           >
-            Rest<span className="wordmark-i" aria-hidden="true">ı</span>vra
+            Rest
+            <span className="wordmark-i" aria-hidden="true">
+              ı
+            </span>
+            vra
           </a>
           <nav aria-label="Restivra">
             {["overview", "projects", "history", "setup"].map((id) => (
@@ -282,7 +472,11 @@ function App({ onUnauthorized, onLogout }) {
             ))}
           </nav>
           <LanguageSwitch />
-          {onLogout && <button className="text-button" onClick={onLogout}>{t("signOut")}</button>}
+          {onLogout && (
+            <button className="text-button" onClick={onLogout}>
+              {t("signOut")}
+            </button>
+          )}
         </div>
       </header>
       <main id="records" className="workspace">
@@ -313,7 +507,15 @@ function App({ onUnauthorized, onLogout }) {
             {t(health?.worker_online ? "workerOnline" : "workerOffline")}
           </span>
           {health && <span>{t("databaseOnline")}</span>}
-          {health && <span>{t(health.authentication_enabled ? "protectedAccess" : "localAccess")}</span>}
+          {health && (
+            <span>
+              {t(
+                health.authentication_enabled
+                  ? "protectedAccess"
+                  : "localAccess",
+              )}
+            </span>
+          )}
           <span>PostgreSQL 17</span>
           <div className="update-controls">
             {updated && (
@@ -353,10 +555,13 @@ function App({ onUnauthorized, onLogout }) {
                     projects: projects.length,
                     passed,
                     failed,
+                    cancelled: runSummary?.cancelled || 0,
                     active: running,
                   })}
                 </p>
-                <small>{t("recentWindow", { count: jobs.length })}</small>
+                <small>
+                  {t("retainedWindow", { count: runSummary?.total || 0 })}
+                </small>
               </div>
             )}
             {(page === "overview" || page === "projects") && (
@@ -364,17 +569,65 @@ function App({ onUnauthorized, onLogout }) {
                 <div className="section-heading">
                   <h2 id="project-heading">{t("projects")}</h2>
                   {page === "projects" && (
-                    <label className="search-field">
-                      <span>{t("searchProjects")}</span>
-                      <input
-                        type="search"
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                      />
-                    </label>
+                    <div className="table-filters">
+                      <label className="search-field">
+                        <span>{t("searchProjects")}</span>
+                        <input
+                          type="search"
+                          value={search}
+                          onChange={(event) => setSearch(event.target.value)}
+                        />
+                      </label>
+                      <label className="search-field">
+                        <span>{t("projectView")}</span>
+                        <select
+                          aria-label={t("projectView")}
+                          value={showArchived ? "archived" : "active"}
+                          onChange={(event) => {
+                            setArchiveLoading(
+                              event.target.value === "archived",
+                            );
+                            setArchiveError("");
+                            setShowArchived(event.target.value === "archived");
+                            setSearch("");
+                          }}
+                        >
+                          <option value="active">{t("activeProjects")}</option>
+                          <option value="archived">
+                            {t("archivedProjects")}
+                          </option>
+                        </select>
+                      </label>
+                    </div>
                   )}
                 </div>
-                {!projects.length ? (
+                {page === "projects" && showArchived && archiveError && (
+                  <div className="notice error-notice" role="alert">
+                    {explain(archiveError)}{" "}
+                    <button onClick={refresh}>{t("refresh")}</button>
+                  </div>
+                )}
+                {page === "projects" &&
+                  showArchived &&
+                  archivedProjects.length > 0 && (
+                    <p className="help-text">{t("archivedProjectsHelp")}</p>
+                  )}
+                {page === "projects" &&
+                showArchived &&
+                archiveError &&
+                !archivedProjects.length ? null : page === "projects" &&
+                  showArchived &&
+                  archiveLoading &&
+                  !archivedProjects.length ? (
+                  <p role="status">{t("loading")}</p>
+                ) : page === "projects" &&
+                  showArchived &&
+                  !visibleProjects.length ? (
+                  <Empty
+                    title={t("noArchivedProjects")}
+                    text={t("archivedProjectsHelp")}
+                  />
+                ) : !visibleProjects.length ? (
                   <Empty title={t("noProjects")} text={t("noProjectsText")}>
                     <Button onClick={() => openProject()}>
                       {t("createProject")}
@@ -434,21 +687,47 @@ function App({ onUnauthorized, onLogout }) {
                             </td>
                             <td>
                               <div className="row-actions">
-                                <Button
-                                  disabled={
-                                    active(project.last_job) ||
-                                    busy === project.id
-                                  }
-                                  onClick={() => start(project)}
-                                >
-                                  {t("runTest")}
-                                </Button>
+                                {project.archived ? (
+                                  <Button
+                                    disabled={busy === project.id}
+                                    onClick={() =>
+                                      perform(project.id, async () => {
+                                        await api(
+                                          `/projects/${project.id}/restore`,
+                                          { method: "POST", body: "{}" },
+                                        );
+                                        setShowArchived(false);
+                                        setToast({ key: "restoredToast" });
+                                      })
+                                    }
+                                  >
+                                    {t("restoreProject")}
+                                  </Button>
+                                ) : (
+                                  <>
+                                    <Button
+                                      disabled={
+                                        active(project.last_job) ||
+                                        busy === project.id
+                                      }
+                                      onClick={() => start(project)}
+                                    >
+                                      {t("runTest")}
+                                    </Button>
+                                    <button
+                                      className="text-button"
+                                      aria-label={`${t("edit")}: ${project.name}`}
+                                      onClick={() => openProject(project)}
+                                    >
+                                      {t("edit")}
+                                    </button>
+                                  </>
+                                )}
                                 <button
                                   className="text-button"
-                                  aria-label={`${t("edit")}: ${project.name}`}
-                                  onClick={() => openProject(project)}
+                                  onClick={() => go("history", project.id)}
                                 >
-                                  {t("edit")}
+                                  {t("projectHistory")}
                                 </button>
                               </div>
                             </td>
@@ -463,52 +742,23 @@ function App({ onUnauthorized, onLogout }) {
                 )}
               </section>
             )}
-            {(page === "overview" || page === "history") && (
+            {page === "history" && (
+              <History
+                api={api}
+                onInspect={inspect}
+                onUnauthorized={onUnauthorized}
+                revision={updated}
+                RunState={RunState}
+                Button={Button}
+              />
+            )}
+            {page === "overview" && (
               <section className="ledger" aria-labelledby="run-heading">
                 <div className="section-heading">
-                  <h2 id="run-heading">
-                    {page === "overview" ? t("recentRuns") : t("history")}
-                  </h2>
-                  {page === "overview" ? (
-                    <button
-                      className="text-button"
-                      onClick={() => go("history")}
-                    >
-                      {t("allRuns")}
-                    </button>
-                  ) : (
-                    <div className="table-filters">
-                      <label className="search-field">
-                        <span>{t("searchRuns")}</span>
-                        <input
-                          type="search"
-                          value={search}
-                          onChange={(event) => setSearch(event.target.value)}
-                        />
-                      </label>
-                      <label className="search-field">
-                        <span>{t("statusFilter")}</span>
-                        <select
-                          value={filter}
-                          onChange={(event) => setFilter(event.target.value)}
-                        >
-                          <option value="all">{t("allResults")}</option>
-                          {[
-                            "passed",
-                            "failed",
-                            "running",
-                            "queued",
-                            "cancelled",
-                            "interrupted",
-                          ].map((value) => (
-                            <option key={value} value={value}>
-                              {t(`status.${value}`)}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                    </div>
-                  )}
+                  <h2 id="run-heading">{t("recentRuns")}</h2>
+                  <button className="text-button" onClick={() => go("history")}>
+                    {t("allRuns")}
+                  </button>
                 </div>
                 {!jobs.length ? (
                   <Empty title={t("noRuns")} text={t("noRunsText")} />
@@ -526,45 +776,40 @@ function App({ onUnauthorized, onLogout }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {listedJobs
-                          .slice(0, page === "overview" ? 6 : 100)
-                          .map((job) => (
-                            <tr key={job.id}>
-                              <td>
-                                <strong>{job.project_name}</strong>
-                                <code className="cell-note run-id">
-                                  {job.id.slice(0, 8)}
-                                </code>
-                              </td>
-                              <td>
-                                <RunState job={job} />
-                              </td>
-                              <td>
-                                {formatDate(job.started_at || job.queued_at)}
-                              </td>
-                              <td className="numeric">{runDuration(job)}</td>
-                              <td>
-                                {t(
-                                  job.trigger === "schedule"
-                                    ? "scheduled"
-                                    : "manual",
-                                )}
-                              </td>
-                              <td className="action-column">
-                                <button
-                                  className="text-button"
-                                  onClick={() => inspect(job)}
-                                >
-                                  {t("inspect")}
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
+                        {jobs.slice(0, 6).map((job) => (
+                          <tr key={job.id}>
+                            <td>
+                              <strong>{job.project_name}</strong>
+                              <code className="cell-note run-id">
+                                {job.id.slice(0, 8)}
+                              </code>
+                            </td>
+                            <td>
+                              <RunState job={job} />
+                            </td>
+                            <td>
+                              {formatDate(job.started_at || job.queued_at)}
+                            </td>
+                            <td className="numeric">{runDuration(job)}</td>
+                            <td>
+                              {t(
+                                job.trigger === "schedule"
+                                  ? "scheduled"
+                                  : "manual",
+                              )}
+                            </td>
+                            <td className="action-column">
+                              <button
+                                className="text-button"
+                                onClick={() => inspect(job)}
+                              >
+                                {t("inspect")}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
                       </tbody>
                     </table>
-                    {!listedJobs.length && (
-                      <p className="no-results">{t("noMatches")}</p>
-                    )}
                   </div>
                 )}
               </section>
@@ -963,16 +1208,66 @@ function Report({ job, duration, onClose, onCancel }) {
               ? t("reportRunning")
               : explain(job.error) || t("reportFailed")}
         </p>
-        {report?.error_code && <p className="notice">{t(`advice.${report.error_code}`)} <code>{report.error_code}</code></p>}
-        {job.retry_at && <p className="notice">{t("retryExplanation",{time:formatDate(job.retry_at,true)})}</p>}
-        {job.attempts?.length>0 && (job.attempt_count>1 || job.retry_at) && <section aria-label={t("attemptHistory")}><h3>{t("attemptHistory")}</h3><div className="table-scroll"><table className="attempt-history"><thead><tr><th>{t("attempt")}</th><th>{t("result")}</th><th>{t("details")}</th><th>JSON</th></tr></thead><tbody>{job.attempts.map(a=><tr key={a.number}><td>{a.number}</td><td><Status value={a.status}/></td><td>{explain(a.error)||formatDate(a.finished_at,true)}</td><td>{a.report && <a href={`/api/jobs/${job.id}/report?attempt=${a.number}`} download>{t("download")}</a>}</td></tr>)}</tbody></table></div></section>}
+        {report?.error_code && (
+          <p className="notice">
+            {t(`advice.${report.error_code}`)} <code>{report.error_code}</code>
+          </p>
+        )}
+        {job.retry_at && (
+          <p className="notice">
+            {t("retryExplanation", { time: formatDate(job.retry_at, true) })}
+          </p>
+        )}
+        {job.attempts?.length > 0 &&
+          (job.attempt_count > 1 || job.retry_at) && (
+            <section aria-label={t("attemptHistory")}>
+              <h3>{t("attemptHistory")}</h3>
+              <div className="table-scroll">
+                <table className="attempt-history">
+                  <thead>
+                    <tr>
+                      <th>{t("attempt")}</th>
+                      <th>{t("result")}</th>
+                      <th>{t("details")}</th>
+                      <th>JSON</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {job.attempts.map((a) => (
+                      <tr key={a.number}>
+                        <td>{a.number}</td>
+                        <td>
+                          <Status value={a.status} />
+                        </td>
+                        <td>
+                          {explain(a.error) || formatDate(a.finished_at, true)}
+                        </td>
+                        <td>
+                          {a.report && (
+                            <a
+                              href={`/api/jobs/${job.id}/report?attempt=${a.number}`}
+                              download
+                            >
+                              {t("download")}
+                            </a>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
         <dl className="report-facts">
           <div>
             <dt>{t("started")}</dt>
             <dd>{formatDate(job.started_at || job.queued_at, true)}</dd>
           </div>
           <div>
-            <dt>{t(job.attempt_count>1 ? "latestAttemptDuration" : "duration")}</dt>
+            <dt>
+              {t(job.attempt_count > 1 ? "latestAttemptDuration" : "duration")}
+            </dt>
             <dd>{duration}</dd>
           </div>
           <div>
@@ -1005,7 +1300,11 @@ function Report({ job, duration, onClose, onCancel }) {
                       <td>
                         <Status value={check.status} />
                       </td>
-                      <td>{check.error_code ? t(`advice.${check.error_code}`) : check.error && explain(check.error)}</td>
+                      <td>
+                        {check.error_code
+                          ? t(`advice.${check.error_code}`)
+                          : check.error && explain(check.error)}
+                      </td>
                     </tr>
                   ))}
                   <tr>

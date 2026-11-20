@@ -53,7 +53,7 @@ func (s *Store) Attempts(ctx context.Context, id string) ([]Attempt, error) {
 
 // Attempt completion and retry scheduling commit together. Previous failures
 // remain immutable evidence; only infrastructure failures are retried.
-func (s *Store) FinishAttempt(ctx context.Context, id, status, message string, report *verify.Report, webhook bool) error {
+func (s *Store) FinishAttempt(ctx context.Context, id string, expectedAttempt int, status, message string, report *verify.Report, webhook bool) error {
 	tx, err := s.DB.BeginTx(ctx, nil)
 	if err != nil {
 		return err
@@ -63,7 +63,10 @@ func (s *Store) FinishAttempt(ctx context.Context, id, status, message string, r
 	if err != nil {
 		return err
 	}
-	if current.Status != "running" {
+	// A worker that lost its advisory-lock connection can still have a live
+	// pooled SQL connection. Its delayed completion must not finish a newer
+	// attempt of the same job after startup recovery and persisted backoff.
+	if current.Status != "running" || current.AttemptCount != expectedAttempt {
 		return ErrConflict
 	}
 	if current.AttemptCount < 1 || current.AttemptCount > MaxAttempts {
@@ -116,26 +119,30 @@ func (s *Store) FinishAttempt(ctx context.Context, id, status, message string, r
 // Called only after startup has positively reconciled owned containers and
 // private snapshots while holding the database's worker advisory lock.
 func (s *Store) RecoverAttempts(ctx context.Context, webhook bool) error {
-	rows, err := s.DB.QueryContext(ctx, "SELECT id FROM jobs WHERE status='running'")
+	rows, err := s.DB.QueryContext(ctx, "SELECT id,attempt_count FROM jobs WHERE status='running'")
 	if err != nil {
 		return err
 	}
-	ids := []string{}
+	type claim struct {
+		id     string
+		number int
+	}
+	claims := []claim{}
 	for rows.Next() {
-		var id string
-		if err = rows.Scan(&id); err != nil {
+		var item claim
+		if err = rows.Scan(&item.id, &item.number); err != nil {
 			rows.Close()
 			return err
 		}
-		ids = append(ids, id)
+		claims = append(claims, item)
 	}
 	err = rows.Err()
 	rows.Close()
 	if err != nil {
 		return err
 	}
-	for _, id := range ids {
-		if err = s.FinishAttempt(ctx, id, "interrupted", "Previous worker stopped before finishing. Temporary resources were reconciled.", nil, webhook); err != nil && !errors.Is(err, ErrConflict) {
+	for _, item := range claims {
+		if err = s.FinishAttempt(ctx, item.id, item.number, "interrupted", "Previous worker stopped before finishing. Temporary resources were reconciled.", nil, webhook); err != nil && !errors.Is(err, ErrConflict) {
 			return err
 		}
 	}

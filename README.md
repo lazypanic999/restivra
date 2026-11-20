@@ -25,9 +25,12 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 ## Features
 
 - React dashboard in English and Turkish: overview, project settings, recent runs, report details and JSON downloads.
+- Search all retained runs with result/date filters, cursor pagination, shareable filter links and CSV exports.
+- Browse archived projects and restore their settings/history with scheduling disabled.
 - PostgreSQL-backed queue, immutable run settings, cancellation and one active run per project.
 - One restore worker per application database, enforced by a PostgreSQL session advisory lock.
 - Worker heartbeats and startup reconciliation of interrupted jobs, owned containers and private snapshots.
+- Owned-resource reconciliation before work and while idle; stale attempt completions are rejected.
 - Bounded automatic infrastructure recovery: three attempts, persisted backoff and downloadable attempt history.
 - Daily schedules with explicit IANA time zones; missed intervals do not create a backlog.
 - SHA-256 fingerprints, unchanged-file warnings and file-age warnings.
@@ -163,6 +166,8 @@ RESTIVRA_INTEGRATION=1 go test -p 1 ./... -count=1 -timeout=10m
 PowerShell: set `$env:RESTIVRA_INTEGRATION = '1'` before `go test`. Integration tests use real PostgreSQL containers and cover restores, corrupt input, failing/null checks, blocked writes, deadlines, cleanup, persistent jobs, duplicate prevention, scheduling, cancellation and restart recovery. CI runs them on Linux.
 
 ## Operations
+
+Use **Runs** to search all retained history, including archived sources, and download up to 10,000 matching rows as CSV. Filters use queue time in your device time zone; exports use UTC. **Projects → Archived projects** restores a source with daily scheduling disabled. The overview counts all retained outcomes and displays six recent rows. See [history, exports and project recovery](docs/HISTORY.md).
 
 ```sh
 docker compose logs --tail=100 api worker

@@ -26,8 +26,8 @@ test("Every interface message has both languages with matching placeholders", ()
     assert.deepEqual(placeholders(pair[0]), placeholders(pair[1]), key);
   }
   assert.equal(
-    text("en", "summary", { projects: 2, passed: 3, failed: 0, active: 1 }),
-    "2 projects / 3 passed / 0 failed / 1 active",
+    text("en", "summary", { projects: 2, passed: 3, failed: 0, cancelled: 2, active: 1 }),
+    "2 projects / 3 passed / 0 failed / 2 cancelled / 1 active",
   );
   assert.equal(text("tr", "runTest"), "Testi çalıştır");
 });

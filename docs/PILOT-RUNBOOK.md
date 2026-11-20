@@ -163,7 +163,11 @@ SQL or command arguments. See [stall analysis](DOCKER-STALL-ANALYSIS.md).
 `docker compose down` preserves named volumes. `down -v` deletes metadata and
 history; do not use it to restart a real installation. Completed jobs expire
 after `RESTIVRA_RETENTION_DAYS` (30 by default); pending notifications are kept.
-The UI lists the latest 100 jobs and up to 500 unarchived projects.
+The overview lists six recent jobs and counts all retained outcomes. Runs searches
+all retained jobs, with 50-row pages and filtered CSV exports up to 10,000 rows.
+Projects lists up to 500 entries per active/archived view. Restoring an archived
+source preserves its settings/history and disables daily scheduling. See
+[history and recovery](HISTORY.md).
 
 ## Back up Restivra's own state
 

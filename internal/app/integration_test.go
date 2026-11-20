@@ -128,7 +128,7 @@ func TestIntegrationApp(t *testing.T) {
 	defer func() { _, _ = d.Run(context.Background(), nil, "rm", "--force", "--volumes", "restivra-"+foreignID) }()
 	workerCtx, stopWorker := context.WithCancel(ctx)
 	done := make(chan error, 1)
-	worker := Worker{Store: store, BackupRoot: rootDir, WorkDir: work, Instance: name, RetentionDays: 30}
+	worker := Worker{Store: store, BackupRoot: rootDir, WorkDir: work, Instance: name, RetentionDays: 30, reconcileInterval: time.Second}
 	go func() { done <- worker.Run(workerCtx) }()
 	workerStopped := false
 	defer func() {
@@ -266,6 +266,52 @@ func TestIntegrationApp(t *testing.T) {
 	if err != nil || len(entries) != 0 {
 		t.Fatal("worker leaked private files")
 	}
+	// Model the Docker daemon completing a cancelled create after the CLI's
+	// initial cleanup/absence check. The idle worker must reconcile it without
+	// a restart and without changing the cancelled verification outcome.
+	installation, err := store.InstallationID(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	foundLate, err := d.Run(ctx, nil, "ps", "--all", "--quiet", "--filter", "name=^/restivra-"+slow.ID+"$")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.TrimSpace(foundLate) == "" {
+		if _, err = d.Run(ctx, nil, "create", "--name", "restivra-"+slow.ID, "--label", "app=restivra", "--label", "restivra.run="+slow.ID, "--label", "restivra.installation="+installation, "--network", "none", verify.Image); err != nil {
+			t.Fatal(err)
+		}
+	}
+	stage, err := os.MkdirTemp(work, ".stage-")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = os.WriteFile(filepath.Join(stage, "snapshot-late.dump"), []byte("synthetic late snapshot"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err = os.Rename(stage, filepath.Join(work, slow.ID)); err != nil {
+		t.Fatal(err)
+	}
+	cleanedLate := false
+	for attempt := 0; attempt < 80; attempt++ {
+		left, e := d.Run(ctx, nil, "ps", "--all", "--quiet", "--filter", "label=restivra.run="+slow.ID)
+		_, statErr := os.Stat(filepath.Join(work, slow.ID))
+		if e == nil && strings.TrimSpace(left) == "" && os.IsNotExist(statErr) {
+			cleanedLate = true
+			break
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
+	if !cleanedLate {
+		t.Fatal("idle reconciliation left a late cancelled container/snapshot")
+	}
+	if _, err = d.Run(ctx, nil, "inspect", "restivra-"+foreignID); err != nil {
+		t.Fatal("idle reconciliation deleted another installation's container")
+	}
+	lateJob, err := store.Job(ctx, slow.ID)
+	if err != nil || lateJob.Status != "cancelled" {
+		t.Fatal("reconciliation rewrote the cancelled job")
+	}
 	stopWorker()
 	err = <-done
 	workerStopped = true
@@ -308,7 +354,7 @@ func TestIntegrationApp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	broken := Worker{Store: store, BackupRoot: rootDir, WorkDir: work, Instance: name, Docker: rejectCleanup{d}}
+	broken := Worker{Store: store, BackupRoot: rootDir, WorkDir: work, Instance: name, Docker: rejectCleanup{Commander: d, RunID: blocked.ID}}
 	if err = broken.Run(ctx); !errors.Is(err, ErrCleanupPending) {
 		t.Fatalf("worker did not stop on cleanup failure: %v", err)
 	}
@@ -364,12 +410,16 @@ func TestIntegrationApp(t *testing.T) {
 		t.Fatal(err)
 	}
 	testRetryPolicy(t, ctx, store, p)
+	testHistoryAndProjectRestore(t, ctx, store, p)
 }
 
-type rejectCleanup struct{ verify.Commander }
+type rejectCleanup struct {
+	verify.Commander
+	RunID string
+}
 
 func (d rejectCleanup) Run(ctx context.Context, input io.Reader, args ...string) (string, error) {
-	if len(args) > 0 && args[0] == "rm" {
+	if len(args) > 0 && args[0] == "rm" && args[len(args)-1] == "restivra-"+d.RunID {
 		return "", errors.New("injected Docker removal failure")
 	}
 	return d.Commander.Run(ctx, input, args...)

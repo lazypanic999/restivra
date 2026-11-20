@@ -53,9 +53,9 @@ func testRetryPolicy(t *testing.T, ctx context.Context, store *Store, template P
 		}
 		return *j
 	}
-	finish := func(id, code string) {
+	finish := func(id string, attempt int, code string) {
 		t.Helper()
-		e := store.FinishAttempt(ctx, id, "failed", "fixed safe diagnostic", &verify.Report{Stage: "start", Status: "failed", ErrorCode: code, CleanupStatus: "passed"}, true)
+		e := store.FinishAttempt(ctx, id, attempt, "failed", "fixed safe diagnostic", &verify.Report{Stage: "start", Status: "failed", ErrorCode: code, CleanupStatus: "passed"}, true)
 		if e != nil {
 			t.Fatal(e)
 		}
@@ -65,7 +65,7 @@ func testRetryPolicy(t *testing.T, ctx context.Context, store *Store, template P
 	handler := api.Handler()
 	for n := 1; n <= MaxAttempts; n++ {
 		claim(j.ID, n)
-		finish(j.ID, "database_start_failed")
+		finish(j.ID, n, "database_start_failed")
 		state, e := store.Job(ctx, j.ID)
 		if e != nil {
 			t.Fatal(e)
@@ -107,7 +107,7 @@ func testRetryPolicy(t *testing.T, ctx context.Context, store *Store, template P
 	for _, code := range []string{"checks_failed", "archive_invalid", "resource_limit"} {
 		j = enqueue()
 		claim(j.ID, 1)
-		finish(j.ID, code)
+		finish(j.ID, 1, code)
 		state, e := store.Job(ctx, j.ID)
 		if e != nil || state.Status != "failed" || state.AttemptCount != 1 || state.RetryAt != nil {
 			t.Fatalf("non-transient failure retried: %s %+v %v", code, state, e)
@@ -115,7 +115,7 @@ func testRetryPolicy(t *testing.T, ctx context.Context, store *Store, template P
 	}
 	j = enqueue()
 	claim(j.ID, 1)
-	finish(j.ID, "database_start_failed")
+	finish(j.ID, 1, "database_start_failed")
 	if err = store.Cancel(ctx, j.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -131,11 +131,32 @@ func testRetryPolicy(t *testing.T, ctx context.Context, store *Store, template P
 	if err = store.Cancel(ctx, j.ID); err != nil {
 		t.Fatal(err)
 	}
-	if err = store.FinishAttempt(ctx, j.ID, "passed", "", &verify.Report{Status: "passed", CleanupStatus: "passed"}, false); err != nil {
+	if err = store.FinishAttempt(ctx, j.ID, 1, "passed", "", &verify.Report{Status: "passed", CleanupStatus: "passed"}, false); err != nil {
 		t.Fatal(err)
 	}
 	state, err := store.Job(ctx, j.ID)
 	if err != nil || state.Status != "cancelled" || state.Report.Status != "cancelled" {
 		t.Fatal("late cancellation was turned into success")
+	}
+	j = enqueue()
+	claim(j.ID, 1)
+	finish(j.ID, 1, "database_start_failed")
+	if _, err = store.DB.ExecContext(ctx, "UPDATE jobs SET retry_at=clock_timestamp() WHERE id=$1", j.ID); err != nil {
+		t.Fatal(err)
+	}
+	claim(j.ID, 2)
+	if err = store.FinishAttempt(ctx, j.ID, 1, "passed", "", &verify.Report{Status: "passed", CleanupStatus: "passed"}, false); err != ErrConflict {
+		t.Fatal("stale worker completed a newer attempt")
+	}
+	state, err = store.Job(ctx, j.ID)
+	if err != nil || state.Status != "running" || state.AttemptCount != 2 || state.Report != nil || len(state.Attempts) != 1 {
+		t.Fatal("stale completion rewrote current job/history")
+	}
+	if err = store.FinishAttempt(ctx, j.ID, 2, "passed", "", &verify.Report{Status: "passed", CleanupStatus: "passed"}, false); err != nil {
+		t.Fatal(err)
+	}
+	state, err = store.Job(ctx, j.ID)
+	if err != nil || state.Status != "passed" || state.Report.Attempt != 2 || len(state.Attempts) != 2 {
+		t.Fatal("current attempt could not finish after stale completion was rejected")
 	}
 }

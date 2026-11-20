@@ -17,14 +17,15 @@ import (
 )
 
 type Worker struct {
-	Store         *Store
-	BackupRoot    string
-	WorkDir       string
-	Instance      string
-	Installation  string
-	WebhookURL    string
-	RetentionDays int
-	Docker        verify.Commander
+	Store             *Store
+	BackupRoot        string
+	WorkDir           string
+	Instance          string
+	Installation      string
+	WebhookURL        string
+	RetentionDays     int
+	Docker            verify.Commander
+	reconcileInterval time.Duration
 }
 
 func (w *Worker) Run(ctx context.Context) error {
@@ -76,6 +77,11 @@ func (w *Worker) Run(ctx context.Context) error {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	lastPrune := time.Time{}
+	lastReconcile := time.Now()
+	interval := w.reconcileInterval
+	if interval <= 0 {
+		interval = 30 * time.Second
+	}
 	for {
 		if ctx.Err() != nil {
 			return nil
@@ -105,25 +111,28 @@ func (w *Worker) Run(ctx context.Context) error {
 			return err
 		}
 		if job != nil {
-			if job.AttemptCount > 1 {
-				// Reconcile an ambiguous late Docker create before reusing this
-				// job's container name. Never overlap attempts.
-				cleanCtx, stopClean := context.WithTimeout(ctx, 30*time.Second)
-				found, e := w.Docker.Run(cleanCtx, nil, "ps", "--all", "--quiet", "--filter", "name=^/restivra-"+job.ID+"$", "--filter", "label=app=restivra")
-				if e == nil && strings.TrimSpace(found) != "" {
-					e = (verify.Runner{Docker: w.Docker}).Cleanup(cleanCtx, job.ID)
+			// The Docker daemon can finish a cancelled create after the CLI
+			// and its absence check have returned. Reconcile all owned leftovers
+			// before executing another job, not only before retrying the same ID.
+			if err = w.reconcile(ctx); err != nil {
+				if ctx.Err() != nil {
+					return nil
 				}
-				if e == nil {
-					e = cleanSnapshotDir(w.WorkDir, job.ID)
-				}
-				stopClean()
-				if e != nil {
-					return ErrCleanupPending
-				}
+				return ErrCleanupPending
 			}
+			lastReconcile = time.Now()
 			if err = w.execute(ctx, conn, root, *job); err != nil {
 				return err
 			}
+		} else if time.Since(lastReconcile) >= interval {
+			// Also clean late-created resources when the queue remains idle.
+			if err = w.reconcile(ctx); err != nil {
+				if ctx.Err() != nil {
+					return nil
+				}
+				return ErrCleanupPending
+			}
+			lastReconcile = time.Now()
 		}
 		notifyCtx, stopNotify := context.WithTimeout(ctx, 15*time.Second)
 		err = w.notifyPending(notifyCtx)
@@ -152,6 +161,17 @@ func (w *Worker) Run(ctx context.Context) error {
 }
 
 func (w *Worker) recover(ctx context.Context) error {
+	if err := w.reconcile(ctx); err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	return w.Store.RecoverAttempts(ctx, w.WebhookURL != "")
+}
+
+// Caller holds the worker advisory lock and has no executing restore. This
+// never rewrites job outcomes; interrupted-attempt recovery is startup-only.
+func (w *Worker) reconcile(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 45*time.Second)
 	defer cancel()
 	ids, err := w.Docker.Run(ctx, nil, "ps", "--all", "--filter", "label=app=restivra", "--filter", "label=restivra.installation="+w.Installation, "--format", `{{.Label "restivra.run"}}`)
@@ -210,7 +230,7 @@ func (w *Worker) recover(ctx context.Context) error {
 			return err
 		}
 	}
-	return w.Store.RecoverAttempts(ctx, w.WebhookURL != "")
+	return nil
 }
 
 func cleanSnapshotDir(work, id string) error {
@@ -378,7 +398,7 @@ func (w *Worker) execute(parent context.Context, conn *sql.Conn, root *os.Root, 
 			report.ErrorCode = "cleanup_failed"
 		}
 	}
-	if err := w.Store.FinishAttempt(finalCtx, job.ID, status, errorText, report, w.WebhookURL != ""); err != nil {
+	if err := w.Store.FinishAttempt(finalCtx, job.ID, job.AttemptCount, status, errorText, report, w.WebhookURL != ""); err != nil {
 		return err
 	}
 	if cleanupFailed {

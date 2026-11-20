@@ -49,8 +49,15 @@ func (a *API) Handler() http.Handler {
 		jsonResponse(w, 200, map[string]any{"csrf_token": a.CSRFToken, "default_config": verify.DefaultConfig(), "version": "0.1.0"})
 	})
 	mux.HandleFunc("GET /api/health", a.health)
+	mux.HandleFunc("GET /api/history", a.history)
+	mux.HandleFunc("GET /api/history/export.csv", a.history)
 	mux.HandleFunc("GET /api/projects", func(w http.ResponseWriter, r *http.Request) {
-		p, err := a.Store.Projects(r.Context())
+		value := r.URL.Query().Get("archived")
+		if value != "" && value != "true" && value != "false" {
+			jsonError(w, 400, "invalid project archive filter")
+			return
+		}
+		p, err := a.Store.ProjectList(r.Context(), value == "true")
 		if err != nil {
 			apiError(w, err)
 			return
@@ -59,6 +66,23 @@ func (a *API) Handler() http.Handler {
 	})
 	mux.HandleFunc("POST /api/projects", a.saveProject)
 	mux.HandleFunc("PUT /api/projects/{id}", a.saveProject)
+	mux.HandleFunc("POST /api/projects/{id}/restore", func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		if !ValidID(id) {
+			jsonError(w, 400, "geçersiz proje kimliği")
+			return
+		}
+		var body struct{}
+		if decodeJSON(w, r, &body) != nil {
+			return
+		}
+		p, err := a.Store.RestoreProject(r.Context(), id)
+		if err != nil {
+			apiError(w, err)
+			return
+		}
+		jsonResponse(w, 200, p)
+	})
 	mux.HandleFunc("DELETE /api/projects/{id}", func(w http.ResponseWriter, r *http.Request) {
 		if !ValidID(r.PathValue("id")) {
 			jsonError(w, 400, "geçersiz proje kimliği")

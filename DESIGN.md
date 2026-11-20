@@ -84,3 +84,10 @@ The mark is a crimson R whose counter is a cream return arrow: the backup coming
 The mascot is a badger in a crimson vest carrying a case with the return arrow (`docs/brand/restivra-badger.png`). It belongs to marketing material such as the walkthrough video and the README; the product interface does not show it.
 
 This layer overrides two earlier rules on purpose: monospace is now the interface face, and controls use 8px corners, panels 12px.
+
+History uses a compact wrapping filter form and a single ledger with explicit
+Older/Newer controls. Counts cover all retained records; the overview shows six
+recent rows. CSV applies to the whole filtered selection. Project lists switch
+between active and archived entries; restoring an archive leaves scheduling off.
+These controls reuse the existing dark character layer, language control and
+internally scrolling tables.

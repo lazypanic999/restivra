@@ -25,6 +25,7 @@ type Project struct {
 	NextRunAt     *time.Time    `json:"next_run_at"`
 	CreatedAt     time.Time     `json:"created_at"`
 	LastJob       *Job          `json:"last_job,omitempty"`
+	Archived      bool          `json:"archived"`
 }
 
 type Job struct {

@@ -8,6 +8,20 @@ The exact Windows process or kernel condition that triggered the desktop stall
 has **not** been established. No Windows service was disabled and no global Docker
 setting was changed as a purported fix.
 
+## November 20: late-create resource reconciliation
+
+An additional cancellation drill exposed a separate cleanup race: a Docker create
+may complete after its caller's cancellation and initial absence check. Startup
+cleanup alone leaves that resource until the next worker restart. The worker now
+reconciles its installation's resources before each restore and every 30 idle
+seconds, under the same exclusive worker lock. Failure to establish cleanup stops
+new work. Completing a stale attempt also cannot overwrite a newer attempt.
+
+A [live test](acceptance/history-20261120/idle-reconciliation.json) removed a
+late container and staged snapshot in 28.17 seconds without restarting the worker,
+preserved a foreign installation's container and kept the job cancelled. This
+fix does not establish the cause of the original Windows/Desktop stall below.
+
 ## Observed incident
 
 All timestamps below are UTC, on the same host. The original job was

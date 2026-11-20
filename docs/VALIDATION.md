@@ -9,6 +9,19 @@ the exact Windows stall trigger is still unproven.
 
 Additional validation: [PostgreSQL 17.12 relational acceptance run](POSTGRES-ACCEPTANCE.md) with 135,500 synthetic rows, source-data loss and eight expected outcomes; [English/Turkish interface and design review](DESIGN-REVIEW.md).
 
+## November 20 regression coverage
+
+- Actual PostgreSQL/Docker suite passes with retained-history pagination, CSV,
+  archive restoration and stale-attempt completion rejection.
+- Nine frontend tests pass, including device-local dates across daylight-saving
+  changes and shareable filter URLs. Production build and vet pass.
+- English/Turkish browser checks verified more than 100 real retained records,
+  full and scoped CSV downloads, archive recovery and a 390-pixel viewport.
+- Live idle reconciliation cleaned a late cancelled container and snapshot in
+  28.17 seconds without a worker restart; foreign resources remained intact.
+- New behavior and limits: [history guide](HISTORY.md). Sanitized evidence:
+  [November 20 acceptance](acceptance/history-20261120/).
+
 ## Completed locally
 
 - Frontend production build with direct esbuild; the full npm dependency audit is clean, including development tools. Vite/picomatch removal and the development-asset boundary are documented in [BUILD-SECURITY.md](BUILD-SECURITY.md).
