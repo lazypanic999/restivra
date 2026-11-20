@@ -1,0 +1,34 @@
+name: Bug report / Hata bildirimi
+description: Report a reproducible problem with synthetic data.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        English / Türkçe is welcome. Never attach real dumps, .env, tokens or private SQL.
+        Security issue? Use the private reporting link instead.
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment / Ortam
+      description: Commit, OS, Docker version and installation method.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce / Tekrarlama adımları
+      description: Use a minimal synthetic archive or SQL example.
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected and actual result / Beklenen ve gerçekleşen
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics / Temizlenmiş tanı bilgileri
+      description: Optional logs or screenshots with private information removed.

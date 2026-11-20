@@ -1,6 +1,7 @@
 <h1 align="center"><img src="docs/brand/restivra-lockup.png" alt="Restivra" width="460"></h1>
 
 [![CI](https://github.com/lazypanic999/restivra/actions/workflows/ci.yml/badge.svg)](https://github.com/lazypanic999/restivra/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-d2324d.svg)](LICENSE)
 
 **Restore your PostgreSQL backups. Run your checks. Keep the evidence.**
 
@@ -195,6 +196,13 @@ The logo is a crimson R whose counter is a cream return arrow. The palette is cr
 Logo, mark, favicon sources and the mascot are in [docs/brand](docs/brand). Interface rules, including the dark character layer, are in [DESIGN.md](DESIGN.md).
 
 The badger also has [six transparent expression poses](docs/branding): sleeping, proud, panicking, refusing, approving and waving, with a downloadable PNG pack and generation prompts.
+
+## Contributing and license
+
+Restivra is available under the [MIT license](LICENSE). See
+[CONTRIBUTING.md](CONTRIBUTING.md) for development checks and issue guidelines,
+[SECURITY.md](SECURITY.md) for private vulnerability reporting, and
+[third-party notices](THIRD_PARTY_NOTICES.md) for dependency licenses.
 
 ## Remaining work
 
