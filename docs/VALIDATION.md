@@ -19,6 +19,10 @@ Additional validation: [PostgreSQL 17.12 relational acceptance run](POSTGRES-ACC
   full and scoped CSV downloads, archive recovery and a 390-pixel viewport.
 - Live idle reconciliation cleaned a late cancelled container and snapshot in
   28.17 seconds without a worker restart; foreign resources remained intact.
+- A fixed-image 20.01-minute regression passed all 38 expected outcomes, including
+  a planned worker kill, metadata restart/pause and actual scheduled restore.
+  There were no other automatic retries or final resource leftovers.
+- Linux race checks and the packaged Linux binary vulnerability scan pass.
 - New behavior and limits: [history guide](HISTORY.md). Sanitized evidence:
   [November 20 acceptance](acceptance/history-20261120/).
 

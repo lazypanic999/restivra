@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "original_jobs": 18,
+  "original_status_report_fingerprint_preserved": true,
+  "metadata_backup_restore_verified": true,
+  "synthetic_restore": "passed",
+  "attempts": 1,
+  "cleanup": "passed",
+  "history_verified": true,
+  "worker_online": true,
+  "verified_at": "2026-11-20T00:27:16.7715240Z"
+}

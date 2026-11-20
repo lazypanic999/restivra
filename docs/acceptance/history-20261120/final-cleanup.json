@@ -1,0 +1,11 @@
+{
+  "passed": true,
+  "main_active_jobs": 0,
+  "restore_containers": 0,
+  "main_private_snapshot_entries": 0,
+  "isolated_stack_removed": true,
+  "user_volumes_preserved": true,
+  "main_doctor_passed": true,
+  "earlier_failed_test_fixture_removed": true,
+  "verified_at": "2026-11-20T00:28:36.8248586Z"
+}

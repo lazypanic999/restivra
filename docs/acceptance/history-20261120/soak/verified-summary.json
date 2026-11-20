@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "elapsed_minutes": 20.01,
+  "runs": 38,
+  "iterations": 22,
+  "outcomes": [
+    {
+      "status": "cancelled",
+      "count": 2
+    },
+    {
+      "status": "failed",
+      "count": 9
+    },
+    {
+      "status": "passed",
+      "count": 27
+    }
+  ],
+  "planned_worker_recoveries": 1,
+  "other_automatic_retries": 0,
+  "active_jobs": 0,
+  "restore_containers": 0,
+  "private_snapshot_entries": 0,
+  "stable_containers_and_images": true,
+  "runtime_source": "d36ebdd28d3f371ce1bc10e52179d198ddfcd159",
+  "runtime_ci": "https://github.com/lazypanic999/restivra/actions/runs/44644349305",
+  "verified_at": "2026-11-20T00:27:02.5703176Z"
+}

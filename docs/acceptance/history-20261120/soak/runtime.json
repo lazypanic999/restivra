@@ -1,0 +1,7 @@
+{
+  "containers": [
+    "/restivra-pilot-unattended-release-api-1 057abdc2f5cb615cad6542f5b428d472067ea28de676bdd4c959bccc81fec91f sha256:bafe27a6a73d732e5ea91563622afb1d3af363b2c5d6408f1daed47f0f565984",
+    "/restivra-pilot-unattended-release-worker-1 020f7a0baeb97c21bb3bb0182efc7edcf4b2aceb99185e348e2b488aa252e31a sha256:bafe27a6a73d732e5ea91563622afb1d3af363b2c5d6408f1daed47f0f565984"
+  ],
+  "captured_at": "2026-11-20T00:06:56.3536181Z"
+}

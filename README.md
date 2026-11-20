@@ -203,6 +203,7 @@ Restivra is available under the [MIT license](LICENSE). See
 [CONTRIBUTING.md](CONTRIBUTING.md) for development checks and issue guidelines,
 [SECURITY.md](SECURITY.md) for private vulnerability reporting, and
 [third-party notices](THIRD_PARTY_NOTICES.md) for dependency licenses.
+Changes awaiting a tagged release are listed in the [changelog](CHANGELOG.md).
 
 ## Remaining work
 

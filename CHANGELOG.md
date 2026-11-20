@@ -1,0 +1,31 @@
+# Changelog
+
+## Unreleased — local developer pilot
+
+### Added
+
+- Search across retained run history, result/date filters, stable cursor pages
+  and shareable filter URLs in English and Turkish.
+- CSV export for up to 10,000 matching runs, with spreadsheet-formula protection.
+- Archived-project browsing and recovery without automatically resuming schedules.
+- Six transparent badger mascot poses and documented generation prompts.
+- MIT license, dependency notices, contribution/security guides, issue and pull
+  request templates, and weekly Dependabot checks.
+
+### Fixed
+
+- History and overview counts no longer stop at the latest 100 jobs.
+- Late containers and snapshots from cancelled work are reconciled while idle
+  and before the next restore; the worker preserves foreign-installation resources.
+- A delayed completion from an earlier attempt cannot overwrite a newer one.
+
+### Validation and limits
+
+Real PostgreSQL/Docker regression tests, frontend tests, browser checks and
+sanitized acceptance evidence are linked in [the history guide](docs/HISTORY.md)
+and [pilot readiness review](docs/PILOT-READINESS.md). The earlier two-hour run
+belongs to runtime `5ef8f0a`. An external developer's week-long pilot, large dump
+sizing, extension compatibility and paid-pilot validation remain open.
+
+There is no tagged stable release yet. The supported pilot uses trusted
+PostgreSQL 17 custom-format archives on the operator's own computer.

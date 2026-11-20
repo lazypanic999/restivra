@@ -23,6 +23,18 @@ The two-hour result below belongs to runtime `5ef8f0a`; it is historical evidenc
 not a two-hour acceptance of this newer candidate. External customer acceptance
 and the unresolved Windows host trigger remain open.
 
+The newer runtime completed a **20.01-minute / 22-iteration** fixed-image
+regression: all **38 expected outcomes** matched (27 passed, nine intentional
+failures and two cancellations). One planned worker SIGKILL preserved its
+interrupted attempt and recovered; there were no other automatic retries.
+A metadata restart, eight-second pause and one real scheduled run passed.
+Container/image identities stayed fixed and final inspection found no active
+jobs, owned restore containers or private snapshot entries.
+See [verified results](acceptance/history-20261120/soak/verified-summary.json)
+and [attempt evidence](acceptance/history-20261120/soak/enriched-runs.ndjson).
+An earlier short development run was interrupted by an intentional API image
+replacement and is excluded from this fixed-image result.
+
 ## Previous unattended local developer pilot acceptance
 
 Runtime `5ef8f0a` completed a fresh **120.01-minute / 143-iteration** acceptance
