@@ -1099,5 +1099,9 @@ pre {
     animation: none !important;
   }
 }
-.evidence-options { padding: 0 24px 16px; border-top: 1px solid var(--border); }
+.evidence-options { padding: 0 24px 16px; border-top: 1px solid var(--rule); }
 .evidence-options .checkbox-label { margin-top: 14px; }
+.check-templates { border: 1px solid var(--rule); border-radius: 6px; padding: 12px; margin: 12px 0 18px; }
+.check-templates > summary { cursor: pointer; font-weight: 600; }
+.check-templates .field-grid { margin-top: 12px; }
+.template-preview { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px; background: var(--surface); border: 1px solid var(--rule); font-size: 12px; }

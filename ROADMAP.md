@@ -33,4 +33,4 @@
 
 ## Later
 
-Provider-specific S3 pilots, PDF, extra PostgreSQL versions/custom extension images, project-list pagination beyond 500 entries, public remote deployment, roles and billing. Hosted multi-tenancy and hostile-dump execution require a separate security design. Other engines and PITR require separate restore strategies.
+Provider-specific S3 pilots, server-generated PDF, extra PostgreSQL versions/custom extension images, project-list pagination beyond 500 entries, public remote deployment, roles and billing. Hosted multi-tenancy and hostile-dump execution require a separate security design. Other engines and PITR require separate restore strategies.

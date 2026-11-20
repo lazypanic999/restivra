@@ -26,6 +26,11 @@ jobs:
       - run: go run golang.org/x/vuln/cmd/govulncheck@v1.10.0 ./...
       - run: docker pull postgres:17-bookworm
       - run: docker pull rustfs/rustfs:1.0.5
+      - name: SQL check templates on PostgreSQL 17
+        run: npm test
+        working-directory: web
+        env:
+          RESTIVRA_INTEGRATION: '1'
       - run: go test -p 1 ./... -count=1 -timeout=10m
         env:
           RESTIVRA_INTEGRATION: '1'

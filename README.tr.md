@@ -52,6 +52,10 @@ Eski `./scripts/seed-demo.ps1` geliştirici demosu ise Go 1.27.4+ ister.
 
 ## MVP'de bulunanlar
 
+Proje formundaki hazır kontrol şablonları kayıt sayısı, güncel uygulama verisi ve
+gerekli sütunlar için düzenlenebilir SQL üretir. Önizlemeyi şemana göre inceleyip
+ekleyebilirsin; [şablonların kapsamı ve sınırları](docs/CHECK-TEMPLATES.md).
+
 `main` sürümünde S3 uyumlu bucket'tan doğrulama da var: `private/sources.json`
 içinde salt okunur worker profili tanımlanır, proje formundan seçilir. Anahtarlar
 API'ye veya proje veritabanına girmez. [Yapılandırma ve sınırlar](docs/S3-SOURCES.md).

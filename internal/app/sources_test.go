@@ -42,6 +42,31 @@ func testSourceSelections(t *testing.T, ctx context.Context, store *Store, templ
 	if err = store.Cancel(ctx, job.ID); err != nil {
 		t.Fatal(err)
 	}
+	// Scheduled dispatch has its own INSERT because active manual jobs must not
+	// abort the whole scheduler transaction. It must snapshot the source too.
+	saved.ScheduleTime = "03:00"
+	due := time.Now().UTC().Add(-time.Minute)
+	saved.NextRunAt = &due
+	if _, err = store.SaveProject(ctx, saved, false); err != nil {
+		t.Fatal(err)
+	}
+	if err = store.Schedule(ctx, time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	jobs, err := store.Jobs(ctx, saved.ID)
+	if err != nil || len(jobs) != 2 || jobs[0].Trigger != "schedule" || jobs[0].Source != saved.Source || jobs[0].BackupPattern != saved.BackupPattern {
+		t.Fatal("scheduled dispatch lost the remote source snapshot")
+	}
+	if err = store.Cancel(ctx, jobs[0].ID); err != nil {
+		t.Fatal(err)
+	}
+	saved.Source = p.Source
+	saved.BackupPattern = p.BackupPattern
+	saved.ScheduleTime = ""
+	saved.NextRunAt = nil
+	if _, err = store.SaveProject(ctx, saved, false); err != nil {
+		t.Fatal(err)
+	}
 	api := API{Store: store, Instance: "source-catalog-" + NewID(), AllowedHosts: []string{"localhost:7474"}, CSRFToken: NewID()}
 	handler := api.Handler()
 	// Only explicitly public fields survive even unexpected persisted fields.
@@ -76,7 +101,7 @@ func testSourceSelections(t *testing.T, ctx context.Context, store *Store, templ
 		t.Fatal("project source accepted credentials")
 	}
 	page, err := store.History(ctx, HistoryFilter{ProjectID: saved.ID, Limit: 50}, false)
-	if err != nil || len(page.Items) != 1 || page.Items[0].SourceKind != "s3" || page.Items[0].SourceBucket != "original-backups" {
+	if err != nil || len(page.Items) != 2 || page.Items[1].SourceKind != "s3" || page.Items[1].SourceBucket != "original-backups" || page.Items[0].SourceBucket != "replacement-backups" {
 		t.Fatal("history lost immutable source metadata")
 	}
 }

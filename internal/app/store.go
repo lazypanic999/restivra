@@ -349,7 +349,11 @@ func (s *Store) Schedule(ctx context.Context, now time.Time) error {
 		if e != nil {
 			return e
 		}
-		_, err = tx.ExecContext(ctx, `INSERT INTO jobs(id,project_id,project_name,backup_pattern,config,status,trigger) VALUES($1,$2,$3,$4,$5,'queued','schedule') ON CONFLICT DO NOTHING`, NewID(), p.ID, p.Name, p.BackupPattern, raw)
+		sourceRaw, e := json.Marshal(p.Source)
+		if e != nil {
+			return e
+		}
+		_, err = tx.ExecContext(ctx, `INSERT INTO jobs(id,project_id,project_name,backup_pattern,config,status,trigger,source) VALUES($1,$2,$3,$4,$5,'queued','schedule',$6) ON CONFLICT DO NOTHING`, NewID(), p.ID, p.Name, p.BackupPattern, raw, sourceRaw)
 		if err != nil {
 			return err
 		}

@@ -4,6 +4,7 @@ import "@fontsource/public-sans/400.css";
 import "@fontsource/public-sans/600.css";
 import { LanguageProvider, useLanguage } from "./language.jsx";
 import { History } from "./history.jsx";
+import { CheckTemplates } from "./check-templates.jsx";
 import { initialPage, emptyHistoryFilters } from "./history.js";
 import "./styles.css";
 import "./character.css";
@@ -1024,7 +1025,7 @@ function ProjectForm({ project, sourceProfiles, onClose, onSave, onArchive }) {
                   {t("sourceProfile")}
                   <select
                     required
-                  aria-label={t("sourceProfile")}
+                    aria-label={t("sourceProfile")}
                     value={source.profile || ""}
                     onChange={(event) =>
                       setSource("profile", event.target.value)
@@ -1124,6 +1125,12 @@ function ProjectForm({ project, sourceProfiles, onClose, onSave, onArchive }) {
               {t("checks")} <small>({t("optional")})</small>
             </legend>
             <p className="help-text">{t("checkHint")}</p>
+            <CheckTemplates
+              checks={value.config.checks}
+              onInsert={(check) =>
+                config("checks", [...value.config.checks, check])
+              }
+            />
             {value.config.checks.map((check, index) => (
               <div className="check-editor" key={index}>
                 <label className="field">

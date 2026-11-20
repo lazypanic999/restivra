@@ -185,6 +185,14 @@ RESTIVRA_INTEGRATION=1 go test -p 1 ./... -count=1 -timeout=10m
 
 PowerShell: set `$env:RESTIVRA_INTEGRATION = '1'` before `go test`. Integration tests use real PostgreSQL containers and cover restores, corrupt input, failing/null checks, blocked writes, deadlines, cleanup, persistent jobs, duplicate prevention, scheduling, cancellation and restart recovery. CI runs them on Linux.
 
+## Writing useful checks
+
+The project form includes editable templates for a nonempty table, a minimum
+row count, recent application timestamps and required columns. Review the SQL
+against your schema before saving. Recent-data checks reject empty/null data and
+timestamps more than five minutes in the future; file modification times alone
+cannot establish freshness. See [SQL check templates](docs/CHECK-TEMPLATES.md).
+
 ## Operations
 
 Use **Runs** to search all retained history, including archived sources, and download up to 10,000 matching rows as CSV. Filters use queue time in your device time zone; exports use UTC. **Projects → Archived projects** restores a source with daily scheduling disabled. The overview counts all retained outcomes and displays six recent rows. See [history, exports and project recovery](docs/HISTORY.md).
@@ -230,6 +238,6 @@ Changes awaiting a tagged release are listed in the [changelog](CHANGELOG.md).
 
 ## Remaining work
 
-Real developer pilots on their own computers, provider-specific S3 compatibility, extension compatibility, larger-database sizing and payment validation. PDF, extra database engines/major versions, PITR and hosted multi-tenant operation remain outside the MVP. See [ROADMAP.md](ROADMAP.md).
+Real developer pilots on their own computers, provider-specific S3 compatibility, extension compatibility, larger-database sizing and payment validation. Server-generated PDF, extra database engines/major versions, PITR and hosted multi-tenant operation remain outside the MVP. See [ROADMAP.md](ROADMAP.md).
 
 References: [pg_restore](https://www.postgresql.org/docs/17/app-pgrestore.html), [advisory locks](https://www.postgresql.org/docs/17/explicit-locking.html#ADVISORY-LOCKS), [Docker run](https://docs.docker.com/reference/cli/docker/container/run/).

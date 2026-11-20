@@ -4,6 +4,9 @@
 
 ### Added
 
+- Editable SQL templates for row counts, recent application data and required
+  columns, with real PostgreSQL edge-case tests and English/Turkish guidance.
+
 - S3-compatible worker sources with private profiles, bounded conditional
   snapshots, immutable queued selections and source evidence in history/CSV.
 - English/Turkish printable evidence reports with name redaction and preserved
@@ -23,6 +26,8 @@
   request templates, and weekly Dependabot checks.
 
 ### Fixed
+
+- Scheduled S3 jobs preserve their source selection, just like manual jobs.
 
 - History and overview counts no longer stop at the latest 100 jobs.
 - Late containers and snapshots from cancelled work are reconciled while idle
