@@ -3,10 +3,11 @@
 Katılımcıya [başlangıç rehberini](PILOT-START.tr.md) ve özel dolduracağı
 [kayıt formunu](PILOT-RECORD.tr.md) gönder. Başlangıç ve bitiş tarihini katılımcıyla
 belirle; bu belge otomatik bir takip veya bildirim oluşturmaz.
+İlk iletişim için [kısa davet mesajını](PILOT-INVITE.tr.md) kullanabilirsin.
 
 ## Pilot öncesi: sorumlu ve katılımcı birlikte
 
-- Sürüm `v0.1.0-pilot.1`; Windows + PowerShell 7.2+ + Docker Linux engine.
+- Sürüm `v0.1.0-pilot.2`; Windows + PowerShell 7.2+ + Docker Linux engine.
   İşletim sistemi, CPU mimarisi, Docker sürümü ve kullanılabilir kaynakları kaydet.
 - Bir gerçek PostgreSQL 17 custom yedek, yetkili geliştirici, bilinen extension
   listesi ve beklenen açılmış boyut. Varsayılan sınırlara uymuyorsa başlamadan konuş.
@@ -27,10 +28,13 @@ belirle; bu belge otomatik bir takip veya bildirim oluşturmaz.
 | Gün 2 | Yedek üreticisinin yeni tamamlanmış dosyasını kullan; SHA-256 ve uyarıları incele | Dosyanın değişmesi bekleniyor muydu, gözlenen hash değişimi; hash tek başına veri güncelliği değildir |
 | Gün 3 | İş yokken `docker compose restart worker`; Worker online ve sonraki manuel testi kontrol et | Yeniden bağlanma, yeni test sonucu, temizlik; gerçek veri üzerinde SIGKILL/arıza enjeksiyonu yapma |
 | Gün 4 | Geçmişi filtrele, CSV indir, raporda başarısızlığın sebebini bul; örnek başarısız projeyi arşivle | Sonucu yardım almadan açıklayabildi mi, dil ve mobil/masaüstü kullanım notu |
-| Gün 5 | Metaveriyi özel dosyaya yedekle; varsa isteğe bağlı HTTPS alıcısına örnek başarısızlığı gönder | Export tamamlandı mı; alıcı kullanılıyorsa teslim gerçekten görüldü mü |
+| Gün 5 | Metaveriyi özel dosyaya yedekle ve izole geri yükleme kontrolünü çalıştır; varsa HTTPS alıcısına örnek başarısızlığı gönder | Export ve izole restore/şema/temizlik geçti mi; alıcı kullanılıyorsa teslim görüldü mü |
 | Gün 6–7 | Günlük sonuçları gözden geçir; bitiş görüşmesi ve devam/durdurma kararı | Beklenen/oluşan test sayısı, açıklanamayan atlama, müdahale, kullanım ve ödeme isteği |
 
-Metaveri export'u almak, geri yüklenebildiğini kanıtlamaz. Ayrı PostgreSQL 17
+Metaveri export'u almak, geri yüklenebildiğini kanıtlamaz. Önce
+[otomatik izole metaveri kontrolünü](METADATA-CHECK.md) çalıştır. Bu kontrolün
+sınırları içinde geri yükleme/şema/temizlik sonucunu kaydet. Uygulamanın bütünüyle
+geri açılmasını da sınamak için ayrı PostgreSQL 17
 üzerinde metaveri geri yükleme provası pilot sorumlusu eşliğinde yapılır;
 [işletim rehberindeki sınırlar](PILOT-RUNBOOK.md#back-up-restivras-own-state) izlenir.
 Orijinal ve klon metadata ile iki worker'ı aynı Docker motorunda çalıştırmayın.

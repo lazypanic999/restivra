@@ -118,6 +118,8 @@ container memory, a 180-second verification budget plus bounded cleanup, one CPU
 128 PIDs. Each automatic attempt has its own verification budget; backoff and
 reconciliation add elapsed time. The database volume counts
 toward container memory. A small compressed dump can expand far beyond 512 MiB.
+The data directory also contains indexes, PostgreSQL system files and WAL;
+capacity is not just the sum of application payloads or compressed archive bytes.
 Raise `data_mb` and `memory_mb` together, with at least 256 MiB headroom, after
 checking host capacity. One private archive snapshot also needs local disk.
 

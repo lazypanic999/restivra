@@ -1,6 +1,6 @@
 # Restivra: ilk geliştirici pilotu
 
-Bu rehberi katılımcıya gönder. Pilot sürüm: **`v0.1.0-pilot.1`**.
+Bu rehberi katılımcıya gönder. Pilot sürüm: **`v0.1.0-pilot.2`**.
 Hedef: geliştiricinin kendi bilgisayarında bir PostgreSQL 17 yedeğini gerçekten
 geri yükleyip uygulamaya özel kontrollerle doğrulaması, ardından bir hafta izlemesi.
 Veritabanı dosyaları bize gönderilmez; işlem katılımcının bilgisayarında yapılır.
@@ -24,7 +24,7 @@ Veritabanı dosyaları bize gönderilmez; işlem katılımcının bilgisayarınd
 Docker Desktop'ı aç. PowerShell 7 terminalinde:
 
 ```powershell
-git clone --branch v0.1.0-pilot.1 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+git clone --branch v0.1.0-pilot.2 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
 cd restivra-pilot
 ./scripts/setup.ps1
 docker pull postgres:17-bookworm
@@ -83,9 +83,11 @@ Yerel kanıtlar `work/pilot-…/` altında; otomatik olarak hiçbir yere gönder
 2. **New project / Yeni proje** ile yolu `uygulamam/latest.dump` olarak gir.
    Makinenin tam dosya yolunu yazma. Varsayılan sınırlar: 256 MiB arşiv,
    512 MiB açılmış veritabanı, 180 saniye doğrulama süresi. Sığmıyorsa destek
-   notuna boyutları yaz; rastgele sınır yükseltme. Kapasite rehberi [işletim belgesinde](PILOT-RUNBOOK.md).
+   notuna boyutları yaz; rastgele sınır yükseltme. Veri alanına indeksler, PostgreSQL sistem dosyaları ve WAL de dahildir; arşiv
+   boyutu tek başına kapasite hesabı değildir. Kapasite rehberi
+   [işletim belgesinde](PILOT-RUNBOOK.md).
 3. Şemana uygun, tek bir `true/false` döndüren kontrol ekle. Örneğin tablo gerçekten
-   varsa `SELECT count(*) > 0 FROM public.orders`. Noktalı virgül ekleme.
+   varsa `SELECT EXISTS (SELECT 1 FROM public.orders)`. Noktalı virgül ekleme.
    Tablonun boş olması meşruysa bu kontrolü kullanma. Gerekirse birden fazla
    uygulama kuralı yaz. Sadece `SELECT true`, veri doğruluğunu sınamaz.
 4. Manuel test başlat. **Passed**, kontrol sonuçları, SHA-256, süre ve
@@ -126,7 +128,9 @@ Gün gün görevler ve bitiş ölçütleri [pilot planında](PILOT-PLAN.tr.md).
 - Güncelleme: pilot boyunca sürümü sabit tut. Yeni sürümde önce
   `New-Item -ItemType Directory -Path work -Force`, sonra
   `./scripts/metadata-backup.ps1 -OutputPath work/before-update.dump` ile metaveriyi
-  özel konuma yedekle. Kaynak dump ve `.env` ayrıca korunmalı. Güncelleme adımını
+  özel konuma yedekle. `./scripts/metadata-check.ps1 -Archive work/before-update.dump` ile
+  geçici, izole veritabanında geri yüklemeyi doğrula. Kaynak dump, `.env` ve
+  `private/sources.json` ayrıca korunmalı. Güncelleme adımını
   pilot sorumlusuyla belirle; çalışma sırasında `git pull` yapma.
 - Worker takılırsa: `docker compose logs --tail=100 worker` ve
   `docker compose exec -T worker restivra doctor --role worker` ile incele.
@@ -138,3 +142,14 @@ imajı indir ve aynı Compose komutuyla başlat. `pilot-*.ps1` komutları PowerS
 7.2+ ister; yüklü değilse [manuel ilk arşiv adımlarını](PILOT-RUNBOOK.md#connect-the-first-real-archive)
 izle. Bu otomatik başlangıç paketi Windows üzerinde denenmiştir; macOS/ARM için
 aynı doğrulama tamamlanmış sayılmaz.
+
+## İlk başarıdan sonra isteğe bağlı özellikler
+
+- [S3 uyumlu arşiv kaynakları](S3-SOURCES.md): anahtarlar worker'ın özel dosyasında kalır.
+- [SQL kontrol şablonları](CHECK-TEMPLATES.md): sorguyu görüp düzenleyerek uygula.
+- [Önceki çalışmayla karşılaştırma](RUN-COMPARISON.md): sorgu değişikliği ayrıca gösterilir.
+- [Yazdırılabilir İngilizce/Türkçe kanıt](EVIDENCE-REPORTS.md): isimleri gizleme seçeneği vardır.
+- [Proje ayarlarını taşıma](PROJECT-TRANSFER.md): içe aktarılan zamanlama kapalı başlar.
+- [Restivra metaveri yedeğini doğrulama](METADATA-CHECK.md): mevcut kurulumu değiştirmeden geri yükleme testi.
+
+İlk adım yine yukarıdaki yerel, iki satırlık örnekle doğrulamadır.

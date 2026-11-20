@@ -48,9 +48,10 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 
 This early MVP is ready for an unattended local developer pilot while the computer and Docker are running. A fixed-image two-hour run passed all 210 expected outcomes; separate Docker/metadata fault drills recovered automatically. See the [readiness evidence and limits](docs/PILOT-READINESS.md). A passing run establishes a logical restore and your selected checks, not complete application recovery, original permissions, PITR or backup freshness. Real customer pilots and payment validation remain to be done.
 
-The latest development checkpoint found an intermittent Docker-streamed listing
-failure with a larger archive. Its fix and the next pilot release remain pending;
-see [the reproduced issue and completed-test evidence](docs/acceptance/development-checkpoint-20261120/).
+The large-archive listing correction and full restore/failure/cancellation
+acceptance are recorded in [the current pilot evidence](docs/acceptance/large-archive-fix-20261120/).
+Use the pinned guide below for `v0.1.0-pilot.2`; earlier interrupted development
+runs remain separate historical evidence.
 
 ## Quick start
 
@@ -104,8 +105,8 @@ two projects labeled **Demo**. `./scripts/demo.ps1` runs only the standalone CLI
 For S3-compatible backups, configure an operator-managed read-only profile in
 `private/sources.json`, restart the idle worker, then choose it in the project
 form. The API never receives storage keys. [Storage setup and limits](docs/S3-SOURCES.md).
-The pinned `v0.1.0-pilot.1` remains the earlier local-file pilot; S3 support is
-currently on `main` and needs provider-specific external validation.
+The pinned `v0.1.0-pilot.2` includes this integration; provider-specific external
+validation remains necessary. The earlier `v0.1.0-pilot.1` tag is unchanged.
 
 Setup generates `.env` with independent random database/access credentials and a unique instance name. Existing `.env` files are preserved. Do not commit `.env`, dumps, reports or runtime data.
 

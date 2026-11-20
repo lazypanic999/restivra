@@ -1,0 +1,34 @@
+{
+  "development_harness_observer_repaired": true,
+  "scope": "Fixed-image Windows/Docker acceptance of the original synthetic reproduction archive; not a general size guarantee or external-user pilot.",
+  "harness_note": "Fault observer now includes PID in Docker top output. Earlier completed outcomes were re-read before and after continuation; runtime identities stayed fixed. Separate first harness with reserved-variable error is excluded.",
+  "archive_bytes": 59244344,
+  "restore_containers": 0,
+  "data_mb": 1024,
+  "active_jobs": 0,
+  "runtime_identities_unchanged": true,
+  "persisted_outcomes_rechecked": 16,
+  "application_image": "sha256:47193e4303ce0ee3e3610368129bf18150e394d72b592edad4fb4cd49f402a56",
+  "passed": true,
+  "application_binary_sha256": "c0f77cefba27180cfe05a3960c90065f0f08219dbd35cd0811f9e6ba083dcbee",
+  "outcomes": [
+    {
+      "status": "cancelled",
+      "count": 1
+    },
+    {
+      "status": "failed",
+      "count": 4
+    },
+    {
+      "status": "passed",
+      "count": 11
+    }
+  ],
+  "started_at": "2026-11-20T16:00:02.7742861Z",
+  "memory_mb": 1536,
+  "asserted_runs": 16,
+  "private_files": 0,
+  "archive_sha256": "ccc59d31c0b1d6f03e156e9f645194848e3ab12d72d220a789e1bec7888acff2",
+  "finished_at": "2026-11-20T16:06:51.9472842Z"
+}

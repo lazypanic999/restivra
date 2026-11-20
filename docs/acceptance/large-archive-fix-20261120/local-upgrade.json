@@ -1,0 +1,10 @@
+{
+  "new_image": "sha256:47193e4303ce0ee3e3610368129bf18150e394d72b592edad4fb4cd49f402a56",
+  "upgraded_at": "2026-11-20T16:07:44.7071520Z",
+  "original_jobs": 24,
+  "original_projects": 17,
+  "old_image": "sha256:b879f56640f0c35e947ba7d10a7748c803adb739b3eef337aa33f89cf7431338",
+  "original_rows_unchanged": true,
+  "credentials_preserved": true,
+  "metadata_restore_verified": true
+}

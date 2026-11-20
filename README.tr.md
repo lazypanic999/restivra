@@ -36,9 +36,9 @@ Teslim durumu: bilgisayar ve Docker açıkken gözetimsiz yerel geliştirici pil
 
 ## İlk proje
 
-Son geliştirme kontrolünde büyük bir arşivin Docker üzerinden listeleme aşamasında
-aralıklı hata bulundu. Düzeltme henüz uygulanmadı; yeni pilot sürümü yayımlanmadı.
-[Tekrar üretim ve tamamlanan testlerin kaydı](docs/acceptance/development-checkpoint-20261120/).
+Büyük arşivin Docker üzerinden listeleme hatası düzeltildi. Tam geri yükleme,
+bozuk dosya, iptal ve worker toparlanması [pilot kabul kaydında](docs/acceptance/large-archive-fix-20261120/).
+Yeni katılımcı `v0.1.0-pilot.2` etiketli başlangıç rehberini izlemeli.
 
 1. PostgreSQL 17 üzerinde `pg_dump` 17 ile `-Fc` formatında alınmış tamamlanmış yedeği `backups/` klasörüne koy.
 2. Panelde **Yeni proje** seç. Dosya yolunu klasöre göre yaz: örneğin `musteri/*.dump`.
@@ -65,7 +65,7 @@ Proje formundaki hazır kontrol şablonları kayıt sayısı, güncel uygulama v
 gerekli sütunlar için düzenlenebilir SQL üretir. Önizlemeyi şemana göre inceleyip
 ekleyebilirsin; [şablonların kapsamı ve sınırları](docs/CHECK-TEMPLATES.md).
 
-`main` sürümünde S3 uyumlu bucket'tan doğrulama da var: `private/sources.json`
+`v0.1.0-pilot.2` sürümünde S3 uyumlu bucket'tan doğrulama da var: `private/sources.json`
 içinde salt okunur worker profili tanımlanır, proje formundan seçilir. Anahtarlar
 API'ye veya proje veritabanına girmez. [Yapılandırma ve sınırlar](docs/S3-SOURCES.md).
 Sabit `v0.1.0-pilot.1` etiketi önceki yerel dosya pilotudur; değiştirilmedi.

@@ -1,6 +1,6 @@
 # Developer pilot handoff
 
-Pinned candidate: **`v0.1.0-pilot.1`**. The primary tested path is Windows,
+Pinned candidate: **`v0.1.0-pilot.2`**. The primary tested path is Windows,
 PowerShell 7.2+ (`pwsh`), Git and Docker Desktop with Linux containers.
 Go, Node and a host PostgreSQL installation are not required: Docker builds the app.
 
@@ -8,7 +8,7 @@ Go, Node and a host PostgreSQL installation are not required: Docker builds the 
 [Seven-day operator plan](PILOT-PLAN.tr.md) · [Private record template](PILOT-RECORD.tr.md)
 
 ```powershell
-git clone --branch v0.1.0-pilot.1 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+git clone --branch v0.1.0-pilot.2 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
 cd restivra-pilot
 ./scripts/setup.ps1
 docker pull postgres:17-bookworm
@@ -37,15 +37,18 @@ actual daily scheduled run. Preserve your existing backup/recovery process.
 Default limits: 256 MiB archive, 512 MiB RAM-backed restored data, 1536 MiB restore
 container memory and 180-second verification budget. Allow additional memory
 for metadata PostgreSQL and disk for images plus a private archive copy.
+The data limit also includes PostgreSQL system files, indexes and WAL. Compressed
+archive size is not a reliable capacity estimate. A synthetic 59 MB archive
+required a larger data limit in acceptance; this is an example, not a sizing rule.
 Extensions, large databases and different major versions need prior compatibility
 review. This pilot is for trusted local inputs, not public uploads.
 
 If port 7474 is occupied, set `RESTIVRA_PORT=17474` in `.env` before starting and
 pass `-Base http://127.0.0.1:17474` to both pilot scripts. For a second installation
 on the same engine, also set a unique `COMPOSE_PROJECT_NAME` and use a separate
-checkout, port, freshly generated `.env` and a unique application image tag. Follow
-[the second-installation steps](SECOND-INSTALL.md) before starting it; never
-duplicate metadata ownership.
+checkout, port, freshly generated `.env` and a unique application image tag; follow
+[the second-installation steps](SECOND-INSTALL.md) before starting it. Never duplicate
+metadata ownership.
 
 Keep this version fixed for the seven-day pilot. Record planned versus actual
 runs, host availability, duration, cleanup, interventions and usefulness. Sleeping
@@ -55,7 +58,9 @@ receiver separately before relying on notifications.
 
 Stop with `docker compose stop`; resume with `docker compose start`, then run the
 prerequisite check. `docker compose down` preserves volumes; **do not use `down -v`**.
-Back up metadata, `.env` and source archives separately before any update.
+Back up metadata, `.env`, `private/sources.json` and source archives separately before
+any update. [Verify a metadata backup](METADATA-CHECK.md) in an isolated temporary
+database before relying on it.
 Failures need sanitized diagnostics, never customer dumps or secrets.
 
 Native Linux can use `sh scripts/setup.sh` and the same Compose startup. The pilot
@@ -65,3 +70,13 @@ the [operations runbook](PILOT-RUNBOOK.md). macOS/ARM acceptance is not establis
 The [readiness review](PILOT-READINESS.md) contains engineering evidence.
 Seven-day external-user acceptance and willingness to pay remain unvalidated until
 an actual participant completes them.
+
+## Optional features after the first successful restore
+
+- [Read-only S3-compatible archives](S3-SOURCES.md), configured privately in the worker.
+- [Editable SQL check templates](CHECK-TEMPLATES.md) for application-specific rules.
+- [Previous-run comparison](RUN-COMPARISON.md) with changed definitions called out.
+- [Printable English/Turkish evidence](EVIDENCE-REPORTS.md), including optional name redaction.
+- [Project settings export/import](PROJECT-TRANSFER.md); imported schedules start disabled.
+
+These are optional; the local two-row smoke check above remains the starting path.

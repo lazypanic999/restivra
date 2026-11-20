@@ -56,3 +56,12 @@ yaz. Yedi güne karşılık otomatik yedi başarılı sonuç doldurma.
 - Ödeme isteği (katılımcının kendi sözleri ve varsa tutar):
 - Karar: devam / düzeltip tekrar dene / durdur:
 - Takip bulguları ve sorumlusu:
+
+## İsteğe bağlı yeni özellik gözlemleri
+
+- Kullanılan kaynak: yerel / S3 uyumlu (özel sağlayıcı adresini veya anahtarını yazma):
+- Şablondan oluşturulan SQL kontrolünü anlayıp düzenleyebildi mi:
+- Önceki sonuç karşılaştırması bir değişikliği açıklamaya yardımcı oldu mu:
+- Yazdırılabilir kanıt ve isim gizleme yeterli miydi:
+- Proje ayarları taşındıysa zamanlamanın kapalı başladığı görüldü mü:
+- Metaveri kontrolünde restore / şema / temizlik sonucu ve hata kodu:

@@ -1,0 +1,17 @@
+[
+  {
+    "image": "sha256:47193e4303ce0ee3e3610368129bf18150e394d72b592edad4fb4cd49f402a56",
+    "container": "a772198d062c3d5a36b13de1804b5f3f7f836099c6bc58c7ad6587c826531ac0",
+    "service": "api"
+  },
+  {
+    "image": "sha256:47193e4303ce0ee3e3610368129bf18150e394d72b592edad4fb4cd49f402a56",
+    "container": "c3cbb5254e42087c6ccac496c04ce7ac0a14a6a126ad9c3035d4f55e52d56e1e",
+    "service": "worker"
+  },
+  {
+    "image": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+    "container": "b62334d3f8fd34f5657c2112e7983cbe003af26fc56af97e954000bb6b69422f",
+    "service": "db"
+  }
+]

@@ -6,14 +6,26 @@ computer, with Docker Desktop Linux containers and localhost access. PowerShell
 A real customer pilot remains
 the next product milestone. Public hosted SaaS readiness is a separate project.
 
-## November 20 stopped development checkpoint
+## November 20 resumed pilot candidate
 
-The latest [development checkpoint](acceptance/development-checkpoint-20261120/)
+Candidate **`v0.1.0-pilot.2`** corrects the large-archive listing issue. The worker
+drains remaining Docker stdin while retaining PostgreSQL failures. The
+[current acceptance](acceptance/large-archive-fix-20261120/) records repeated
+full restores of the original 59 MB reproduction archive, preserved failure
+outcomes, cancellation, worker recovery and an actual scheduled run. Source CI
+also tests repeated large listings, corrupt input and cancellation while draining.
+The pinned participant guides now target this candidate. The previous pilot tag
+remains unchanged. This supports a local developer pilot within the documented
+archive/version/resource limits; external seven-day acceptance is still pending.
+
+## Historical November 20 stopped development checkpoint
+
+The earlier [development checkpoint](acceptance/development-checkpoint-20261120/)
 records completed tests separately from planned durations. Work stopped at the
 operator's request. A separate large synthetic archive exposed an intermittent
-Docker-streamed archive-listing failure; its candidate fix is not merged or
-installed. Large-archive pilot acceptance and the proposed next pilot release
-remain pending that correction and a full restore regression. The earlier
+Docker-streamed archive-listing failure; at that checkpoint its candidate fix
+was not merged or installed. Large-archive acceptance and the next pilot release
+were held pending correction and a full restore regression. The earlier
 `v0.1.0-pilot.1` tag is unchanged. Fresh Windows installation and bounded metadata
 export/checking passed; these do not resolve the archive-listing issue.
 
