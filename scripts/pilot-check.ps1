@@ -1,0 +1,30 @@
+#Requires -Version 7.2
+# Read-only prerequisite check. Does not print credentials or project data.
+param(
+    [string]$Base = 'http://127.0.0.1:7474',
+    [string]$EnvFile = (Join-Path (Split-Path -Parent $PSScriptRoot) '.env')
+)
+$ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'api-session.ps1')
+$root = Split-Path -Parent $PSScriptRoot
+Push-Location $root
+try {
+    $uri = [uri]$Base
+    if (-not $uri.IsLoopback -or $uri.Scheme -ne 'http') { throw 'The desktop pilot requires loopback HTTP.' }
+    if (-not (Get-Command docker -ErrorAction SilentlyContinue)) { throw 'Install Docker Desktop and start its Linux engine first.' }
+    $engine = & docker info --format '{{.OSType}}'
+    if ($LASTEXITCODE -ne 0 -or $engine.Trim() -ne 'linux') { throw 'Docker must be running with Linux containers.' }
+    & docker compose version --short | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Docker Compose is required.' }
+    & docker image inspect postgres:17-bookworm --format '{{.Id}}' | Out-Null
+    if ($LASTEXITCODE -ne 0) { throw 'Run: docker pull postgres:17-bookworm' }
+    $connection = New-RestivraSession -Base $Base -EnvFile $EnvFile
+    $health = Invoke-RestMethod "$Base/api/health" -WebSession $connection.WebSession -TimeoutSec 15 -MaximumRedirection 0
+    if (-not $health.authentication_enabled) { throw 'Pilot sign-in is disabled. Follow the existing-installation instructions in docs/PILOT-RUNBOOK.md; do not replace an initialized database password.' }
+    if (-not $health.worker_online) { throw 'Worker is offline. Check docker compose logs --tail=100 worker.' }
+    & docker compose exec -T api restivra healthcheck
+    if ($LASTEXITCODE -ne 0) { throw 'API/database healthcheck failed.' }
+    & docker compose exec -T worker restivra doctor --role worker
+    if ($LASTEXITCODE -ne 0) { throw 'Worker prerequisites failed.' }
+    Write-Host 'Pilot prerequisites passed. No restore has run yet.'
+} finally { Pop-Location }

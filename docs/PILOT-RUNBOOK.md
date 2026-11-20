@@ -1,5 +1,10 @@
 # First-user pilot runbook
 
+Participant handoff: [English quick start](PILOT-START.md),
+[full Turkish guide](PILOT-START.tr.md), [seven-day plan](PILOT-PLAN.tr.md)
+and [private record template](PILOT-RECORD.tr.md). These use a pinned pilot tag
+and a Docker-only smoke script; this runbook contains deeper operating details.
+
 First pilot: a developer on their own computer, with Docker Desktop using Linux
 containers and PowerShell 7.2+ on Windows. Native Linux Docker is an alternative.
 Use trusted PostgreSQL 17 custom archives created by pg_dump 17, accessed over

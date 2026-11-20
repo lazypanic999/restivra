@@ -1,0 +1,65 @@
+# Developer pilot handoff
+
+Pinned candidate: **`v0.1.0-pilot.1`**. The primary tested path is Windows,
+PowerShell 7.2+ (`pwsh`), Git and Docker Desktop with Linux containers.
+Go, Node and a host PostgreSQL installation are not required: Docker builds the app.
+
+[Full Turkish participant guide](PILOT-START.tr.md) ·
+[Seven-day operator plan](PILOT-PLAN.tr.md) · [Private record template](PILOT-RECORD.tr.md)
+
+```powershell
+git clone --branch v0.1.0-pilot.1 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+cd restivra-pilot
+./scripts/setup.ps1
+docker pull postgres:17-bookworm
+docker compose up --build -d --wait --wait-timeout 180
+./scripts/pilot-check.ps1
+./scripts/pilot-smoke.ps1
+```
+
+Start Docker first. Open `http://127.0.0.1:7474` and sign in using the value of
+`RESTIVRA_AUTH_TOKEN` from the private `.env` file. Never share that file.
+English is the default; Turkish is available in the header.
+
+The smoke script creates a real PostgreSQL 17 archive containing two synthetic
+customers and verifies it through the API/worker. One project must pass; the
+other intentionally fails `SELECT false`, while restore and cleanup succeed.
+Schedules stay disabled. Inspect both reports, then archive the sample projects.
+The source container is removed; sample dumps and private `work/pilot-…` evidence
+remain locally. Re-running creates new samples, without overwriting existing ones.
+If it fails, inspect/wait for or cancel its jobs before trying again.
+
+Then use your own completed, trusted PostgreSQL 17 custom-format (`pg_dump 17 -Fc`)
+archive under `backups/`. Create a project using its relative path, add meaningful
+single-boolean SQL checks without semicolons, pass a manual run and confirm an
+actual daily scheduled run. Preserve your existing backup/recovery process.
+
+Default limits: 256 MiB archive, 512 MiB RAM-backed restored data, 1536 MiB restore
+container memory and 180-second verification budget. Allow additional memory
+for metadata PostgreSQL and disk for images plus a private archive copy.
+Extensions, large databases and different major versions need prior compatibility
+review. This pilot is for trusted local inputs, not public uploads.
+
+If port 7474 is occupied, set `RESTIVRA_PORT=17474` in `.env` before starting and
+pass `-Base http://127.0.0.1:17474` to both pilot scripts. For a second installation
+on the same engine, also set a unique `COMPOSE_PROJECT_NAME` and use a separate
+checkout, port and freshly generated `.env`; never duplicate metadata ownership.
+
+Keep this version fixed for the seven-day pilot. Record planned versus actual
+runs, host availability, duration, cleanup, interventions and usefulness. Sleeping
+computers cannot run tests; on return only one overdue daily run is queued.
+No email/Telegram alert is configured by default. Test a real optional HTTPS
+receiver separately before relying on notifications.
+
+Stop with `docker compose stop`; resume with `docker compose start`, then run the
+prerequisite check. `docker compose down` preserves volumes; **do not use `down -v`**.
+Back up metadata, `.env` and source archives separately before any update.
+Failures need sanitized diagnostics, never customer dumps or secrets.
+
+Native Linux can use `sh scripts/setup.sh` and the same Compose startup. The pilot
+scripts need PowerShell 7.2+; without it, follow the manual archive procedure in
+the [operations runbook](PILOT-RUNBOOK.md). macOS/ARM acceptance is not established.
+
+The [readiness review](PILOT-READINESS.md) contains engineering evidence.
+Seven-day external-user acceptance and willingness to pay remain unvalidated until
+an actual participant completes them.

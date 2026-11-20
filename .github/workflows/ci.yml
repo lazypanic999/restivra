@@ -29,3 +29,21 @@ jobs:
         env:
           RESTIVRA_INTEGRATION: '1'
       - run: go build ./cmd/restivra
+      - name: Fresh pilot setup and Docker-only smoke
+        shell: pwsh
+        env:
+          COMPOSE_PROJECT_NAME: restivra-pilot-ci
+          RESTIVRA_PORT: '17474'
+        run: |
+          $ErrorActionPreference = 'Stop'
+          try {
+            ./scripts/setup.ps1
+            $original = (Get-FileHash .env).Hash
+            ./scripts/setup.ps1
+            if ((Get-FileHash .env).Hash -ne $original) { throw 'Repeated setup changed credentials.' }
+            docker compose up --build -d --wait --wait-timeout 180
+            if ($LASTEXITCODE -ne 0) { throw 'Fresh Compose installation failed.' }
+            ./scripts/pilot-smoke.ps1 -Base http://127.0.0.1:17474
+          } finally {
+            docker compose down
+          }

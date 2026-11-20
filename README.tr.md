@@ -30,7 +30,7 @@ docker compose up --build -d
 
 Linux'ta kurulum betiği `sh scripts/setup.sh`. Panel: **[http://127.0.0.1:7474](http://127.0.0.1:7474)**.
 
-Yeni kurulumda özel `.env` dosyasındaki `RESTIVRA_AUTH_TOKEN` ile giriş yap. Mevcut `.env` değiştirilmez; eski kurulumda anahtar yoksa oturum açma kapalı kalır. İlk gerçek kullanıcı için [pilot işletim rehberi](docs/PILOT-RUNBOOK.md) ve [hazırlık incelemesi](docs/PILOT-READINESS.md).
+Yeni kurulumda özel `.env` dosyasındaki `RESTIVRA_AUTH_TOKEN` ile giriş yap. Mevcut `.env` değiştirilmez; eski kurulumda anahtar yoksa oturum açma kapalı kalır. Başka bir geliştiriciye vermek için [sabit sürümlü pilot başlangıç rehberi](docs/PILOT-START.tr.md), [yedi günlük plan](docs/PILOT-PLAN.tr.md) ve [özel kayıt formu](docs/PILOT-RECORD.tr.md) hazır. Ayrıntılı kurtarma için [pilot işletim rehberi](docs/PILOT-RUNBOOK.md).
 
 Teslim durumu: bilgisayar ve Docker açıkken gözetimsiz yerel geliştirici pilotuna hazır. Sabit imajla iki saatlik testte 210 beklenen sonuç doğrulandı; ayrıca Docker takılması ve metaveri bağlantı kaybından otomatik toparlandı. Önceki 97. dakika hatası ve Windows'taki kesin tetikleyicinin hâlâ belirsiz olması [hazırlık incelemesinde](docs/PILOT-READINESS.md) korunuyor. Dış kullanıcıyla bir haftalık pilot henüz yapılmadı. Bilgisayar/Docker kapalıyken test çalışmaz.
 
@@ -44,7 +44,11 @@ Teslim durumu: bilgisayar ve Docker açıkken gözetimsiz yerel geliştirici pil
 
 Birden fazla eşleşmede değiştirilme zamanı en yeni dosya seçilir. Yedeği önce başka uzantıya yazıp tamamlandığında seçilen ada atomik taşı. Dosya değiştirilme zamanı, yedeğin alınma zamanının kesin kanıtı değildir.
 
-Go 1.27.4+ kuruluysa `./scripts/seed-demo.ps1` iki hayali müşteri projesi oluşturur. **Demo** etiketli bu projelerde gerçek geri yükleme yapılır; biri geçer, diğeri bilerek yanlış kontrol nedeniyle başarısız olur. Zamanlamaları kapalıdır.
+Go/Node kurmadan örnek deneme için PowerShell 7.2+ ile `./scripts/pilot-smoke.ps1`
+çalıştır. Gerçek PostgreSQL yedeğinden iki benzersiz **Pilot** projesi oluşturur;
+biri geçer, diğeri kasıtlı yanlış kontrolden kalır. Geri yükleme ve temizliği
+doğrular; zamanlamalar kapalı kalır. İnceledikten sonra örnekleri arşivle.
+Eski `./scripts/seed-demo.ps1` geliştirici demosu ise Go 1.27.4+ ister.
 
 ## MVP'de bulunanlar
 

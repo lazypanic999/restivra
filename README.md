@@ -59,7 +59,11 @@ Windows / PowerShell 7.2+: use `./scripts/setup.ps1` instead of `sh scripts/setu
 
 Open **[http://127.0.0.1:7474](http://127.0.0.1:7474)** and sign in using `RESTIVRA_AUTH_TOKEN` from your private `.env` file. New installations have an empty workspace. English is the default; Turkish is available in the header.
 
-For the supported first-user deployment and recovery procedure, read the [pilot runbook](docs/PILOT-RUNBOOK.md). The [readiness review](docs/PILOT-READINESS.md) separates completed checks from remaining production work.
+Giving Restivra to another developer? Use the [pinned pilot handoff](docs/PILOT-START.md)
+or [Turkish participant guide](docs/PILOT-START.tr.md), including Docker-only smoke
+tests, a seven-day plan and a private feedback form. For operations and recovery,
+read the [pilot runbook](docs/PILOT-RUNBOOK.md). The [readiness review](docs/PILOT-READINESS.md)
+separates completed checks from remaining production work.
 
 1. Put a completed custom-format dump in `backups/`. Only PostgreSQL **17**, dumped with **pg_dump 17** and `-Fc`, is supported.
 2. Create a project with a relative path such as `customer/*.dump`.
@@ -78,7 +82,13 @@ Checks return one non-null boolean from a single SELECT. Semicolons, comments an
 
 ### Synthetic demo
 
-With Go 1.27.4+ installed, run `./scripts/seed-demo.ps1` in PowerShell. It creates an actual dump with synthetic customers and queues two projects labeled **Demo**: one passes and one intentionally fails its data check. Demo schedules stay disabled. `./scripts/demo.ps1` runs only the standalone CLI demonstration.
+For the pilot, PowerShell 7.2+ users can run `./scripts/pilot-smoke.ps1` against
+the running Compose installation. It needs Docker but no host Go/Node, creates a
+real synthetic archive and two unique Pilot projects, and checks passing/failing
+SQL outcomes plus cleanup. Schedules remain disabled; inspect then archive the samples.
+
+The older developer demo, `./scripts/seed-demo.ps1`, needs Go 1.27.4+ and creates
+two projects labeled **Demo**. `./scripts/demo.ps1` runs only the standalone CLI demonstration.
 
 ## Configuration
 
@@ -118,7 +128,7 @@ Jobs snapshot the project name, path and checks. Edits affect future jobs. Alrea
 
 Recovery uses the metadata database's installation ID and exact legacy running-job IDs. It does not delete another installation's resources based on a shared instance name. Failed cleanup stops the worker before it claims another job; restart reconciles remaining resources first.
 
-History returns the latest 100 runs; overview counters describe that window. The project list displays up to 500 records. Archiving preserves history until retention removes it.
+History searches all retained runs with cursor pages; overview counters cover all retained outcomes. The project list displays up to 500 records per active/archived view. Archiving preserves history until retention removes it.
 
 ## Access and trust boundary
 
