@@ -1,0 +1,13 @@
+{
+  "compose_project": "restivra-pilot-p2-normalized",
+  "verified_at": "2026-11-20T03:50:20.8997950Z",
+  "source_commit": "63f594bdf9ddd6d0562a2b8897848822e966f705",
+  "setup_preserves_private_files": true,
+  "source_note": "Pre-tag rehearsal of the current candidate; final pilot tag must be checked separately.",
+  "host_port": 30474,
+  "matches_frozen_qualification_binary": true,
+  "fresh_clone": true,
+  "metadata_restore_passed": true,
+  "smoke_passed": true,
+  "application_binary_sha256": "7245006f6a0a39b5d8b38abfdc1c925f9930d541ad952b067fa5efc10ef749ab"
+}

@@ -1,0 +1,17 @@
+{
+  "passed": true,
+  "synthetic_data": true,
+  "api_version": "0.1.0",
+  "projects": [
+    {
+      "job_id": "e16a74e25ac6fd28465d958315bd2c9d",
+      "project_id": "267eb0d9d38520136aef0a96bc9c24e6"
+    },
+    {
+      "job_id": "78a34f4696337564d09d040013f1dae6",
+      "project_id": "d5f971a3125fe069f87382f91b8a485e"
+    }
+  ],
+  "backup_pattern": "pilot-08c86d1c990f4ceb891bd06654e45b37/sample.dump",
+  "verified_at": "2026-11-20T03:50:13.8950419Z"
+}

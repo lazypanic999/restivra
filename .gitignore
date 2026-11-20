@@ -3,6 +3,7 @@
 /restivra
 /restivra.exe
 /.env
+/compose.override.yaml
 /backups/*
 !/backups/.gitkeep
 /web/node_modules/

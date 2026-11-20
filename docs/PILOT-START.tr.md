@@ -45,7 +45,9 @@ Port çakışıyorsa ilk `compose up` öncesinde özel `.env` dosyana
 `RESTIVRA_PORT=17474` ekle; paneli `http://127.0.0.1:17474` ile aç ve iki pilot
 komutuna da `-Base http://127.0.0.1:17474` ver. Aynı Docker üzerinde başka Restivra
 da çalışıyorsa `.env` içine ayrıca benzersiz `COMPOSE_PROJECT_NAME=restivra-pilot-benim`
-ekle. Ayrı klasör, ayrı `.env`, ayrı port kullan; mevcut veritabanını kopyalama.
+ekle. Ayrı klasör, yeni `.env`, ayrı port ve benzersiz uygulama imaj etiketi kullan.
+Başlatmadan önce [ikinci kurulum adımlarını](SECOND-INSTALL.md) uygula; mevcut
+veritabanını kopyalama.
 
 ## 2. Önce örnek veriyle dene
 

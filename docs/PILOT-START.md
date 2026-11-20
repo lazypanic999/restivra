@@ -43,7 +43,9 @@ review. This pilot is for trusted local inputs, not public uploads.
 If port 7474 is occupied, set `RESTIVRA_PORT=17474` in `.env` before starting and
 pass `-Base http://127.0.0.1:17474` to both pilot scripts. For a second installation
 on the same engine, also set a unique `COMPOSE_PROJECT_NAME` and use a separate
-checkout, port and freshly generated `.env`; never duplicate metadata ownership.
+checkout, port, freshly generated `.env` and a unique application image tag. Follow
+[the second-installation steps](SECOND-INSTALL.md) before starting it; never
+duplicate metadata ownership.
 
 Keep this version fixed for the seven-day pilot. Record planned versus actual
 runs, host availability, duration, cleanup, interventions and usefulness. Sleeping
