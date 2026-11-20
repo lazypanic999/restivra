@@ -1,0 +1,108 @@
+name: Publish release image
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Existing release tag (for example v0.1.0-pilot.3)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: release-image-${{ inputs.version }}
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      packages: write
+      actions: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Resolve immutable release source and require passing CI
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9]+([.-][a-z0-9]+)*)?$ ]] || { echo 'Use an explicit release version.'; exit 1; }
+          gh release view "$VERSION" --repo "$GH_REPO" --json tagName >/dev/null
+          git fetch --depth=1 origin "refs/tags/$VERSION:refs/tags/$VERSION"
+          REVISION=$(git rev-parse "refs/tags/$VERSION^{commit}")
+          gh api "repos/$GH_REPO/actions/workflows/ci.yml/runs?head_sha=$REVISION&status=completed&per_page=100" |
+            jq -e --arg revision "$REVISION" '[.workflow_runs[] | select(.head_sha == $revision and .conclusion == "success")] | length > 0' >/dev/null
+          git checkout --detach "$REVISION"
+          echo "REVISION=$REVISION" >> "$GITHUB_ENV"
+          echo "IMAGE=ghcr.io/${GH_REPO,,}" >> "$GITHUB_ENV"
+      - name: Authenticate to GHCR
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s' "$GH_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+      - name: Build once or reuse the existing version without replacing it
+        shell: bash
+        run: |
+          set -euo pipefail
+          if docker manifest inspect "$IMAGE:$VERSION" >/dev/null 2>&1; then
+            docker pull "$IMAGE:$VERSION"
+          else
+            docker build --pull --platform linux/amd64 \
+              --label "org.opencontainers.image.source=https://github.com/$GH_REPO" \
+              --label "org.opencontainers.image.revision=$REVISION" \
+              --label "org.opencontainers.image.version=$VERSION" \
+              --label 'io.restivra.metadata-contract=1' \
+              --tag "$IMAGE:$VERSION" .
+            docker push "$IMAGE:$VERSION"
+          fi
+          test "$(docker image inspect "$IMAGE:$VERSION" --format '{{index .Config.Labels "org.opencontainers.image.revision"}}')" = "$REVISION"
+          test "$(docker image inspect "$IMAGE:$VERSION" --format '{{index .Config.Labels "org.opencontainers.image.version"}}')" = "$VERSION"
+          REF=$(docker image inspect "$IMAGE:$VERSION" --format '{{json .RepoDigests}}' | jq -r --arg prefix "$IMAGE@sha256:" '.[] | select(startswith($prefix))' | head -n1)
+          [[ "$REF" =~ ^ghcr\.io/[a-z0-9_-]+/[a-z0-9_-]+@sha256:[a-f0-9]{64}$ ]]
+          BINARY_SHA=$(docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true --entrypoint sha256sum "$REF" /usr/local/bin/restivra | cut -d' ' -f1)
+          [[ "$BINARY_SHA" =~ ^[a-f0-9]{64}$ ]]
+          echo "IMAGE_REF=$REF" >> "$GITHUB_ENV"
+          echo "BINARY_SHA=$BINARY_SHA" >> "$GITHUB_ENV"
+      - name: Require anonymous public access
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/anonymous-docker"
+          docker --config "$RUNNER_TEMP/anonymous-docker" manifest inspect "$IMAGE_REF" >/dev/null || {
+            echo 'The image is not anonymously readable. Set the new GHCR package visibility to Public, then rerun this workflow; its version tag will be reused.'
+            exit 1
+          }
+      - name: Attach the digest-pinned release manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import datetime, json, os
+          manifest = {
+              'format': 'restivra.release.v1', 'version': os.environ['VERSION'],
+              'revision': os.environ['REVISION'], 'image': os.environ['IMAGE_REF'],
+              'binary_sha256': os.environ['BINARY_SHA'], 'platform': 'linux/amd64',
+              'metadata_contract': 1,
+              'published_at': datetime.datetime.now(datetime.timezone.utc).isoformat()
+          }
+          with open(os.path.join(os.environ['RUNNER_TEMP'], 'restivra-release.json'), 'w') as f:
+              json.dump(manifest, f, indent=2)
+              f.write('\n')
+          PY
+          if gh release view "$VERSION" --repo "$GH_REPO" --json assets --jq '.assets[].name' | grep -Fxq restivra-release.json; then
+            gh release download "$VERSION" --repo "$GH_REPO" --pattern restivra-release.json --dir "$RUNNER_TEMP/existing"
+            python3 - <<'PY'
+          import json, os
+          with open(os.path.join(os.environ['RUNNER_TEMP'], 'existing', 'restivra-release.json')) as f:
+              saved = json.load(f)
+          assert saved['image'] == os.environ['IMAGE_REF']
+          assert saved['revision'] == os.environ['REVISION']
+          assert saved['binary_sha256'] == os.environ['BINARY_SHA']
+          PY
+          else
+            gh release upload "$VERSION" "$RUNNER_TEMP/restivra-release.json" --repo "$GH_REPO"
+          fi
+          printf 'Published %s\nSource %s\n' "$IMAGE_REF" "$REVISION" >> "$GITHUB_STEP_SUMMARY"
