@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "source_commit": "3fdd162d78a179aca7cc3479169d4bf7163930e5",
+  "fresh_local_clone": true,
+  "fresh_metadata_volume": true,
+  "independent_generated_credentials": true,
+  "repeated_setup_preserved_credentials": true,
+  "authentication_required": true,
+  "legacy_unauthenticated_installation_rejected": true,
+  "worker_restart_prerequisites_passed": true,
+  "host_go_node_used_by_smoke": false,
+  "expected_pass_and_failed_check_verified": true,
+  "synthetic_source_cleanup_verified": true,
+  "test_port": 27474,
+  "isolated_compose_project": "restivra-pilot-handoff-20261120",
+  "image_tag_override_only": true,
+  "verified_at": "2026-11-20T00:42:09.0712292Z"
+}

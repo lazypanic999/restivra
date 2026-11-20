@@ -4,6 +4,11 @@
 
 ### Added
 
+- Pinned developer-pilot onboarding, Turkish seven-day plan and private record
+  template; Docker-only synthetic smoke checks with no host Go/Node requirement.
+- CI checks fresh Compose setup, preserved credentials on repeated setup and
+  passing/intentionally failing real PostgreSQL verification.
+
 - Search across retained run history, result/date filters, stable cursor pages
   and shareable filter URLs in English and Turkish.
 - CSV export for up to 10,000 matching runs, with spreadsheet-formula protection.

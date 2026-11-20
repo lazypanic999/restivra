@@ -26,5 +26,5 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'API/database healthcheck failed.' }
     & docker compose exec -T worker restivra doctor --role worker
     if ($LASTEXITCODE -ne 0) { throw 'Worker prerequisites failed.' }
-    Write-Host 'Pilot prerequisites passed. No restore has run yet.'
+    Write-Host 'Pilot prerequisites passed. This check does not run a restore.'
 } finally { Pop-Location }

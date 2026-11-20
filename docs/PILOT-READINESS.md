@@ -8,6 +8,13 @@ the next product milestone. Public hosted SaaS readiness is a separate project.
 
 ## November 20 operator update
 
+The participant handoff now includes a [pinned installation guide](PILOT-START.md),
+Docker-only synthetic smoke checks, a [seven-day plan](PILOT-PLAN.tr.md) and a
+[private record form](PILOT-RECORD.tr.md). A fresh authenticated Windows clone
+passed setup, credential preservation and the actual positive/negative restore
+checks. See [handoff evidence](acceptance/pilot-handoff-20261120/).
+External participant acceptance remains pending.
+
 The current candidate adds [retained history, CSV and archived-project recovery](HISTORY.md).
 Real PostgreSQL integration tests cover tied-time pagination beyond 100 records,
 literal search, date bounds, export limits and stale-attempt completion fencing.
