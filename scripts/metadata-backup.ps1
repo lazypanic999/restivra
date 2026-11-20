@@ -1,28 +1,23 @@
 #Requires -Version 7.2
-param([Parameter(Mandatory)][string]$OutputPath)
+param(
+    [Parameter(Mandatory)][string]$OutputPath,
+    [ValidateRange(1,3600)][int]$TimeoutSeconds = 180,
+    [ValidateRange(1,10240)][int]$MaxArchiveMB = 512
+)
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'native-command.ps1')
 $projectDir = Split-Path -Parent $PSScriptRoot
 $output = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputPath)
 $partial = "$output.partial"
 if (Test-Path -LiteralPath $output) { throw 'Output already exists.' }
 $stream = [IO.File]::Open($partial,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
-$process = [Diagnostics.Process]::new()
 try {
-    $process.StartInfo.FileName='docker'
-    $process.StartInfo.WorkingDirectory=$projectDir
-    $process.StartInfo.UseShellExecute=$false
-    $process.StartInfo.CreateNoWindow=$true
-    $process.StartInfo.RedirectStandardOutput=$true
-    $process.StartInfo.RedirectStandardError=$true
-    foreach($argument in @('compose','exec','-T','db','pg_dump','-U','restivra','-d','restivra','-Fc')) { $process.StartInfo.ArgumentList.Add($argument) }
-    if(-not $process.Start()){throw 'Could not start metadata export.'}
-    $diagnostic=$process.StandardError.ReadToEndAsync()
-    $process.StandardOutput.BaseStream.CopyTo($stream)
-    $process.WaitForExit()
-    $null=$diagnostic.GetAwaiter().GetResult()
-    if($process.ExitCode -ne 0){throw 'Metadata export failed. The .partial file is not a completed archive.'}
+    $result = Invoke-RestivraNative -FilePath docker -WorkingDirectory $projectDir -Arguments @('compose','exec','-T','db','pg_dump','-U','restivra','-d','restivra','-Fc',"--lock-wait-timeout=${TimeoutSeconds}s") -TimeoutSeconds $TimeoutSeconds -OutputStream $stream -OutputByteLimit ([long]$MaxArchiveMB * 1MB)
+    if($result.ExitCode -ne 0){throw 'Metadata export failed.'}
     $stream.Flush($true)
-}finally{$stream.Dispose();$process.Dispose()}
+} catch {
+    throw 'Metadata export failed or exceeded its time/size limit. The .partial file is not a completed archive.'
+} finally { $stream.Dispose() }
 # File.Move without overwrite refuses a destination created during the export.
 [IO.File]::Move($partial,$output)
 Write-Host 'Metadata archive created. Keep it private; test its restore separately.'

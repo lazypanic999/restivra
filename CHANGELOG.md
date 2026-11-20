@@ -39,6 +39,10 @@
 
 ### Fixed
 
+- PowerShell metadata exports have time/byte limits, discard native stderr and
+  retain failed output only as `.partial`. Real PostgreSQL tests cover a locked
+  table, oversized export, exclusive outputs and a successful 100,000-row restore.
+
 - Metadata export/report paths follow PowerShell's current location after `cd`,
   rather than the native process's original directory. CI reproduces the split.
 - Text source and embedded assets retain LF on Windows/Linux checkouts; binary

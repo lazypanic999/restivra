@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "started_at": "2026-11-20T04:00:25.8934323Z",
+  "finished_at": "2026-11-20T04:00:29.6085011Z",
+  "archive_sha256": "5e5e14959798c6a3f65875d49a4c275553e7c1817fa2f91efd15b7a619c3f7d4",
+  "archive_bytes": 18554,
+  "postgres_image": "postgres:17-bookworm",
+  "image_id": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+  "restore": "passed",
+  "schema": "passed",
+  "cleanup": "passed",
+  "counts": {
+    "projects": 17,
+    "jobs": 24,
+    "reports": 24,
+    "attempts": 10,
+    "active_jobs": 0,
+    "orphan_jobs": 0,
+    "orphan_attempts": 0,
+    "valid_installation": true
+  },
+  "error_code": "",
+  "temporary_container": "restivra-metadata-check-bf0ca5fa2d6543f48d250ad513ef2d99",
+  "worker_started": false,
+  "scope": "Isolated metadata restore and schema/count checks only; credentials, source archives and application recovery are separate."
+}

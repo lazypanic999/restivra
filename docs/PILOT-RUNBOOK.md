@@ -84,7 +84,8 @@ rotation. Login is limited to ten attempts per actual peer IP per minute.
 Reverse-proxy headers are not trusted for peer identity or secure-cookie state.
 
 To run multiple installations on one host, use different Compose project names,
-ports and backup directories. Set `RESTIVRA_PORT` for the host port; explicit
+ports, image tags and backup directories; follow the [second-installation steps](SECOND-INSTALL.md).
+Set `RESTIVRA_PORT` for the host port; explicit
 extra hostnames go in `RESTIVRA_ALLOWED_HOSTS`. Keep the generated instance name
 stable. Each metadata database has its own resource-ownership ID. A copied
 metadata database keeps that ID: **never run the original and its restored clone
@@ -99,7 +100,7 @@ as concurrent workers against the same Docker engine**.
    `customer/*.dump`. With several matches, newest file mtime wins; filename
    order breaks ties. Symlinks escaping the backup root are rejected.
 3. Add a check specific to expected application data, for example
-   `SELECT count(*) > 0 FROM public.customers`. A check must return exactly one
+   `SELECT EXISTS (SELECT 1 FROM public.customers)`. A check must return exactly one
    non-null boolean. It runs read-only with a ten-second statement timeout.
 4. Run manually. Inspect restore, every SQL check, cleanup, SHA-256 and notes.
    Download the JSON report. Passing without custom checks proves less than
@@ -194,6 +195,14 @@ Existing output is never replaced. A failed export remains `.partial` and is not
 a completed archive. Export can run while the application operates; PostgreSQL
 provides a consistent logical snapshot. Protect the archive: it contains project
 names, SQL checks and reports. Snapshots are deleted, not securely erased.
+
+The PowerShell exporter streams binary output directly to disk, discards native
+stderr and defaults to 180 seconds / 512 MiB. It kills its local Docker client
+on timeout or a failed output stream. PostgreSQL's lock-wait deadline also bounds
+table-lock acquisition. It does not stop or restart the existing database.
+For larger metadata, review capacity before using e.g. `-TimeoutSeconds 300
+-MaxArchiveMB 1024`. Failures never publish the partial file as a completed dump.
+The shell exporter does not yet provide these PowerShell time/size limits.
 
 PowerShell users can check a completed archive without replacing the running
 installation:

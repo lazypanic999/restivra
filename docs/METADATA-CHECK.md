@@ -15,6 +15,11 @@ Requires PowerShell 7.2+, a **local** Docker Linux engine and a previously pulle
 with the app stopped. It reads the supplied archive, not the existing API,
 database or `.env` file. `ReportPath` is optional; JSON is also printed to stdout.
 Use unused output names: existing reports are never overwritten.
+The PowerShell exporter defaults to a 180-second deadline and a 512 MiB archive
+limit. A timeout, output-stream failure or oversized export leaves only its
+`.partial` file. Native stderr is discarded rather than buffered. For a larger
+metadata database, review capacity before setting exporter `-TimeoutSeconds` and
+`-MaxArchiveMB`; these are separate from the checker's restored-data limits.
 Relative archive/report paths follow the current PowerShell location, including
 after `Set-Location`; they do not use the process's original startup directory.
 

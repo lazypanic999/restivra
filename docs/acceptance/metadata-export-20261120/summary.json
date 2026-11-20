@@ -1,0 +1,33 @@
+{
+  "verified_at": "2026-11-20T03:59:47.1242184Z",
+  "cases": [
+    {
+      "passed": true,
+      "rows": 100000,
+      "case": "binary_export_and_restore",
+      "archive_bytes": 4043327
+    },
+    {
+      "case": "completed_non_overwrite",
+      "passed": true
+    },
+    {
+      "case": "partial_non_overwrite",
+      "passed": true
+    },
+    {
+      "partial_bytes": 1028096,
+      "passed": true,
+      "elapsed_seconds": 1.5211154,
+      "case": "size_limit_keeps_partial"
+    },
+    {
+      "passed": true,
+      "elapsed_seconds": 3.4589633,
+      "case": "table_lock_timeout_keeps_partial"
+    }
+  ],
+  "passed": true,
+  "cleanup": "passed",
+  "failed_export_connections": 0
+}

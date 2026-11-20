@@ -44,6 +44,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           try {
             ./scripts/test-native-command.ps1
+            ./scripts/test-metadata-backup.ps1
             ./scripts/setup.ps1
             $original = (Get-FileHash .env).Hash
             $sourceProfiles = (Get-FileHash private/sources.json).Hash

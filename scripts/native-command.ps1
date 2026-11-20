@@ -28,6 +28,16 @@ namespace Restivra {
             try { await source.CopyToAsync(target, 81920, token); }
             finally { target.Dispose(); }
         }
+        public static async Task CopyOutputAsync(Stream source, Stream target, long limit, CancellationToken token) {
+            var buffer = new byte[81920];
+            long copied = 0;
+            int count;
+            while ((count = await source.ReadAsync(buffer, 0, buffer.Length, token)) > 0) {
+                if (count > limit - copied) throw new IOException("Native output exceeded its byte limit.");
+                await target.WriteAsync(buffer, 0, count, token);
+                copied += count;
+            }
+        }
     }
 }
 '@
@@ -39,6 +49,9 @@ function Invoke-RestivraNative {
         [string[]]$Arguments = @(),
         [ValidateRange(1,3600)][int]$TimeoutSeconds = 30,
         [IO.Stream]$InputStream = $null,
+        [IO.Stream]$OutputStream = $null,
+        [ValidateRange(1,10737418240)][long]$OutputByteLimit = 536870912,
+        [string]$WorkingDirectory = '',
         [ValidateRange(64,1048576)][int]$OutputLimit = 65536
     )
     $process = [Diagnostics.Process]::new()
@@ -48,24 +61,29 @@ function Invoke-RestivraNative {
         $process.StartInfo.FileName = $FilePath
         $process.StartInfo.UseShellExecute = $false
         $process.StartInfo.CreateNoWindow = $true
+        if ($WorkingDirectory) { $process.StartInfo.WorkingDirectory = $WorkingDirectory }
         $process.StartInfo.RedirectStandardOutput = $true
         $process.StartInfo.RedirectStandardError = $true
         $process.StartInfo.RedirectStandardInput = ($null -ne $InputStream)
         foreach ($argument in $Arguments) { $process.StartInfo.ArgumentList.Add($argument) }
         if (-not $process.Start()) { throw 'Native command could not start.' }
         $startedProcess = $true
-        $outputTask = [Restivra.NativeIO]::ReadAsync($process.StandardOutput, $OutputLimit)
+        $outputTask = if ($OutputStream) {
+            [Restivra.NativeIO]::CopyOutputAsync($process.StandardOutput.BaseStream, $OutputStream, $OutputByteLimit, $timeout.Token)
+        } else { [Restivra.NativeIO]::ReadAsync($process.StandardOutput, $OutputLimit) }
         $errorTask = $process.StandardError.BaseStream.CopyToAsync([IO.Stream]::Null)
         $inputTask = if ($InputStream) { [Restivra.NativeIO]::WriteAsync($InputStream, $process.StandardInput.BaseStream, $timeout.Token) } else { $null }
-        try { $process.WaitForExitAsync($timeout.Token).GetAwaiter().GetResult() }
-        catch {
-            try { $process.Kill($true) } catch {}
-            $null = $process.WaitForExit(3000)
-            throw 'Native command exceeded its time limit.'
+        while (-not $process.WaitForExit(100)) {
+            if ($timeout.IsCancellationRequested) { throw 'Native command exceeded its time limit.' }
+            foreach ($task in @($outputTask,$errorTask,$inputTask)) {
+                if ($null -ne $task -and ($task.IsFaulted -or $task.IsCanceled)) { throw 'Native command or stream failed.' }
+            }
         }
         foreach ($task in @($outputTask,$errorTask,$inputTask)) {
             if ($null -ne $task -and -not $task.Wait(3000)) { throw 'Native command streams did not close.' }
         }
+        if ($timeout.IsCancellationRequested) { throw 'Native command exceeded its time limit.' }
+        if ($OutputStream) { return @{ExitCode=$process.ExitCode;Output='';Truncated=$false} }
         $capture = $outputTask.GetAwaiter().GetResult()
         return @{ExitCode=$process.ExitCode;Output=$capture.Text;Truncated=$capture.Truncated}
     } catch {
