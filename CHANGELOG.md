@@ -35,6 +35,9 @@
 
 ### Fixed
 
+- New existence/minimum-row templates stop after finding enough rows, verified
+  by PostgreSQL query plans against 100,000 rows. Saved custom SQL is preserved.
+
 - Interrupted S3 HTTP downloads now discard partial snapshots and use the bounded
   infrastructure retry policy. Fully downloaded corrupt archives and local
   snapshot failures remain final; cancellation still does not retry.

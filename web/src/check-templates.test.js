@@ -21,7 +21,7 @@ test("repeated insertions keep names unique without renaming existing checks", (
 test("templates quote the schema and reject future timestamps in recent-data checks", () => {
   assert.equal(
     checkTemplate("rows", { table: "orders" }).sql,
-    'SELECT count(*) > 0 FROM "public"."orders"',
+    'SELECT EXISTS (SELECT 1 FROM "public"."orders")',
   );
   const minimum = checkTemplate("minimum", {
     table: "Billing.Orders",

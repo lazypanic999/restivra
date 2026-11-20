@@ -40,13 +40,15 @@ export function checkTemplate(
     case "rows":
       return {
         nameKey: "templateRows",
-        sql: `SELECT count(*) > 0 FROM ${target.sql}`,
+        sql: `SELECT EXISTS (SELECT 1 FROM ${target.sql})`,
       };
-    case "minimum":
+    case "minimum": {
+      const count = integer(minimum, 0, 1000000000);
       return {
         nameKey: "templateMinimum",
-        sql: `SELECT count(*) >= ${integer(minimum, 0, 1000000000)} FROM ${target.sql}`,
+        sql: `SELECT count(*) >= ${count} FROM (SELECT 1 FROM ${target.sql} LIMIT ${count}) AS required_rows`,
       };
+    }
     case "recent": {
       const timestamp = identifier(column),
         age = integer(hours, 1, 8760);

@@ -114,6 +114,26 @@ test(
         "extra columns are allowed",
       );
       assert.equal(check("columns", { columns: "id,missing" }), "f");
+      assert.equal(check("minimum", { minimum: "0" }), "t");
+      sql("INSERT INTO orders(id) SELECT generate_series(3, 100000)");
+      const nodes = (plan) => [plan, ...(plan.Plans || []).flatMap(nodes)];
+      for (const [kind, fields, bound] of [
+        ["rows", {}, 1],
+        ["minimum", { minimum: "25" }, 25],
+      ]) {
+        const generated = checkTemplate(kind, { table: "orders", ...fields });
+        const plan = JSON.parse(
+          sql(`EXPLAIN (ANALYZE, FORMAT JSON) ${generated.sql}`),
+        )[0].Plan;
+        const scans = nodes(plan).filter(
+          (node) => node["Relation Name"] === "orders",
+        );
+        assert.ok(scans.length > 0);
+        assert.ok(
+          scans.every((scan) => scan["Actual Rows"] <= bound),
+          "existence/threshold checks must stop after enough rows instead of scanning the full restored table",
+        );
+      }
     } finally {
       const cleanup = docker("rm", "--force", "--volumes", name);
       assert.equal(

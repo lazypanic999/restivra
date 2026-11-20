@@ -29,6 +29,13 @@ on the next verification. The existing read-only, single-boolean SELECT rules,
 statement deadline and 32-check limit still apply. Unused builder fields do not
 affect project validation or persist with the project.
 
+New nonempty checks use `EXISTS`, and minimum-count checks count a subquery capped
+at the requested threshold. They stop reading once enough rows are found.
+Existing saved checks keep their original SQL. The PostgreSQL test inserts
+100,000 rows and uses `EXPLAIN ANALYZE` to assert that the relation scans read at
+most one row for existence and 25 rows for a threshold of 25. This checks the
+amount of work directly, without relying on timing thresholds on a shared host.
+
 ![Editable template with SQL preview](screenshots/check-templates-en.jpg)
 
 ## Validation
