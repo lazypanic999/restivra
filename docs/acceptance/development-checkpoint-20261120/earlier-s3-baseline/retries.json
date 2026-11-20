@@ -1,0 +1,92 @@
+[
+  {
+    "id": "90d25699521f9e703bc8a64eda723daa",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "s3_outage_recovered"
+  },
+  {
+    "id": "ed42f21ae5cd857c12e086c72d3fe1ee",
+    "attempts": [
+      {
+        "status": "interrupted",
+        "number": 1,
+        "code": null,
+        "has_report": false
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "worker_sigkill_recovered"
+  },
+  {
+    "id": "6794431bac62eb931570c3faaf736c66",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "s3_outage_recovered"
+  },
+  {
+    "id": "a9ca18649e75aea0179e6a9503ff76f4",
+    "attempts": [
+      {
+        "status": "interrupted",
+        "number": 1,
+        "code": null,
+        "has_report": false
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "worker_sigkill_recovered"
+  },
+  {
+    "id": "2c57bf2bc6a28792aeb2d11170e949da",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "s3_outage_recovered"
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "failure": null,
+  "iterations": 153,
+  "elapsed_minutes": 131.8,
+  "started_at": "2026-11-20T02:03:17.0000000Z",
+  "planned_minutes": 230,
+  "scope": "Completed recorded outcomes only; stopped by user before planned full-duration qualification.",
+  "end_reason": "operator_stop",
+  "runs": 194,
+  "finished_at": "2026-11-20T04:15:04.7128371Z",
+  "outcomes": [
+    {
+      "status": "cancelled",
+      "count": 10
+    },
+    {
+      "status": "failed",
+      "count": 24
+    },
+    {
+      "status": "passed",
+      "count": 160
+    }
+  ],
+  "full_duration_completed": false
+}

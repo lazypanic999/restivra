@@ -1,0 +1,15 @@
+{
+  "archive_bytes": 59244344,
+  "id": "795c36457f3367a1feb2bfb08e85bb5c",
+  "cleanup": "passed",
+  "memory_mb": 1536,
+  "scenario": "data128",
+  "data_mb": 128,
+  "attempt_count": 1,
+  "archive_sha256": "ccc59d31c0b1d6f03e156e9f645194848e3ab12d72d220a789e1bec7888acff2",
+  "error_code": "restore_failed",
+  "restore": "failed",
+  "duration_ms": 15269,
+  "max_backup_bytes": 268435456,
+  "status": "failed"
+}

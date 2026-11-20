@@ -1,0 +1,17 @@
+{
+  "runtime_image": "sha256:b879f56640f0c35e947ba7d10a7748c803adb739b3eef337aa33f89cf7431338",
+  "list_then_drain": {
+    "runs": 30,
+    "failures": 0
+  },
+  "remaining": "Add a real large-input regression and verify the candidate in full API/worker restores before release.",
+  "production_fix_applied": false,
+  "direct_list": {
+    "runs": 30,
+    "failures": 12
+  },
+  "status": "candidate_not_merged",
+  "verified_at": "2026-11-20T04:16:36.3470541Z",
+  "archive_sha256": "ccc59d31c0b1d6f03e156e9f645194848e3ab12d72d220a789e1bec7888acff2",
+  "archive_bytes": 59244344
+}

@@ -1,0 +1,68 @@
+{
+  "elapsed_minutes": 82.23,
+  "rounds": 55,
+  "http": [
+    {
+      "requests": 1182,
+      "max_ms": 72.654,
+      "p95_ms": 9.659,
+      "endpoint": "comparison"
+    },
+    {
+      "requests": 1182,
+      "max_ms": 33.603,
+      "p95_ms": 5.072,
+      "endpoint": "cross-origin"
+    },
+    {
+      "requests": 1182,
+      "max_ms": 22.397,
+      "p95_ms": 9.05,
+      "endpoint": "evidence-en"
+    },
+    {
+      "requests": 1182,
+      "max_ms": 15.403,
+      "p95_ms": 9.15,
+      "endpoint": "history"
+    },
+    {
+      "requests": 1182,
+      "max_ms": 19.441,
+      "p95_ms": 8.746,
+      "endpoint": "redacted-evidence-tr"
+    },
+    {
+      "requests": 1182,
+      "max_ms": 20.486,
+      "p95_ms": 6.107,
+      "endpoint": "source-catalog"
+    },
+    {
+      "requests": 1182,
+      "max_ms": 28.54,
+      "p95_ms": 10.656,
+      "endpoint": "unauthenticated"
+    }
+  ],
+  "failure": null,
+  "finished_at": "2026-11-20T04:14:51.9531700Z",
+  "source_runs": 69,
+  "outcomes": [
+    {
+      "status": "cancelled",
+      "count": 3
+    },
+    {
+      "status": "failed",
+      "count": 10
+    },
+    {
+      "status": "passed",
+      "count": 56
+    }
+  ],
+  "end_reason": "operator_stop",
+  "http_assertions": 8274,
+  "started_at": "2026-11-20T02:52:38.1526328Z"
+}

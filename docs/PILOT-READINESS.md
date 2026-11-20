@@ -6,7 +6,18 @@ computer, with Docker Desktop Linux containers and localhost access. PowerShell
 A real customer pilot remains
 the next product milestone. Public hosted SaaS readiness is a separate project.
 
-## November 20 operator update
+## November 20 stopped development checkpoint
+
+The latest [development checkpoint](acceptance/development-checkpoint-20261120/)
+records completed tests separately from planned durations. Work stopped at the
+operator's request. A separate large synthetic archive exposed an intermittent
+Docker-streamed archive-listing failure; its candidate fix is not merged or
+installed. Large-archive pilot acceptance and the proposed next pilot release
+remain pending that correction and a full restore regression. The earlier
+`v0.1.0-pilot.1` tag is unchanged. Fresh Windows installation and bounded metadata
+export/checking passed; these do not resolve the archive-listing issue.
+
+## Earlier November 20 operator update
 
 The participant handoff now includes a [pinned installation guide](PILOT-START.md),
 Docker-only synthetic smoke checks, a [seven-day plan](PILOT-PLAN.tr.md) and a

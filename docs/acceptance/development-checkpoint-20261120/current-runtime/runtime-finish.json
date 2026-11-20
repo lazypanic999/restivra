@@ -1,0 +1,32 @@
+[
+  {
+    "image": "sha256:b879f56640f0c35e947ba7d10a7748c803adb739b3eef337aa33f89cf7431338",
+    "container": "0c58b37270817b4ffdeca62ac1cb351874dac152e738d0afe20ecb86b0a563ed",
+    "restarts": 0,
+    "service": "api"
+  },
+  {
+    "image": "sha256:b879f56640f0c35e947ba7d10a7748c803adb739b3eef337aa33f89cf7431338",
+    "container": "d8f635e6153161d2d0dfadb243f41223c0523ebb9c3761a9365f13528a1188ab",
+    "restarts": 0,
+    "service": "worker"
+  },
+  {
+    "image": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+    "container": "4259aaaeaec2c98de6434514cbcbb502b3fab2300304b53146b2a491d1746638",
+    "restarts": 0,
+    "service": "db"
+  },
+  {
+    "image": "sha256:b81d16a90ee25bd9511280127ca1471788c6e874cf0f0da759645f46b2dc1d74",
+    "container": "97169d645d95c3de201cc4278398d26b2706f2a5b5c93088e745c135df1500bc",
+    "restarts": 0,
+    "service": "storage"
+  },
+  {
+    "image": "sha256:f82d97449a23888fcc331a9f775e20891bf6f61cf8066c1e9c7150f1f3f08c8f",
+    "container": "0a09deb927ef89b288b9f6e7a2339c525e16a2bba1835a2f7fd78b49c8ae402b",
+    "restarts": 0,
+    "service": "source-proxy"
+  }
+]

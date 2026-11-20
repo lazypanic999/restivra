@@ -48,6 +48,10 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 
 This early MVP is ready for an unattended local developer pilot while the computer and Docker are running. A fixed-image two-hour run passed all 210 expected outcomes; separate Docker/metadata fault drills recovered automatically. See the [readiness evidence and limits](docs/PILOT-READINESS.md). A passing run establishes a logical restore and your selected checks, not complete application recovery, original permissions, PITR or backup freshness. Real customer pilots and payment validation remain to be done.
 
+The latest development checkpoint found an intermittent Docker-streamed listing
+failure with a larger archive. Its fix and the next pilot release remain pending;
+see [the reproduced issue and completed-test evidence](docs/acceptance/development-checkpoint-20261120/).
+
 ## Quick start
 
 Requires Docker Engine / Docker Desktop with Linux containers and Docker Compose. Allow RAM for the application database plus a restore container (1536 MiB default restore limit).

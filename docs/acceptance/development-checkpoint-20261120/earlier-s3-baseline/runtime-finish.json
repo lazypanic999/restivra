@@ -1,0 +1,26 @@
+[
+  {
+    "restarts": 0,
+    "image": "sha256:321bc0ec550c2f8e626e5b649413c8625b8f9ac656b337ffba04c4b27d8eefe9",
+    "service": "api",
+    "container": "b7512768c5db240692bd6e5b4e4888330e20cb0042a423fae0d66eb72511e632"
+  },
+  {
+    "restarts": 1,
+    "image": "sha256:321bc0ec550c2f8e626e5b649413c8625b8f9ac656b337ffba04c4b27d8eefe9",
+    "service": "worker",
+    "container": "40260ee3708250ea68a35975b78ab9a9f9c3a8ac9f7190fcbcdf0b91377b084a"
+  },
+  {
+    "restarts": 0,
+    "image": "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+    "service": "db",
+    "container": "a6691713b086330bbe3a23259d46fb648352d202ce98234404811ee98f74d222"
+  },
+  {
+    "restarts": 0,
+    "image": "sha256:b81d16a90ee25bd9511280127ca1471788c6e874cf0f0da759645f46b2dc1d74",
+    "service": "storage",
+    "container": "3edfb93c38732d5a4dd80275fa2fff354f1790c10857ccaa335f483454024154"
+  }
+]

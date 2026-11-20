@@ -1,0 +1,218 @@
+[
+  {
+    "id": "d08968346da7c0ff9c882d18abf7766e",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "interrupted_http_body_recovered"
+  },
+  {
+    "id": "9135d80e9c4f351d23b78321238f87d0",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "interrupted_http_body_recovered"
+  },
+  {
+    "id": "d768f635389d97d93b73917a4f2d5701",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "interrupted_http_body_recovered"
+  },
+  {
+    "id": "98214c88ad21543261e8610caa4427c8",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "interrupted_http_body_recovered"
+  },
+  {
+    "id": "b49c8994e47d0383eb1181ce4c66c14e",
+    "attempts": [
+      {
+        "status": "interrupted",
+        "number": 1,
+        "code": null,
+        "has_report": false
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "worker_sigkill_recovered"
+  },
+  {
+    "id": "1f533effd304e52c0bd3804323f590e1",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "interrupted_http_body_recovered"
+  },
+  {
+    "id": "d701d9886ad1fc8e1d418a9e9e9f4719",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "interrupted_http_body_recovered"
+  },
+  {
+    "id": "50666d517e93289362b4791f61144a67",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "interrupted_http_body_recovered"
+  },
+  {
+    "id": "6a0141fbbc42a6505eabc8b5579323b5",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "interrupted_http_body_recovered"
+  },
+  {
+    "id": "75c919db43718cee25521b6fdd1b9ee0",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "interrupted_http_body_recovered"
+  },
+  {
+    "id": "55f7c246da60608e6581b40262e671a7",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "interrupted_http_body_recovered"
+  },
+  {
+    "id": "b304e94737c7c5d6a9d85197243f17f0",
+    "attempts": [
+      {
+        "status": "failed",
+        "number": 1,
+        "code": "source_unavailable",
+        "has_report": true
+      },
+      {
+        "status": "passed",
+        "number": 2,
+        "code": null,
+        "has_report": true
+      }
+    ],
+    "scenario": "interrupted_http_body_recovered"
+  }
+]

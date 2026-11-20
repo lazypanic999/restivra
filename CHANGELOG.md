@@ -64,6 +64,12 @@
 
 ### Validation and limits
 
+The operator stopped the November 20 development session before the planned long
+tests ended. Completed outcomes are recorded in the [checkpoint](docs/acceptance/development-checkpoint-20261120/).
+A separate larger archive exposed intermittent Docker stdin/listing failures.
+The candidate correction is not merged; the next pilot release is held pending
+its integration regression and full restore verification.
+
 Real PostgreSQL/Docker regression tests, frontend tests, browser checks and
 sanitized acceptance evidence are linked in [the history guide](docs/HISTORY.md)
 and [pilot readiness review](docs/PILOT-READINESS.md). The earlier two-hour run

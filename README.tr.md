@@ -36,6 +36,10 @@ Teslim durumu: bilgisayar ve Docker açıkken gözetimsiz yerel geliştirici pil
 
 ## İlk proje
 
+Son geliştirme kontrolünde büyük bir arşivin Docker üzerinden listeleme aşamasında
+aralıklı hata bulundu. Düzeltme henüz uygulanmadı; yeni pilot sürümü yayımlanmadı.
+[Tekrar üretim ve tamamlanan testlerin kaydı](docs/acceptance/development-checkpoint-20261120/).
+
 1. PostgreSQL 17 üzerinde `pg_dump` 17 ile `-Fc` formatında alınmış tamamlanmış yedeği `backups/` klasörüne koy.
 2. Panelde **Yeni proje** seç. Dosya yolunu klasöre göre yaz: örneğin `musteri/*.dump`.
 3. İstersen tek boolean döndüren kontrol ekle: `SELECT EXISTS (SELECT 1 FROM public.customers)`. Noktalı virgül kullanma.

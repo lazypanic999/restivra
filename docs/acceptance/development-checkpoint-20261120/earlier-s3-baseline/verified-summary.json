@@ -1,0 +1,32 @@
+{
+  "verified_at": "2026-11-20T04:16:07.0732542Z",
+  "private_files": 0,
+  "active_jobs": 0,
+  "http": null,
+  "full_duration_completed": false,
+  "restore_containers": 0,
+  "persisted_runs_verified": 194,
+  "elapsed_minutes": 131.8,
+  "retried_jobs": 5,
+  "restore_images": [
+    "sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536"
+  ],
+  "end_reason": "operator_stop",
+  "asserted_runs": 194,
+  "outcomes": [
+    {
+      "status": "cancelled",
+      "count": 10
+    },
+    {
+      "status": "failed",
+      "count": 24
+    },
+    {
+      "status": "passed",
+      "count": 160
+    }
+  ],
+  "runtime_identities_unchanged": true,
+  "http_assertions": null
+}
