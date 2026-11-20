@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Restivra — PostgreSQL restore verification</title>
+  <meta name="description" content="Watch Restivra restore a PostgreSQL backup, check the data and report the result. Open source, MIT, Docker Compose.">
+  <meta property="og:title" content="Restivra — PostgreSQL restore verification">
+  <meta property="og:description" content="A 51-second walkthrough: restore a backup, run SQL checks and keep the evidence.">
+  <meta property="og:image" content="https://lazypanic999.github.io/restivra/media/restivra-walkthrough-poster.jpg">
+  <meta name="color-scheme" content="dark">
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#1b1718;color:#ede3dc;font:16px/1.6 system-ui,sans-serif}header,main,footer{max-width:1000px;margin:auto;padding:20px 24px}header{display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid #473236}.brand{font:700 21px ui-monospace,monospace;color:#ec5f74;text-decoration:none}nav{display:flex;gap:8px}button,a{touch-action:manipulation}button{background:#120d0e;color:#ede3dc;border:1px solid #75505a;border-radius:6px;padding:7px 12px;cursor:pointer}button[aria-pressed="true"]{border-color:#ec5f74;color:#ec5f74}h1{font-size:clamp(26px,5vw,38px);line-height:1.2;margin:18px 0}p{max-width:76ch;color:#cfc1c3}video{display:block;width:100%;aspect-ratio:16/9;background:#000;border:1px solid #473236;border-radius:6px;margin-top:24px}a{color:#f08092;text-underline-offset:3px}.actions{display:flex;flex-wrap:wrap;gap:12px;margin:22px 0}.actions a{display:inline-block;padding:9px 16px;border:1px solid #98606b;border-radius:6px;text-decoration:none}.actions a:first-child{background:#a6243c;border-color:#a6243c;color:#fff0eb}footer{font-size:14px;border-top:1px solid #473236;color:#bcaeb0}.fine{font-size:14px}.error{color:#ffad85}:focus-visible{outline:3px solid #ec5f74;outline-offset:4px}[hidden]{display:none}@media(max-width:480px){header,main,footer{padding:16px}.actions a{width:100%;text-align:center}}
+  </style>
+</head>
+<body>
+  <header><a class="brand" href="https://github.com/lazypanic999/restivra">Restivra</a><nav aria-label="Language"><button type="button" data-lang="en" aria-pressed="true">English</button><button type="button" data-lang="tr" aria-pressed="false">Türkçe</button></nav></header>
+  <main>
+    <h1 data-text="heading">Check your PostgreSQL backups with a real restore.</h1>
+    <p data-text="intro">Restivra restores an existing backup in a disposable container, runs your SQL checks and keeps the result. Open source under MIT; runs locally with Docker Compose.</p>
+    <video controls playsinline preload="metadata" poster="media/restivra-walkthrough-poster.jpg" aria-label="Restivra walkthrough">
+      <source src="media/restivra-walkthrough.mp4" type="video/mp4">
+      <p>Your browser cannot play this video. <a href="media/restivra-walkthrough.mp4">Download the MP4.</a></p>
+    </video>
+    <p class="fine" data-text="caption">51 seconds · sound included · synthetic demo data. Press play to watch.</p>
+    <p id="video-error" class="error" role="alert" hidden data-text="error">The video could not load. Try the direct MP4 link below or download it.</p>
+    <p class="fine"><a href="media/restivra-walkthrough.mp4" data-text="direct">Open video directly</a> · <a href="media/restivra-walkthrough.mp4" download="restivra-walkthrough.mp4" data-text="download">Download MP4</a></p>
+    <div class="actions"><a href="https://github.com/lazypanic999/restivra" data-text="github">View on GitHub</a><a href="https://github.com/lazypanic999/restivra/releases/tag/v0.1.0-pilot.1" data-text="pilot">Try the local pilot</a></div>
+    <p data-text="support">If this is useful to you, star the repository to follow its development. Installation feedback and contributions are welcome.</p>
+    <p class="fine" data-text="scope">Early developer pilot for trusted PostgreSQL 17 archives. Keep your existing backup and independent recovery process. The current pilot adds history filters and CSV exports beyond this walkthrough.</p>
+  </main>
+  <footer><span data-text="footer">No signup to watch. Your own backup verification runs on your computer.</span></footer>
+  <script>
+    const translations={en:{heading:'Check your PostgreSQL backups with a real restore.',intro:'Restivra restores an existing backup in a disposable container, runs your SQL checks and keeps the result. Open source under MIT; runs locally with Docker Compose.',caption:'51 seconds · sound included · synthetic demo data. Press play to watch.',error:'The video could not load. Try the direct MP4 link below or download it.',direct:'Open video directly',download:'Download MP4',github:'View on GitHub',pilot:'Try the local pilot',support:'If this is useful to you, star the repository to follow its development. Installation feedback and contributions are welcome.',scope:'Early developer pilot for trusted PostgreSQL 17 archives. Keep your existing backup and independent recovery process. The current pilot adds history filters and CSV exports beyond this walkthrough.',footer:'No signup to watch. Your own backup verification runs on your computer.'},tr:{heading:'PostgreSQL yedeğini gerçekten geri yükleyerek kontrol et.',intro:'Restivra mevcut yedeğini geçici bir konteynere geri yükler, SQL kontrollerini çalıştırır ve sonucu saklar. MIT lisanslı açık kaynak; Docker Compose ile kendi bilgisayarında çalışır.',caption:'51 saniye · sesli · sentetik örnek veri. İzlemek için oynat düğmesine bas.',error:'Video yüklenemedi. Aşağıdaki doğrudan MP4 bağlantısını dene veya dosyayı indir.',direct:'Videoyu doğrudan aç',download:'MP4 indir',github:"GitHub'da incele",pilot:'Yerel pilotu dene',support:'İşine yarıyorsa projeye yıldız vererek gelişimini takip edebilirsin. Kurulum geri bildirimleri ve katkılar da memnuniyetle karşılanır.',scope:'Güvenilir PostgreSQL 17 yedekleri için erken geliştirici pilotu. Mevcut yedekleme ve bağımsız kurtarma yöntemini koru. Güncel pilot, bu tanıtıma ek olarak geçmiş filtreleri ve CSV indirme içerir.',footer:'İzlemek için üyelik gerekmiyor. Kendi yedeğinin doğrulaması kendi bilgisayarında çalışır.'}};
+    document.querySelectorAll('[data-lang]').forEach(button=>button.addEventListener('click',()=>{const language=button.dataset.lang;document.documentElement.lang=language;document.querySelectorAll('[data-text]').forEach(element=>{element.textContent=translations[language][element.dataset.text]});document.querySelectorAll('[data-lang]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)))}));
+    const video=document.querySelector('video');const showError=()=>{document.getElementById('video-error').hidden=false};video.addEventListener('error',showError);video.querySelector('source').addEventListener('error',showError);
+  </script>
+</body>
+</html>

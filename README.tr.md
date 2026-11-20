@@ -8,7 +8,7 @@ Arayüz varsayılan olarak **İngilizce** açılır. Sağ üstteki dil seçicisi
 
 Mevcut PostgreSQL 17 yedeğini geçici bir ortamda geri yükler, SQL kontrollerini çalıştırır ve sonucu raporlar. İlk pilot, geliştiricinin kendi bilgisayarında Docker Desktop ile çalıştırması için hazırlanmıştır.
 
-[![Tanıtım videosu: proje oluşturma, geri yükleme testi, rapor ve bayat yedeğin yakalanması](docs/media/restivra-walkthrough-poster.jpg)](docs/media/restivra-walkthrough.mp4)
+[![Tanıtım videosu: proje oluşturma, geri yükleme testi, rapor ve bayat yedeğin yakalanması](docs/media/restivra-walkthrough-poster.jpg)](https://lazypanic999.github.io/restivra/)
 
 51 saniyelik tanıtım videosunda bir proje oluşturuluyor, geri yükleme testi çalıştırılıyor, rapor açılıyor ve en yeni kaydı üç gün önceye ait bayat bir yedek yakalanıyor. Video sesli ve İngilizce arayüzle çekildi.
 

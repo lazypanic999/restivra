@@ -11,7 +11,7 @@ Self-hosted PostgreSQL 17 backup verification for small teams and agencies. Rest
 
 The interface defaults to **English**. Select **Türkçe** to switch; the preference is remembered locally. See the [design review](docs/DESIGN-REVIEW.md) and [real PostgreSQL acceptance results](docs/POSTGRES-ACCEPTANCE.md).
 
-[![Walkthrough video: create a project, run a restore test, read the report, catch a stale backup](docs/media/restivra-walkthrough-poster.jpg)](docs/media/restivra-walkthrough.mp4)
+[![Walkthrough video: create a project, run a restore test, read the report, catch a stale backup](docs/media/restivra-walkthrough-poster.jpg)](https://lazypanic999.github.io/restivra/)
 
 The 51-second walkthrough creates a project, runs a restore test, opens the report and catches a stale backup whose newest row is three days old. It has sound.
 
