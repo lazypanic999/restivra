@@ -1,0 +1,130 @@
+{
+  "repeat": {
+    "current": {
+      "id": "f9317b805c418c1c0c8472d674aeea0e",
+      "status": "passed",
+      "queued_at": "2026-11-20T02:12:52.764792Z",
+      "sha256": "b56c61637305d63abda712aa880e7f351f1f7af92a58b8dbc7315d55e35e4e48",
+      "bytes": 1903,
+      "duration_ms": 3472
+    },
+    "baseline": {
+      "id": "3b0ca1b1018adef9223677736b34c157",
+      "status": "passed",
+      "queued_at": "2026-11-20T02:12:48.560916Z",
+      "sha256": "b56c61637305d63abda712aa880e7f351f1f7af92a58b8dbc7315d55e35e4e48",
+      "bytes": 1903,
+      "duration_ms": 3539
+    },
+    "content": "same",
+    "source_changed": false,
+    "limits_changed": false,
+    "image_changed": false,
+    "restore": {
+      "name": "restore",
+      "before": "passed",
+      "after": "passed",
+      "change": "unchanged"
+    },
+    "cleanup": {
+      "name": "cleanup",
+      "before": "passed",
+      "after": "passed",
+      "change": "unchanged"
+    },
+    "checks": [
+      {
+        "name": "Expected customer rows",
+        "before": "passed",
+        "after": "passed",
+        "change": "unchanged"
+      }
+    ]
+  },
+  "synthetic": true,
+  "regression": {
+    "current": {
+      "id": "bc904be252cef944c67d15ec4cf9e7dc",
+      "status": "failed",
+      "queued_at": "2026-11-20T02:12:44.319345Z",
+      "sha256": "b56c61637305d63abda712aa880e7f351f1f7af92a58b8dbc7315d55e35e4e48",
+      "bytes": 1903,
+      "duration_ms": 3239
+    },
+    "baseline": {
+      "id": "da7ee5d1db581daf9ecdb7ace86ccf63",
+      "status": "passed",
+      "queued_at": "2026-11-20T02:12:33.989317Z",
+      "sha256": "ea490c5bec0d9c7d1c987bc480d7a4f35054b6c570f93bfb93e256091f0e6d26",
+      "bytes": 1911,
+      "duration_ms": 3123
+    },
+    "content": "different",
+    "source_changed": false,
+    "limits_changed": false,
+    "image_changed": false,
+    "restore": {
+      "name": "restore",
+      "before": "passed",
+      "after": "passed",
+      "change": "unchanged"
+    },
+    "cleanup": {
+      "name": "cleanup",
+      "before": "passed",
+      "after": "passed",
+      "change": "unchanged"
+    },
+    "checks": [
+      {
+        "name": "Expected customer rows",
+        "before": "passed",
+        "after": "failed",
+        "change": "regressed"
+      }
+    ]
+  },
+  "project_id": "587298e30763c5403a48099959f864cf",
+  "definition_change": {
+    "current": {
+      "id": "3b0ca1b1018adef9223677736b34c157",
+      "status": "passed",
+      "queued_at": "2026-11-20T02:12:48.560916Z",
+      "sha256": "b56c61637305d63abda712aa880e7f351f1f7af92a58b8dbc7315d55e35e4e48",
+      "bytes": 1903,
+      "duration_ms": 3539
+    },
+    "baseline": {
+      "id": "bc904be252cef944c67d15ec4cf9e7dc",
+      "status": "failed",
+      "queued_at": "2026-11-20T02:12:44.319345Z",
+      "sha256": "b56c61637305d63abda712aa880e7f351f1f7af92a58b8dbc7315d55e35e4e48",
+      "bytes": 1903,
+      "duration_ms": 3239
+    },
+    "content": "same",
+    "source_changed": false,
+    "limits_changed": false,
+    "image_changed": false,
+    "restore": {
+      "name": "restore",
+      "before": "passed",
+      "after": "passed",
+      "change": "unchanged"
+    },
+    "cleanup": {
+      "name": "cleanup",
+      "before": "passed",
+      "after": "passed",
+      "change": "unchanged"
+    },
+    "checks": [
+      {
+        "name": "Expected customer rows",
+        "before": "failed",
+        "after": "passed",
+        "change": "definition_changed"
+      }
+    ]
+  }
+}

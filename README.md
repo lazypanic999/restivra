@@ -201,6 +201,10 @@ Use **Runs** to search all retained history, including archived sources, and dow
 sharing if needed, then use the browser's Print command to save as PDF. SQL text
 and credentials are excluded. [Evidence and redaction](docs/EVIDENCE-REPORTS.md).
 
+**Compare with the previous run** shows changed archive fingerprints and check
+outcomes. Changed SQL definitions are separated from regressions, and source,
+limit or image changes are called out. [Comparison rules](docs/RUN-COMPARISON.md).
+
 ```sh
 docker compose logs --tail=100 api worker
 docker compose restart worker

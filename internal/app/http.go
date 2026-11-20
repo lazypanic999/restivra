@@ -129,6 +129,7 @@ func (a *API) Handler() http.Handler {
 	mux.HandleFunc("GET /api/jobs/{id}", a.job)
 	mux.HandleFunc("GET /api/jobs/{id}/report", a.job)
 	mux.HandleFunc("GET /api/jobs/{id}/evidence.html", a.evidence)
+	mux.HandleFunc("GET /api/jobs/{id}/comparison", a.comparison)
 	mux.HandleFunc("POST /api/jobs/{id}/cancel", func(w http.ResponseWriter, r *http.Request) {
 		if !ValidID(r.PathValue("id")) {
 			jsonError(w, 400, "geçersiz çalışma kimliği")

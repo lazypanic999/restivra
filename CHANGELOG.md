@@ -4,6 +4,10 @@
 
 ### Added
 
+- Previous-run comparison using immutable SQL definitions, with separate rule
+  changes, missing execution evidence, source/limit/image changes and SHA-256
+  equality. English/Turkish UI and same-project authenticated API.
+
 - Editable SQL templates for row counts, recent application data and required
   columns, with real PostgreSQL edge-case tests and English/Turkish guidance.
 

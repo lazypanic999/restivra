@@ -18,7 +18,7 @@ func TestAuthProtectsDataAndRequiresSameOriginCSRF(t *testing.T) {
 	}
 	api := API{Auth: auth, AllowedHosts: []string{"localhost:7474"}, CSRFToken: NewID()}
 	handler := api.Handler()
-	for _, path := range []string{"/api/history", "/api/history/export.csv", "/api/projects?archived=true", "/api/sources", "/api/jobs/" + NewID() + "/evidence.html"} {
+	for _, path := range []string{"/api/history", "/api/history/export.csv", "/api/projects?archived=true", "/api/sources", "/api/jobs/" + NewID() + "/evidence.html", "/api/jobs/" + NewID() + "/comparison"} {
 		if response := requestJSON(t, handler, "GET", path, nil, ""); response.Code != 401 {
 			t.Fatal("unauthenticated history/archive access accepted")
 		}

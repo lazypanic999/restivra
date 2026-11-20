@@ -1105,3 +1105,12 @@ pre {
 .check-templates > summary { cursor: pointer; font-weight: 600; }
 .check-templates .field-grid { margin-top: 12px; }
 .template-preview { white-space: pre-wrap; overflow-wrap: anywhere; padding: 12px; background: var(--surface); border: 1px solid var(--rule); font-size: 12px; }
+.run-comparison { border-block: 1px solid var(--rule); margin-top: 22px; padding-block: 15px; }
+.run-comparison > summary { cursor: pointer; font-weight: 600; }
+.run-comparison .help-text { margin-top: 12px; }
+.comparison-results { min-width: 520px; }
+.comparison-results th[scope="row"] { font-weight: 400; }
+.comparison-change { font-size: 12px; }
+.comparison-regressed { color: var(--failure); }
+.comparison-improved { color: var(--success); }
+.comparison-context { color: var(--muted); font-size: 12px; padding-left: 20px; }

@@ -5,6 +5,7 @@ import "@fontsource/public-sans/600.css";
 import { LanguageProvider, useLanguage } from "./language.jsx";
 import { History } from "./history.jsx";
 import { CheckTemplates } from "./check-templates.jsx";
+import { RunComparison } from "./comparison.jsx";
 import { initialPage, emptyHistoryFilters } from "./history.js";
 import "./styles.css";
 import "./character.css";
@@ -865,7 +866,10 @@ function App({ onUnauthorized, onLogout }) {
       )}
       {selected && (
         <Report
+          key={selected.id}
           job={selected}
+          api={api}
+          onInspect={inspect}
           duration={runDuration(selected)}
           onClose={() => setSelected(null)}
           onCancel={() =>
@@ -1261,7 +1265,7 @@ function ProjectForm({ project, sourceProfiles, onClose, onSave, onArchive }) {
     </Modal>
   );
 }
-function Report({ job, duration, onClose, onCancel }) {
+function Report({ job, duration, onClose, onCancel, api, onInspect }) {
   const { t, explain, formatDate, language } = useLanguage(),
     [copied, setCopied] = useState(false),
     [copyError, setCopyError] = useState(""),
@@ -1422,6 +1426,9 @@ function Report({ job, duration, onClose, onCancel }) {
             </div>
             {!report.checks.length && (
               <p className="help-text">{t("noChecks")}</p>
+            )}
+            {!active(job) && (
+              <RunComparison jobID={job.id} api={api} onInspect={onInspect} />
             )}
             <h3 className="report-section-title">{t("archive")}</h3>
             <dl className="archive-facts">
