@@ -38,7 +38,7 @@ Teslim durumu: bilgisayar ve Docker açıkken gözetimsiz yerel geliştirici pil
 
 1. PostgreSQL 17 üzerinde `pg_dump` 17 ile `-Fc` formatında alınmış tamamlanmış yedeği `backups/` klasörüne koy.
 2. Panelde **Yeni proje** seç. Dosya yolunu klasöre göre yaz: örneğin `musteri/*.dump`.
-3. İstersen tek boolean döndüren kontrol ekle: `SELECT count(*) > 0 FROM public.customers`. Noktalı virgül kullanma.
+3. İstersen tek boolean döndüren kontrol ekle: `SELECT EXISTS (SELECT 1 FROM public.customers)`. Noktalı virgül kullanma.
 4. **Test et** ile başlat. Raporunda geri yükleme, kontroller ve temizliği ayrı incele.
 5. Günlük otomatik test için proje ayarlarında saat ve saat dilimi belirle.
 
@@ -68,6 +68,9 @@ Sabit `v0.1.0-pilot.1` etiketi önceki yerel dosya pilotudur; değiştirilmedi.
 
 - Genel bakış, proje ayarları, saklanan geçmişin tamamında arama, tarih/sonuç filtresi, sayfalama, rapor ve JSON indirme.
 - Filtrelenmiş geçmişi CSV olarak indirme; arşivlenmiş projeyi zamanlaması kapalı biçimde geri getirme.
+- [Önceki çalışmayla karşılaştırma](docs/RUN-COMPARISON.md); sorgu değişikliği, kötüleşme ve düzelme ayrı gösterilir.
+- [Proje ayarlarını dışa/içe aktarma](docs/PROJECT-TRANSFER.md); inceleme formu açılır, zamanlama kapalı başlar.
+- [İngilizce/Türkçe yazdırılabilir kanıt](docs/EVIDENCE-REPORTS.md); isimleri gizleme ve tarayıcıdan PDF kaydetme.
 - Kalıcı PostgreSQL iş kuyruğu; aynı anda tek geri yükleme.
 - Proje başına tek aktif iş, manuel/günlük çalışma ve iptal.
 - Worker yeniden başlayınca yarım işlerin ve geçici kaynakların toparlanması.

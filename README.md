@@ -30,6 +30,9 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 - Browse archived projects and restore their settings/history with scheduling disabled.
 - Read existing archives from local files or an S3-compatible bucket, with worker-only private credentials, bounded conditional downloads and source evidence.
 - Printable English/Turkish evidence reports, optional name redaction and browser-assisted PDF saving.
+- [Editable SQL templates](docs/CHECK-TEMPLATES.md) for existence, minimum rows, recent data and required columns.
+- [Previous-run comparison](docs/RUN-COMPARISON.md), separating changed rules from regressions and recoveries.
+- [Project settings export/import](docs/PROJECT-TRANSFER.md), with editable review and imported schedules disabled.
 - PostgreSQL-backed queue, immutable run settings, cancellation and one active run per project.
 - One restore worker per application database, enforced by a PostgreSQL session advisory lock.
 - Worker heartbeats and startup reconciliation of interrupted jobs, owned containers and private snapshots.
@@ -41,7 +44,7 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 - Docker Compose installation; only the worker has Docker socket access.
 - Standalone CLI for one-off verification.
 - Access-token sign-in with eight-hour HttpOnly sessions on fresh installations.
-- Readiness healthcheck, prerequisite diagnostics and metadata backup scripts.
+- Readiness healthcheck, prerequisite diagnostics and [isolated metadata backup verification](docs/METADATA-CHECK.md).
 
 This early MVP is ready for an unattended local developer pilot while the computer and Docker are running. A fixed-image two-hour run passed all 210 expected outcomes; separate Docker/metadata fault drills recovered automatically. See the [readiness evidence and limits](docs/PILOT-READINESS.md). A passing run establishes a logical restore and your selected checks, not complete application recovery, original permissions, PITR or backup freshness. Real customer pilots and payment validation remain to be done.
 
@@ -77,7 +80,7 @@ For multiple matches, the newest file modification time wins; filename order bre
 ### SQL checks
 
 ```sql
-SELECT count(*) > 0 FROM public.customers
+SELECT EXISTS (SELECT 1 FROM public.customers)
 ```
 
 Checks return one non-null boolean from a single SELECT. Semicolons, comments and backslashes are deliberately unsupported. Queries use a restricted role in a read-only transaction with a 10-second statement timeout and a 2-second lock timeout. Row-level security is not bypassed.
