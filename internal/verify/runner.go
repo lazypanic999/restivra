@@ -27,6 +27,12 @@ type Runner struct {
 	SnapshotBackup func(context.Context, string, string, int64) (*os.File, Backup, error)
 }
 
+// Listing reads only the header/TOC. Drain the remainder before the exec exits:
+// otherwise Docker can report a stdin forwarding failure for a valid archive.
+// The fixed shell program keeps pg_restore's status; a successful drain must
+// never turn a corrupt archive into a successful listing.
+const archiveListScript = `pg_restore --list; result=$?; cat >/dev/null || exit 1; exit "$result"`
+
 func (r Runner) Run(parent context.Context, source string, cfg Config) (report Report) {
 	start := time.Now().UTC()
 	id := make([]byte, 16)
@@ -176,7 +182,7 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 		}
 	}
 	report.Stage = "archive"
-	listing, err := r.Docker.Run(ctx, snapshot, "exec", "--interactive", name, "pg_restore", "--list")
+	listing, err := r.Docker.Run(ctx, snapshot, "exec", "--interactive", name, "sh", "-c", archiveListScript)
 	if err != nil {
 		fail("archive is unreadable by PostgreSQL 17 pg_restore")
 		return

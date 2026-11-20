@@ -39,6 +39,11 @@
 
 ### Fixed
 
+- Large custom archives no longer fail intermittently when `pg_restore --list`
+  exits before Docker finishes forwarding stdin. The listing command drains
+  remaining input while preserving failures. Real Docker/PostgreSQL regressions
+  cover repeated large listings, corrupt input and cancellation during draining.
+
 - PowerShell metadata exports have time/byte limits, discard native stderr and
   retain failed output only as `.partial`. Real PostgreSQL tests cover a locked
   table, oversized export, exclusive outputs and a successful 100,000-row restore.
