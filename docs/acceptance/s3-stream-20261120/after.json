@@ -1,0 +1,37 @@
+{
+  "attempt_count": 2,
+  "proxy": {
+    "armed": false,
+    "dropped": 2,
+    "get_requests": 3
+  },
+  "verified_at": "2026-11-20T02:36:17.1201779Z",
+  "source": {
+    "kind": "s3",
+    "profile": "qa-stream",
+    "bucket": "restivra-synthetic",
+    "key": "daily/current.dump",
+    "version_id": "944ec807-4f57-44ae-a17a-8629d0ea72c8",
+    "etag": "\"143fc6e62ec3ab967759066ea33e0413\""
+  },
+  "sha256": "ea490c5bec0d9c7d1c987bc480d7a4f35054b6c570f93bfb93e256091f0e6d26",
+  "job_id": "bcb6da4fb14d7e14ad55a35a0462c21b",
+  "synthetic": true,
+  "status": "passed",
+  "attempts": [
+    {
+      "number": 1,
+      "error_code": "source_unavailable",
+      "status": "failed",
+      "cleanup": "not_needed"
+    },
+    {
+      "number": 2,
+      "error_code": null,
+      "status": "passed",
+      "cleanup": "passed"
+    }
+  ],
+  "phase": "fixed",
+  "project_id": "4e141c39839d59152e07a659628c5f26"
+}

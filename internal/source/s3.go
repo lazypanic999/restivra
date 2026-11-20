@@ -3,6 +3,7 @@ package source
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -60,6 +61,22 @@ type S3Client interface {
 	ListObjectsV2(context.Context, *s3.ListObjectsV2Input, ...func(*s3.Options)) (*s3.ListObjectsV2Output, error)
 	HeadObject(context.Context, *s3.HeadObjectInput, ...func(*s3.Options)) (*s3.HeadObjectOutput, error)
 	GetObject(context.Context, *s3.GetObjectInput, ...func(*s3.Options)) (*s3.GetObjectOutput, error)
+}
+
+// SnapshotStream deliberately sanitizes I/O diagnostics. Remember only whether
+// its input failed, so a broken HTTP body can use bounded infrastructure retries
+// without retrying corrupt archives or private local snapshot write failures.
+type downloadStream struct {
+	io.Reader
+	interrupted bool
+}
+
+func (s *downloadStream) Read(p []byte) (int, error) {
+	n, err := s.Reader.Read(p)
+	if err != nil && err != io.EOF {
+		s.interrupted = true
+	}
+	return n, err
 }
 
 func Latest(ctx context.Context, client S3Client, bucket, pattern string) (types.Object, error) {
@@ -151,10 +168,14 @@ func Snapshot(ctx context.Context, client S3Client, selection Selection, pattern
 	if result.ETag == nil || *result.ETag != *head.ETag || result.ContentLength == nil || *result.ContentLength != b.Bytes || result.LastModified == nil || !result.LastModified.Equal(*head.LastModified) || (input.VersionId != nil && aws.ToString(result.VersionId) != *input.VersionId) {
 		return nil, b, fail("source_changed", "S3 object metadata changed during download.")
 	}
-	snapshot, backup, err := verify.SnapshotStream(ctx, result.Body, b, work, max)
+	stream := &downloadStream{Reader: result.Body}
+	snapshot, backup, err := verify.SnapshotStream(ctx, stream, b, work, max)
 	if err != nil {
 		if ctx.Err() != nil {
 			return nil, backup, safeError(ctx.Err())
+		}
+		if stream.interrupted {
+			return nil, backup, fail("source_unavailable", "S3 download was interrupted. Check storage connectivity; a bounded retry will use a fresh private snapshot.")
 		}
 		return nil, backup, fail("source_download_failed", "Could not create a complete PostgreSQL archive snapshot from S3. Check size, format and connection.")
 	}

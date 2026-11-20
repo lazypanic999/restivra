@@ -35,6 +35,10 @@
 
 ### Fixed
 
+- Interrupted S3 HTTP downloads now discard partial snapshots and use the bounded
+  infrastructure retry policy. Fully downloaded corrupt archives and local
+  snapshot failures remain final; cancellation still does not retry.
+
 - Scheduled S3 jobs preserve their source selection, just like manual jobs.
 
 - History and overview counts no longer stop at the latest 100 jobs.

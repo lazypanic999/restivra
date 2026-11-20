@@ -127,6 +127,13 @@ retained. Bucket/key names and reports are still operational metadata; review
 them before sharing. Each queued job snapshots its selection, so later project
 edits cannot redirect an already queued run.
 
+The snapshot contains the profile **ID**, bucket and pattern, not a frozen copy
+of the private connection file. Profiles are resolved when the worker starts.
+Use a new profile ID when changing its endpoint/account, retain the old profile
+until its queued work finishes, and restart only while idle. Rotating a key or
+redefining a profile requires reviewing its access separately; the source
+metadata does not prove the provider account's identity.
+
 - `source_access_denied`: repair credentials or read permissions; no auto retry.
 - `source_not_found`: check bucket/key pattern and completed uploads.
 - `source_changed`: use immutable finalized objects, then start a new run.
@@ -135,8 +142,14 @@ edits cannot redirect an already queued run.
 - `source_configuration`: correct endpoint/region or provider metadata support.
 - `source_profile_missing`: add the profile to this worker and restart when idle.
 - `source_download_failed`: incomplete or invalid archive snapshot; inspect source.
-- `source_unavailable`: transient request failure; the existing bounded 3-attempt
+- `source_unavailable`: transient request or HTTP body failure; the existing bounded 3-attempt
   infrastructure retry policy applies. Cancelled work does not retry.
+
+An interrupted HTTP body discards its partial private snapshot before retrying.
+It is distinguished from a fully downloaded invalid archive and local snapshot
+write errors, which remain final `source_download_failed` outcomes. Every retry
+does a fresh selection and preserves prior attempt evidence; use immutable object
+keys if a later attempt must target unchanged source content.
 
 This is validated with the actual AWS SDK v2 against a real pinned
 `rustfs/rustfs:1.0.5` S3-compatible test server and real PostgreSQL 17 restores,

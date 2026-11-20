@@ -273,14 +273,15 @@ func TestIntegrationApp(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	foundLate, err := d.Run(ctx, nil, "ps", "--all", "--quiet", "--filter", "name=^/restivra-"+slow.ID+"$")
-	if err != nil {
+	// A separate terminal job has no real create still in flight. Reusing the
+	// running-cancellation ID let the daemon reserve its name between `ps`
+	// and our injection, making the test setup itself race the event it models.
+	lateID := NewID()
+	if _, err = store.DB.ExecContext(ctx, `INSERT INTO jobs(id,project_id,project_name,backup_pattern,config,status,trigger,finished_at,source) SELECT $1,project_id,project_name,backup_pattern,config,'cancelled','manual',clock_timestamp(),source FROM jobs WHERE id=$2`, lateID, slow.ID); err != nil {
 		t.Fatal(err)
 	}
-	if strings.TrimSpace(foundLate) == "" {
-		if _, err = d.Run(ctx, nil, "create", "--name", "restivra-"+slow.ID, "--label", "app=restivra", "--label", "restivra.run="+slow.ID, "--label", "restivra.installation="+installation, "--network", "none", verify.Image); err != nil {
-			t.Fatal(err)
-		}
+	if _, err = d.Run(ctx, nil, "create", "--name", "restivra-"+lateID, "--label", "app=restivra", "--label", "restivra.run="+lateID, "--label", "restivra.installation="+installation, "--network", "none", verify.Image); err != nil {
+		t.Fatal(err)
 	}
 	stage, err := os.MkdirTemp(work, ".stage-")
 	if err != nil {
@@ -289,13 +290,13 @@ func TestIntegrationApp(t *testing.T) {
 	if err = os.WriteFile(filepath.Join(stage, "snapshot-late.dump"), []byte("synthetic late snapshot"), 0600); err != nil {
 		t.Fatal(err)
 	}
-	if err = os.Rename(stage, filepath.Join(work, slow.ID)); err != nil {
+	if err = os.Rename(stage, filepath.Join(work, lateID)); err != nil {
 		t.Fatal(err)
 	}
 	cleanedLate := false
-	for attempt := 0; attempt < 80; attempt++ {
-		left, e := d.Run(ctx, nil, "ps", "--all", "--quiet", "--filter", "label=restivra.run="+slow.ID)
-		_, statErr := os.Stat(filepath.Join(work, slow.ID))
+	for attempt := 0; attempt < 180; attempt++ {
+		left, e := d.Run(ctx, nil, "ps", "--all", "--quiet", "--filter", "label=restivra.run="+lateID)
+		_, statErr := os.Stat(filepath.Join(work, lateID))
 		if e == nil && strings.TrimSpace(left) == "" && os.IsNotExist(statErr) {
 			cleanedLate = true
 			break
@@ -308,7 +309,7 @@ func TestIntegrationApp(t *testing.T) {
 	if _, err = d.Run(ctx, nil, "inspect", "restivra-"+foreignID); err != nil {
 		t.Fatal("idle reconciliation deleted another installation's container")
 	}
-	lateJob, err := store.Job(ctx, slow.ID)
+	lateJob, err := store.Job(ctx, lateID)
 	if err != nil || lateJob.Status != "cancelled" {
 		t.Fatal("reconciliation rewrote the cancelled job")
 	}

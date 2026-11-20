@@ -11,7 +11,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -28,6 +30,61 @@ type fakeS3 struct {
 	body              *s3.GetObjectOutput
 	headErr, errorGet error
 	input             *s3.GetObjectInput
+}
+
+func TestInterruptedHTTPBodyIsRetryableButInvalidArchiveAndDiskFailuresAreNot(t *testing.T) {
+	data := []byte("PGDMP-synthetic-complete-archive")
+	at := time.Now().UTC().Truncate(time.Second)
+	var downloads atomic.Int32
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "GET" && r.URL.Query().Get("list-type") == "2" {
+			w.Header().Set("Content-Type", "application/xml")
+			fmt.Fprintf(w, `<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>daily/current.dump</Key><LastModified>%s</LastModified><ETag>"fixture"</ETag><Size>%d</Size></Contents></ListBucketResult>`, at.Format(time.RFC3339), len(data))
+			return
+		}
+		w.Header().Set("ETag", `"fixture"`)
+		w.Header().Set("Last-Modified", at.Format(http.TimeFormat))
+		w.Header().Set("Content-Length", fmt.Sprint(len(data)))
+		if r.Method == "HEAD" {
+			w.WriteHeader(200)
+			return
+		}
+		if downloads.Add(1) == 1 {
+			w.Write(data[:8]) // Declared length exceeds bytes sent: real HTTP truncation.
+			w.(http.Flusher).Flush()
+			return
+		}
+		w.Write(data)
+	}))
+	defer server.Close()
+	p := Profile{Endpoint: server.URL, Region: "us-east-1", AccessKeyID: "synthetic-key", SecretAccessKey: "synthetic-secret", PathStyle: true, AllowHTTP: true}
+	client := p.Client()
+	selection := Selection{Kind: "s3", Profile: "test", Bucket: "backups"}
+	directory := t.TempDir()
+	_, _, err := Snapshot(context.Background(), client, selection, "daily/*.dump", directory, 1024)
+	var coded *Error
+	if !errors.As(err, &coded) || coded.Code != "source_unavailable" || strings.Contains(err.Error(), "synthetic-secret") {
+		t.Fatalf("broken HTTP body was not safely retryable: %v", err)
+	}
+	if entries, err := os.ReadDir(directory); err != nil || len(entries) != 0 {
+		t.Fatal("interrupted snapshot was retained")
+	}
+	snapshot, backup, err := Snapshot(context.Background(), client, selection, "daily/*.dump", directory, 1024)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual, err := io.ReadAll(snapshot)
+	snapshot.Close()
+	os.Remove(snapshot.Name())
+	digest := sha256.Sum256(data)
+	if err != nil || !bytes.Equal(actual, data) || backup.SHA256 != hex.EncodeToString(digest[:]) || downloads.Load() != 2 {
+		t.Fatal("fresh retry did not verify complete bytes")
+	}
+	fake, _ := fixtureS3()
+	_, _, err = Snapshot(context.Background(), fake, selection, "daily/*.dump", filepath.Join(directory, "missing"), 1024)
+	if !errors.As(err, &coded) || coded.Code != "source_download_failed" {
+		t.Fatal("local snapshot failure was misclassified as a network retry")
+	}
 }
 
 func (f *fakeS3) ListObjectsV2(ctx context.Context, in *s3.ListObjectsV2Input, _ ...func(*s3.Options)) (*s3.ListObjectsV2Output, error) {

@@ -422,6 +422,7 @@ const errorPairs = [
   ["S3 selection exceeds its bounded listing. Narrow the object pattern prefix.","S3 seçimi listeleme sınırını aşıyor. Nesne eşleşmesinin ön ekini daralt."],
   ["Source request exceeded its time limit.","Kaynak isteği zaman sınırını aştı."],
   ["Source download was cancelled.","Kaynaktan indirme iptal edildi."],
+  ["S3 download was interrupted. Check storage connectivity; a bounded retry will use a fresh private snapshot.","S3 indirmesi yarıda kesildi. Depolama bağlantısını kontrol et; sınırlı yeniden deneme yeni bir özel kopya kullanacak."],
   ["invalid history filters", "Geçmiş filtreleri geçersiz. Filtreleri temizleyip yeniden dene."],
   ["history export exceeds 10000 runs; narrow the filters", "Geçmiş dışa aktarma 10.000 çalışmayı aşıyor; filtreleri daralt."],
   ["history exports do not accept a page cursor", "Dışa aktarma sayfa sınırı kullanmaz; filtreleri yeniden uygula."],
