@@ -6,6 +6,15 @@ computer, with Docker Desktop Linux containers and localhost access. PowerShell
 A real customer pilot remains
 the next product milestone. Public hosted SaaS readiness is a separate project.
 
+## November 20 ready-image packaging
+
+**`v0.1.0-pilot.3`** packages the same qualified engine as public Linux/amd64
+release images. [Ready-image acceptance](acceptance/release-images-20261120/)
+records a fresh GitHub-tag install, real PostgreSQL smoke, compatible update,
+explicit rollback, queued-work refusal and automatic recovery from a real
+startup failure. The operator installation retained all 17 projects and 24 jobs.
+The participant guides now use this packaging release. See [updates/recovery](UPDATING.md).
+
 ## November 20 resumed pilot candidate
 
 Candidate **`v0.1.0-pilot.2`** corrects the large-archive listing issue. The worker
@@ -14,7 +23,7 @@ drains remaining Docker stdin while retaining PostgreSQL failures. The
 full restores of the original 59 MB reproduction archive, preserved failure
 outcomes, cancellation, worker recovery and an actual scheduled run. Source CI
 also tests repeated large listings, corrupt input and cancellation while draining.
-The pinned participant guides now target this candidate. The previous pilot tag
+This engine qualification is retained by pilot.3. The previous pilot tag
 remains unchanged. This supports a local developer pilot within the documented
 archive/version/resource limits; external seven-day acceptance is still pending.
 

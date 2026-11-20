@@ -1,0 +1,12 @@
+{
+  "real_postgresql_smoke": "passed and intentionally failed SQL with successful restore and cleanup",
+  "at": "2026-11-20T18:49:56.3100722Z",
+  "image": "ghcr.io/lazypanic999/restivra@sha256:7a051ff655e2e86b9155c9e9b1ac08b118c7b604b52e64c8454010db7176890d",
+  "source_revision": "42723b6c488bd2ecfae011a860ec33381c29d786",
+  "version": "v0.1.0-pilot.3",
+  "repeated_setup_preserved_credentials": true,
+  "host_build_required": false,
+  "authentication_enabled": true,
+  "status": "passed",
+  "install": "default installer from fresh GitHub tag"
+}

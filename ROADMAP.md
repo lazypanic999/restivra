@@ -26,6 +26,7 @@
 - [x] Immutable previous-run comparison with rule/source/configuration changes shown separately.
 - [x] Versioned project settings transfer with review and disabled imported schedules.
 - [x] Bounded PowerShell metadata export and isolated restore/schema/count verification.
+- [x] Public digest-pinned release images, Docker-only installer and verified compatible updates with explicit/automatic application rollback.
 
 ## Pilot acceptance — requires real users
 

@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "worker_online": true,
+  "all_project_job_attempt_fingerprints_unchanged": true,
+  "version": "v0.1.0-pilot.3",
+  "installation_identity_unchanged": true,
+  "at": "2026-11-20T18:52:06.0585972Z",
+  "projects": 17,
+  "jobs": 24,
+  "image": "ghcr.io/lazypanic999/restivra@sha256:7a051ff655e2e86b9155c9e9b1ac08b118c7b604b52e64c8454010db7176890d",
+  "private_credentials_and_source_profiles_unchanged": true,
+  "verified_metadata_checkpoint": true,
+  "database_container_unchanged": true,
+  "legacy_authentication_configuration_preserved": true
+}
