@@ -1114,3 +1114,5 @@ pre {
 .comparison-regressed { color: var(--failure); }
 .comparison-improved { color: var(--success); }
 .comparison-context { color: var(--muted); font-size: 12px; padding-left: 20px; }
+.page-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.project-transfer { margin-top: 20px; border-top: 1px solid var(--rule); padding-top: 14px; }

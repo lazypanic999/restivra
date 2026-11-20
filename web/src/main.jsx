@@ -6,6 +6,11 @@ import { LanguageProvider, useLanguage } from "./language.jsx";
 import { History } from "./history.jsx";
 import { CheckTemplates } from "./check-templates.jsx";
 import { RunComparison } from "./comparison.jsx";
+import {
+  exportProject,
+  importProject,
+  projectTransferLimit,
+} from "./project-transfer.js";
 import { initialPage, emptyHistoryFilters } from "./history.js";
 import "./styles.css";
 import "./character.css";
@@ -257,6 +262,7 @@ function App({ onUnauthorized, onLogout }) {
     [toast, setToast] = useState(""),
     [updated, setUpdated] = useState(null);
   const token = useRef("");
+  const importInput = useRef(null);
   const api = useCallback(
     async (path, options = {}) => {
       if (options.method) token.current = await currentCSRF();
@@ -418,6 +424,17 @@ function App({ onUnauthorized, onLogout }) {
       `${location.pathname}${query.size ? `?${query}` : ""}${location.hash}`,
     );
   };
+  const readProjectFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    try {
+      if (file.size > projectTransferLimit) throw Error("transferInvalid");
+      setForm({ ...importProject(await file.text()), imported: true });
+    } catch {
+      setToast({ key: "transferInvalid" });
+    }
+  };
   const passed = runSummary?.passed || 0,
     failed = (runSummary?.failed || 0) + (runSummary?.interrupted || 0),
     running = (runSummary?.queued || 0) + (runSummary?.running || 0);
@@ -499,9 +516,29 @@ function App({ onUnauthorized, onLogout }) {
             </p>
           </div>
           {page !== "setup" && (
-            <Button primary onClick={() => openProject()} disabled={!session}>
-              {t("newProject")}
-            </Button>
+            <div className="page-actions">
+              {page === "projects" && (
+                <>
+                  <input
+                    ref={importInput}
+                    type="file"
+                    hidden
+                    accept="application/json,.json"
+                    onChange={readProjectFile}
+                    aria-label={t("importProject")}
+                  />
+                  <Button
+                    onClick={() => importInput.current.click()}
+                    disabled={!session}
+                  >
+                    {t("importProject")}
+                  </Button>
+                </>
+              )}
+              <Button primary onClick={() => openProject()} disabled={!session}>
+                {t("newProject")}
+              </Button>
+            </div>
           )}
         </div>
         <div className="system-line">
@@ -947,6 +984,20 @@ function ProjectForm({ project, sourceProfiles, onClose, onSave, onArchive }) {
     [error, setError] = useState(""),
     [archiveConfirm, setArchiveConfirm] = useState(false);
   const update = (key, next) => setValue((old) => ({ ...old, [key]: next }));
+  const downloadSettings = () => {
+    try {
+      const url = URL.createObjectURL(
+        new Blob([exportProject(project)], { type: "application/json" }),
+      );
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "restivra-project.json";
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch {
+      setError(t("transferInvalid"));
+    }
+  };
   const source = value.source || { kind: "local" };
   const setSource = (key, next) => update("source", { ...source, [key]: next });
   const config = (key, next) =>
@@ -992,6 +1043,9 @@ function ProjectForm({ project, sourceProfiles, onClose, onSave, onArchive }) {
             <div className="notice error-notice" role="alert">
               {explain(error)}
             </div>
+          )}
+          {project.imported && (
+            <p className="notice">{t("importProjectReview")}</p>
           )}
           <label className="field">
             {t("projectName")}
@@ -1220,6 +1274,19 @@ function ProjectForm({ project, sourceProfiles, onClose, onSave, onArchive }) {
               ))}
             </div>
           </details>
+          {project.id && (
+            <div className="project-transfer">
+              <button
+                type="button"
+                className="text-button"
+                disabled={saving}
+                onClick={downloadSettings}
+              >
+                {t("exportProject")}
+              </button>
+              <p className="help-text">{t("exportProjectHelp")}</p>
+            </div>
+          )}
           {onArchive && (
             <div className="archive-controls">
               {archiveConfirm ? (

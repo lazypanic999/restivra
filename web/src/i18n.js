@@ -1,4 +1,9 @@
 export const messages = {
+  importProject:["Import project","Proje içe aktar"],
+  exportProject:["Export saved settings","Kayıtlı ayarları dışa aktar"],
+  exportProjectHelp:["Downloads the saved project settings, including SQL checks and source names. Keep this file private. It excludes worker credentials, run history and unsaved edits.","SQL kontrolleri ve kaynak adları dahil, kayıtlı proje ayarlarını indirir. Dosyayı özel tut. Worker erişim anahtarları, çalışma geçmişi ve kaydedilmemiş değişiklikler dahil edilmez."],
+  importProjectReview:["Imported as a new project with scheduling off. Review the backup path, SQL, limits and time zone before saving. S3 credentials must be configured separately on this worker. No test has started.","Zamanlama kapalı olarak yeni projeye aktarıldı. Kaydetmeden önce yedek yolunu, SQL'i, sınırları ve saat dilimini incele. S3 erişim anahtarları bu worker'da ayrıca yapılandırılmalı. Test başlatılmadı."],
+  transferInvalid:["Use a Restivra v1 project settings JSON file up to 2 MiB. Unknown fields, credentials and malformed settings are rejected. The file was not saved.","En fazla 2 MiB boyutunda Restivra v1 proje ayarları JSON dosyası kullan. Bilinmeyen alanlar, erişim anahtarları ve hatalı ayarlar reddedilir. Dosya kaydedilmedi."],
   comparisonTitle:["Compare with the previous run","Önceki çalışmayla karşılaştır"],
   comparisonHelp:["Uses the previous retained completed report for this project. Changed SQL rules are marked separately; an unexecuted check cannot establish a regression or a recovery.","Bu projenin saklanan bir önceki tamamlanmış raporunu kullanır. Değişen SQL kuralları ayrıca belirtilir; çalıştırılmamış kontrol gerileme veya düzelme kanıtı sayılmaz."],
   comparisonFailed:["Comparison could not be loaded.","Karşılaştırma yüklenemedi."],

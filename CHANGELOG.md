@@ -4,6 +4,10 @@
 
 ### Added
 
+- Private project settings export/import with an editable review, new project
+  identity, disabled imported schedules and strict version/shape/credential-field
+  checks. Worker keys and run history are excluded.
+
 - Previous-run comparison using immutable SQL definitions, with separate rule
   changes, missing execution evidence, source/limit/image changes and SHA-256
   equality. English/Turkish UI and same-project authenticated API.
