@@ -1,18 +1,16 @@
 # Developer pilot handoff
 
-Pinned candidate: **`v0.1.0-pilot.2`**. The primary tested path is Windows,
-PowerShell 7.2+ (`pwsh`), Git and Docker Desktop with Linux containers.
-Go, Node and a host PostgreSQL installation are not required: Docker builds the app.
+Pinned candidate: **`v0.1.0-pilot.3`**. The primary tested path is Windows,
+PowerShell 7.2+ (`pwsh`), Git and Docker Desktop with Linux/amd64 containers.
+Go, Node and a host PostgreSQL installation are not required: the installer pulls a published, digest-pinned image.
 
 [Full Turkish participant guide](PILOT-START.tr.md) ·
 [Seven-day operator plan](PILOT-PLAN.tr.md) · [Private record template](PILOT-RECORD.tr.md)
 
 ```powershell
-git clone --branch v0.1.0-pilot.2 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+git clone --branch v0.1.0-pilot.3 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
 cd restivra-pilot
-./scripts/setup.ps1
-docker pull postgres:17-bookworm
-docker compose up --build -d --wait --wait-timeout 180
+./scripts/install.ps1
 ./scripts/pilot-check.ps1
 ./scripts/pilot-smoke.ps1
 ```
@@ -46,7 +44,7 @@ review. This pilot is for trusted local inputs, not public uploads.
 If port 7474 is occupied, set `RESTIVRA_PORT=17474` in `.env` before starting and
 pass `-Base http://127.0.0.1:17474` to both pilot scripts. For a second installation
 on the same engine, also set a unique `COMPOSE_PROJECT_NAME` and use a separate
-checkout, port, freshly generated `.env` and a unique application image tag; follow
+checkout, port, freshly generated `.env` and a pinned release image; follow
 [the second-installation steps](SECOND-INSTALL.md) before starting it. Never duplicate
 metadata ownership.
 
@@ -63,7 +61,8 @@ any update. [Verify a metadata backup](METADATA-CHECK.md) in an isolated tempora
 database before relying on it.
 Failures need sanitized diagnostics, never customer dumps or secrets.
 
-Native Linux can use `sh scripts/setup.sh` and the same Compose startup. The pilot
+Linux/amd64 with PowerShell 7.2+ can use the same installer. Source builds use
+`sh scripts/setup.sh` and `docker compose -f compose.yaml -f compose.build.yaml up --build -d`. The pilot
 scripts need PowerShell 7.2+; without it, follow the manual archive procedure in
 the [operations runbook](PILOT-RUNBOOK.md). macOS/ARM acceptance is not established.
 
@@ -80,3 +79,5 @@ an actual participant completes them.
 - [Project settings export/import](PROJECT-TRANSFER.md); imported schedules start disabled.
 
 These are optional; the local two-row smoke check above remains the starting path.
+
+For a planned release update and rollback, follow [the update guide](UPDATING.md).

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-pilot.3 — ready images and compatible application updates
+
+- Public Linux/amd64 GHCR release images, exact-source CI gate, immutable version
+  reuse, anonymous registry check and digest/binary/source release manifests.
+- Docker-only PowerShell installer with retained credentials and pinned images.
+- Idle-window updater: installation ownership and image-drift guards, exclusive
+  lock, bounded metadata export and isolated restore verification before switching.
+- API readiness, worker diagnostics and fresh heartbeat gate deployment success.
+  Failed deployment restarts the previous exact application image; PostgreSQL is
+  neither upgraded nor restored by the updater. Explicit rollback is supported.
+- Strict binary-identical adoption of existing source installations, retained
+  private checkpoints and interruption/recovery instructions in English/Turkish.
+- Source builds now explicitly use `compose.build.yaml`; normal startup uses
+  the installed release digest. No restore-engine or application behavior changes.
+
 ## 0.1.0-pilot.2 — local developer pilot
 
 ### Added

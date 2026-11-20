@@ -21,14 +21,18 @@ Video ve görüntülerdeki projeler sentetik demo verisidir. Başarısız bir SQ
 Docker'ın Linux konteyner motoru açık olmalı. PowerShell 7.2+:
 
 ```powershell
-git clone https://github.com/lazypanic999/restivra.git
+git clone --branch v0.1.0-pilot.3 --depth 1 https://github.com/lazypanic999/restivra.git
 cd restivra
-./scripts/setup.ps1
-docker pull postgres:17-bookworm
-docker compose up --build -d
+./scripts/install.ps1
+./scripts/pilot-check.ps1
 ```
 
-Linux'ta kurulum betiği `sh scripts/setup.sh`. Panel: **[http://127.0.0.1:7474](http://127.0.0.1:7474)**.
+Hazır imaj yolu yerel Linux/amd64 Docker motoru kullanır; Go/Node ve yerel derleme
+gerekmez. [Güncelleme ve geri dönüş](docs/UPDATING.tr.md) sürüm sabitleme ve doğrulanmış
+özel metaveri yedeğiyle yapılır. Kaynak derlemesi için `sh scripts/setup.sh` veya
+`./scripts/setup.ps1`, ardından `docker pull postgres:17-bookworm` ve
+`docker compose -f compose.yaml -f compose.build.yaml up --build -d`.
+Panel: **[http://127.0.0.1:7474](http://127.0.0.1:7474)**.
 
 Yeni kurulumda özel `.env` dosyasındaki `RESTIVRA_AUTH_TOKEN` ile giriş yap. Mevcut `.env` değiştirilmez; eski kurulumda anahtar yoksa oturum açma kapalı kalır. Başka bir geliştiriciye vermek için [sabit sürümlü pilot başlangıç rehberi](docs/PILOT-START.tr.md), [yedi günlük plan](docs/PILOT-PLAN.tr.md) ve [özel kayıt formu](docs/PILOT-RECORD.tr.md) hazır. Ayrıntılı kurtarma için [pilot işletim rehberi](docs/PILOT-RUNBOOK.md).
 
@@ -38,7 +42,7 @@ Teslim durumu: bilgisayar ve Docker açıkken gözetimsiz yerel geliştirici pil
 
 Büyük arşivin Docker üzerinden listeleme hatası düzeltildi. Tam geri yükleme,
 bozuk dosya, iptal ve worker toparlanması [pilot kabul kaydında](docs/acceptance/large-archive-fix-20261120/).
-Yeni katılımcı `v0.1.0-pilot.2` etiketli başlangıç rehberini izlemeli.
+Yeni katılımcı `v0.1.0-pilot.3` etiketli başlangıç rehberini izlemeli.
 
 1. PostgreSQL 17 üzerinde `pg_dump` 17 ile `-Fc` formatında alınmış tamamlanmış yedeği `backups/` klasörüne koy.
 2. Panelde **Yeni proje** seç. Dosya yolunu klasöre göre yaz: örneğin `musteri/*.dump`.

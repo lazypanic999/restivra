@@ -12,29 +12,23 @@ COMPOSE_PROJECT_NAME=restivra-pilot-second
 RESTIVRA_PORT=17474
 ```
 
-Create `compose.override.yaml` in that checkout with a unique image tag for both
-application services:
+Ready-image installations share immutable image content safely. No custom image
+name or Compose override is needed. Keep the unique project and port above:
 
-```yaml
-services:
-  api:
-    image: restivra:pilot-second
-  worker:
-    image: restivra:pilot-second
+```powershell
+./scripts/install.ps1
+./scripts/pilot-check.ps1 -Base http://127.0.0.1:17474
+./scripts/pilot-smoke.ps1 -Base http://127.0.0.1:17474
 ```
 
-The default `restivra:local` image tag is engine-wide. Separate Compose project
-names isolate containers and volumes, but do not isolate image tags. A unique
-tag prevents a build in one checkout from changing which application image a
-later container recreation in the other checkout selects. Both services must use
-the same tag. Compose automatically reads `compose.override.yaml` when no
-explicit `-f` files are supplied.
+For a **source development** installation, the mutable `restivra:local` tag is
+engine-wide. Create a local `compose.override.yaml` setting a unique `image:` for
+both `api` and `worker` (for example `restivra:pilot-second`), then explicitly
+include it after the build override:
 
 ```powershell
 docker pull postgres:17-bookworm
-docker compose up --build -d --wait --wait-timeout 180
-./scripts/pilot-check.ps1 -Base http://127.0.0.1:17474
-./scripts/pilot-smoke.ps1 -Base http://127.0.0.1:17474
+docker compose -f compose.yaml -f compose.build.yaml -f compose.override.yaml up --build -d --wait --wait-timeout 180
 ```
 
 Open `http://127.0.0.1:17474` and use the new checkout's own access token. Browser

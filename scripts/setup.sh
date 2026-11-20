@@ -16,4 +16,4 @@ mkdir -p private
 if [ ! -e private/sources.json ]; then
   (set -C; printf '{"s3":[]}\n' > private/sources.json)
 fi
-printf 'Next: docker pull postgres:17-bookworm && docker compose up --build -d\n'
+printf 'Next: docker pull postgres:17-bookworm && docker compose -f compose.yaml -f compose.build.yaml up --build -d\n'

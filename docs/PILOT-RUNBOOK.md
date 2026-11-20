@@ -24,7 +24,7 @@ git clone https://github.com/lazypanic999/restivra.git
 cd restivra
 ./scripts/setup.ps1
 docker pull postgres:17-bookworm
-docker compose up --build -d
+docker compose -f compose.yaml -f compose.build.yaml up --build -d
 ```
 
 Start Docker Desktop first and select Linux containers. The same desktop install

@@ -50,22 +50,26 @@ This early MVP is ready for an unattended local developer pilot while the comput
 
 The large-archive listing correction and full restore/failure/cancellation
 acceptance are recorded in [the current pilot evidence](docs/acceptance/large-archive-fix-20261120/).
-Use the pinned guide below for `v0.1.0-pilot.2`; earlier interrupted development
+Use the pinned guide below for `v0.1.0-pilot.3`; earlier interrupted development
 runs remain separate historical evidence.
 
 ## Quick start
 
 Requires Docker Engine / Docker Desktop with Linux containers and Docker Compose. Allow RAM for the application database plus a restore container (1536 MiB default restore limit).
 
-```sh
-git clone https://github.com/lazypanic999/restivra.git
+```powershell
+git clone --branch v0.1.0-pilot.3 --depth 1 https://github.com/lazypanic999/restivra.git
 cd restivra
-sh scripts/setup.sh
-docker pull postgres:17-bookworm
-docker compose up --build -d
+./scripts/install.ps1
+./scripts/pilot-check.ps1
 ```
 
-Windows / PowerShell 7.2+: use `./scripts/setup.ps1` instead of `sh scripts/setup.sh`.
+PowerShell 7.2+ and a local Linux/amd64 Docker engine are required for this ready-image
+path. No host Go/Node or local build is needed. [Updates and rollback](docs/UPDATING.md)
+use explicit versions, verified private metadata checkpoints and pinned image digests.
+Source development: `sh scripts/setup.sh` (or `./scripts/setup.ps1`), then
+`docker pull postgres:17-bookworm` and
+`docker compose -f compose.yaml -f compose.build.yaml up --build -d`.
 
 Open **[http://127.0.0.1:7474](http://127.0.0.1:7474)** and sign in using `RESTIVRA_AUTH_TOKEN` from your private `.env` file. New installations have an empty workspace. English is the default; Turkish is available in the header.
 

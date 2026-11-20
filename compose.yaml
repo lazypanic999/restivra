@@ -16,8 +16,7 @@ services:
     restart: unless-stopped
     networks: [control]
   api:
-    build: .
-    image: restivra:local
+    image: ${RESTIVRA_IMAGE:-restivra:local}
     command: [serve, --listen, "0.0.0.0:7474"]
     ports: ["127.0.0.1:${RESTIVRA_PORT:-7474}:7474"]
     environment:
@@ -39,7 +38,7 @@ services:
     restart: unless-stopped
     networks: [control, edge]
   worker:
-    image: restivra:local
+    image: ${RESTIVRA_IMAGE:-restivra:local}
     pull_policy: never
     command: [worker]
     # Docker management is intentionally isolated from the web API.

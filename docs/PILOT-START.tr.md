@@ -1,6 +1,6 @@
 # Restivra: ilk geliştirici pilotu
 
-Bu rehberi katılımcıya gönder. Pilot sürüm: **`v0.1.0-pilot.2`**.
+Bu rehberi katılımcıya gönder. Pilot sürüm: **`v0.1.0-pilot.3`**.
 Hedef: geliştiricinin kendi bilgisayarında bir PostgreSQL 17 yedeğini gerçekten
 geri yükleyip uygulamaya özel kontrollerle doğrulaması, ardından bir hafta izlemesi.
 Veritabanı dosyaları bize gönderilmez; işlem katılımcının bilgisayarında yapılır.
@@ -8,8 +8,8 @@ Veritabanı dosyaları bize gönderilmez; işlem katılımcının bilgisayarınd
 ## Başlamadan önce
 
 - İlk desteklenen yol: Windows, **PowerShell 7.2+ (`pwsh`)**, Git ve Docker
-  Desktop'ın çalışan **Linux containers** motoru. Windows PowerShell 5.1 uygun değil.
-- Kurulumda Go, Node veya yerel PostgreSQL kurman gerekmiyor; derleme Docker'da.
+  Desktop'ın çalışan **Linux/amd64 containers** motoru. Windows PowerShell 5.1 uygun değil.
+- Kurulumda Go, Node veya yerel PostgreSQL kurman gerekmiyor; yayımlanmış, içerik özeti sabitlenmiş imaj indirilir.
   İlk imaj indirmeleri için internet gerekiyor. Kurulum süresi bağlantıya göre değişir.
 - Makinede Docker'ın kontrol veritabanı ve varsayılan 1536 MiB geri yükleme
   konteyneri için yeterli bellek; imajlar, kaynak yedek ve özel kopyası için disk olmalı.
@@ -24,11 +24,9 @@ Veritabanı dosyaları bize gönderilmez; işlem katılımcının bilgisayarınd
 Docker Desktop'ı aç. PowerShell 7 terminalinde:
 
 ```powershell
-git clone --branch v0.1.0-pilot.2 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+git clone --branch v0.1.0-pilot.3 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
 cd restivra-pilot
-./scripts/setup.ps1
-docker pull postgres:17-bookworm
-docker compose up --build -d --wait --wait-timeout 180
+./scripts/install.ps1
 ./scripts/pilot-check.ps1
 ```
 
@@ -153,3 +151,5 @@ aynı doğrulama tamamlanmış sayılmaz.
 - [Restivra metaveri yedeğini doğrulama](METADATA-CHECK.md): mevcut kurulumu değiştirmeden geri yükleme testi.
 
 İlk adım yine yukarıdaki yerel, iki satırlık örnekle doğrulamadır.
+
+Hazır imaj güncellemesi ve önceki sürüme dönüş: [güncelleme rehberi](UPDATING.tr.md).

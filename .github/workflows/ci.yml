@@ -44,6 +44,7 @@ jobs:
           $ErrorActionPreference = 'Stop'
           try {
             ./scripts/test-native-command.ps1
+            ./scripts/test-release-ops.ps1
             ./scripts/test-metadata-backup.ps1
             ./scripts/setup.ps1
             $original = (Get-FileHash .env).Hash
@@ -51,7 +52,7 @@ jobs:
             ./scripts/setup.ps1
             if ((Get-FileHash .env).Hash -ne $original) { throw 'Repeated setup changed credentials.' }
             if ((Get-FileHash private/sources.json).Hash -ne $sourceProfiles) { throw 'Repeated setup changed private source profiles.' }
-            docker compose up --build -d --wait --wait-timeout 180
+            docker compose -f compose.yaml -f compose.build.yaml up --build -d --wait --wait-timeout 180
             if ($LASTEXITCODE -ne 0) { throw 'Fresh Compose installation failed.' }
             ./scripts/pilot-smoke.ps1 -Base http://127.0.0.1:17474
             ./scripts/metadata-backup.ps1 -OutputPath work/ci-metadata.dump

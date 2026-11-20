@@ -1,0 +1,7 @@
+# Developer/source builds only. Pilot installations use compose.yaml and a release digest.
+services:
+  api:
+    build: .
+    image: restivra:local
+  worker:
+    image: restivra:local

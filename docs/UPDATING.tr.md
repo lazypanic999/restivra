@@ -1,0 +1,44 @@
+# Hazır imajla kurulum ve güvenli güncelleme
+
+PowerShell 7.2+, Git ve yerel Linux/amd64 Docker motoru gerekir. Pilot için Windows
+denendi. Go, Node veya bilgisayarına PostgreSQL kurman gerekmiyor.
+
+```powershell
+git clone --branch v0.1.0-pilot.3 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+cd restivra-pilot
+./scripts/install.ps1
+./scripts/pilot-check.ps1
+./scripts/pilot-smoke.ps1
+```
+
+Panel http://127.0.0.1:7474 adresinde. Giriş anahtarı sana özel `.env` dosyasında.
+Dosyayı paylaşma. Kurulum yayımlanmış imajı indirir, içerik özeti ve uygulama
+dosyasının hash değerini doğrular. Sonraki `docker compose up -d` aynı imajı açar.
+
+Güncelleme için çalışan işlerin bitmesini bekle ve sürüm notlarını oku:
+
+```powershell
+./scripts/update.ps1 -Version v0.1.0-pilot.3
+# Önceki sürüme dönmek gerekirse:
+./scripts/update.ps1 -Rollback
+```
+
+Açık sürüm etiketi kullanılır; `latest` kendiliğinden indirilmez. Betik önce
+imajı doğrular, bekleyen/çalışan işler varsa durur. API ve worker kısa süreliğine
+kapanır; metaveri yedeği alınır ve ayrı PostgreSQL ortamında gerçekten geri
+yüklenip doğrulanır. Ardından uygulama değiştirilir. Sağlık kontrolü veya yeni
+worker kalp atışı başarısızsa önceki uygulama imajı yeniden açılır ve hata bildirilir.
+
+PostgreSQL konteyneri/volümü ve veritabanının içeriği bu işlemle değiştirilmez.
+Geri dönüşte eski metaveri yedeği veritabanına yazılmaz. Yalnızca aynı metaveri
+sözleşmesini kullanan sürümler desteklenir; büyük veritabanı geçişleri ayrıdır.
+Özel yedekler `private/checkpoints/` altında kalır ve otomatik silinmez.
+
+Eski kaynak kurulumunda `-Adopt` yalnızca aynı uygulama dosyası hash değerine
+sahip sürümle kabul edilir. Eski imaj özel bir yerel etiketle saklanır. Kimlik
+doğrulama ayarın korunur. Başka kurulumlar için benzersiz `COMPOSE_PROJECT_NAME`
+ve `RESTIVRA_PORT` değerlerini kurulum, güncelleme ve kurtarmada aynı kullan.
+
+Elektrik kesilmesi veya Docker'ın kapanması otomatik geri dönüşü de engelleyebilir.
+Yarım kalmış işlem yeni güncellemeyi bloke eder. Volüm silme; özel günlükteki önceki
+imajla kurtarma ve ayrıntılı sınırlar için [işletim rehberini](UPDATING.md) izle.
