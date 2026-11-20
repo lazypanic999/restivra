@@ -30,7 +30,7 @@ function Docker([string[]]$Arguments, [IO.Stream]$InputStream=$null) {
 try {
     if ($ReportPath) {
         $report.error_code='report_path_unavailable'
-        $target = [IO.Path]::GetFullPath($ReportPath)
+        $target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ReportPath)
         # Reserve before restoring; never overwrite an existing report.
         $reserved = [IO.File]::Open($target,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
     }

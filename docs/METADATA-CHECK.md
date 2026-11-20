@@ -15,6 +15,8 @@ Requires PowerShell 7.2+, a **local** Docker Linux engine and a previously pulle
 with the app stopped. It reads the supplied archive, not the existing API,
 database or `.env` file. `ReportPath` is optional; JSON is also printed to stdout.
 Use unused output names: existing reports are never overwritten.
+Relative archive/report paths follow the current PowerShell location, including
+after `Set-Location`; they do not use the process's original startup directory.
 
 The tool hashes the completed input, restores it into temporary PostgreSQL,
 checks the expected metadata tables, installation identity and job/attempt relationships, and reports counts

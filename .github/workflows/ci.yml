@@ -57,6 +57,7 @@ jobs:
             $smoke = Get-ChildItem work -Directory -Filter 'pilot-*' | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
             $summary = Get-Content (Join-Path $smoke.FullName 'summary.json') -Raw | ConvertFrom-Json
             ./scripts/test-metadata-check.ps1 -MetadataArchive work/ci-metadata.dump -ApplicationArchive (Join-Path backups $summary.backup_pattern)
+            ./scripts/test-metadata-paths.ps1
           } finally {
             docker compose down
           }

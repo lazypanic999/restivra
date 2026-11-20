@@ -39,6 +39,11 @@
 
 ### Fixed
 
+- Metadata export/report paths follow PowerShell's current location after `cd`,
+  rather than the native process's original directory. CI reproduces the split.
+- Text source and embedded assets retain LF on Windows/Linux checkouts; binary
+  media is excluded from line-ending conversion.
+
 - New existence/minimum-row templates stop after finding enough rows, verified
   by PostgreSQL query plans against 100,000 rows. Saved custom SQL is preserved.
 

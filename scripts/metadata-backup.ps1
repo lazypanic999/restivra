@@ -2,7 +2,7 @@
 param([Parameter(Mandatory)][string]$OutputPath)
 $ErrorActionPreference = 'Stop'
 $projectDir = Split-Path -Parent $PSScriptRoot
-$output = [IO.Path]::GetFullPath($OutputPath)
+$output = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputPath)
 $partial = "$output.partial"
 if (Test-Path -LiteralPath $output) { throw 'Output already exists.' }
 $stream = [IO.File]::Open($partial,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)

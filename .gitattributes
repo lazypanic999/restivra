@@ -1,1 +1,10 @@
+# Keep source/embedded assets identical on fresh Windows and Linux checkouts.
+* text=auto eol=lf
 *.sh text eol=lf
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.gif -text
+*.mp4 -text
+*.woff -text
+*.woff2 -text
