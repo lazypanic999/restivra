@@ -4,6 +4,11 @@
 
 ### Added
 
+- S3-compatible worker sources with private profiles, bounded conditional
+  snapshots, immutable queued selections and source evidence in history/CSV.
+- English/Turkish printable evidence reports with name redaction and preserved
+  attempt outcomes; browser Print can save them as PDF.
+
 - Pinned developer-pilot onboarding, Turkish seven-day plan and private record
   template; Docker-only synthetic smoke checks with no host Go/Node requirement.
 - CI checks fresh Compose setup, preserved credentials on repeated setup and

@@ -1,0 +1,71 @@
+[
+  {
+    "project_id": "e16012b46a68481a9434301cc0cb8460",
+    "job_id": "b1717223c5c5a28c7e4913caaf96765e",
+    "name": "S3 / Passing archive",
+    "status": "passed",
+    "error_code": null,
+    "source": {
+      "kind": "s3",
+      "profile": "qa-storage",
+      "bucket": "restivra-synthetic",
+      "key": "daily/current.dump",
+      "version_id": "7694201d-9d85-458a-81b8-fc81517048b3",
+      "etag": "\"143fc6e62ec3ab967759066ea33e0413\""
+    },
+    "cleanup": "passed",
+    "sha256": "ea490c5bec0d9c7d1c987bc480d7a4f35054b6c570f93bfb93e256091f0e6d26",
+    "attempt_count": 1
+  },
+  {
+    "project_id": "a391b2611e017a8faa2f18e5983fb9b6",
+    "job_id": "a3bcbe746af29affc2b47959d61b666c",
+    "name": "S3 / False check",
+    "status": "failed",
+    "error_code": "checks_failed",
+    "source": {
+      "kind": "s3",
+      "profile": "qa-storage",
+      "bucket": "restivra-synthetic",
+      "key": "daily/current.dump",
+      "version_id": "7694201d-9d85-458a-81b8-fc81517048b3",
+      "etag": "\"143fc6e62ec3ab967759066ea33e0413\""
+    },
+    "cleanup": "passed",
+    "sha256": "ea490c5bec0d9c7d1c987bc480d7a4f35054b6c570f93bfb93e256091f0e6d26",
+    "attempt_count": 1
+  },
+  {
+    "project_id": "dcfc575bca8be4e53828c4d72eb86a88",
+    "job_id": "b33c01958cda1a55feb2e967f9064e97",
+    "name": "S3 / Missing object",
+    "status": "failed",
+    "error_code": "source_not_found",
+    "source": {
+      "kind": "s3",
+      "profile": "qa-storage",
+      "bucket": "restivra-synthetic"
+    },
+    "cleanup": "not_needed",
+    "sha256": null,
+    "attempt_count": 1
+  },
+  {
+    "project_id": "ae534c29fb5524ccba5ccb55d517b66e",
+    "job_id": "39aaf725cae504e4033c7187b7c37e6e",
+    "name": "S3 / Corrupt object",
+    "status": "failed",
+    "error_code": "source_download_failed",
+    "source": {
+      "kind": "s3",
+      "profile": "qa-storage",
+      "bucket": "restivra-synthetic",
+      "key": "corrupt/bad.dump",
+      "version_id": "8e22fe83-4023-48a2-a973-87e8a2eb996d",
+      "etag": "\"78f0e0f373e088fc581a94696a272fe1\""
+    },
+    "cleanup": "not_needed",
+    "sha256": "eb9a92ea5d6ef6e453840a2aff3d2dc940353a9c5da1aec8b2f5364a0c0afeb0",
+    "attempt_count": 1
+  }
+]

@@ -82,12 +82,23 @@ type CheckResult struct {
 }
 
 type Backup struct {
-	Name          string    `json:"name"`
-	Bytes         int64     `json:"bytes"`
-	ModifiedAt    time.Time `json:"modified_at"`
-	SHA256        string    `json:"sha256,omitempty"`
-	SourceVersion string    `json:"source_version,omitempty"`
-	DumpVersion   string    `json:"dump_version,omitempty"`
+	Name          string        `json:"name"`
+	Bytes         int64         `json:"bytes"`
+	ModifiedAt    time.Time     `json:"modified_at"`
+	SHA256        string        `json:"sha256,omitempty"`
+	SourceVersion string        `json:"source_version,omitempty"`
+	DumpVersion   string        `json:"dump_version,omitempty"`
+	Source        *BackupSource `json:"source,omitempty"`
+}
+
+// Metadata only: endpoints, access keys and session tokens never enter reports.
+type BackupSource struct {
+	Kind      string `json:"kind"`
+	Profile   string `json:"profile,omitempty"`
+	Bucket    string `json:"bucket,omitempty"`
+	Key       string `json:"key,omitempty"`
+	VersionID string `json:"version_id,omitempty"`
+	ETag      string `json:"etag,omitempty"`
 }
 
 type Report struct {

@@ -49,6 +49,7 @@ func (a *API) Handler() http.Handler {
 		jsonResponse(w, 200, map[string]any{"csrf_token": a.CSRFToken, "default_config": verify.DefaultConfig(), "version": "0.1.0"})
 	})
 	mux.HandleFunc("GET /api/health", a.health)
+	mux.HandleFunc("GET /api/sources", a.sources)
 	mux.HandleFunc("GET /api/history", a.history)
 	mux.HandleFunc("GET /api/history/export.csv", a.history)
 	mux.HandleFunc("GET /api/projects", func(w http.ResponseWriter, r *http.Request) {
@@ -127,6 +128,7 @@ func (a *API) Handler() http.Handler {
 	})
 	mux.HandleFunc("GET /api/jobs/{id}", a.job)
 	mux.HandleFunc("GET /api/jobs/{id}/report", a.job)
+	mux.HandleFunc("GET /api/jobs/{id}/evidence.html", a.evidence)
 	mux.HandleFunc("POST /api/jobs/{id}/cancel", func(w http.ResponseWriter, r *http.Request) {
 		if !ValidID(r.PathValue("id")) {
 			jsonError(w, 400, "geçersiz çalışma kimliği")

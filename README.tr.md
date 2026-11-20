@@ -52,6 +52,11 @@ Eski `./scripts/seed-demo.ps1` geliştirici demosu ise Go 1.27.4+ ister.
 
 ## MVP'de bulunanlar
 
+`main` sürümünde S3 uyumlu bucket'tan doğrulama da var: `private/sources.json`
+içinde salt okunur worker profili tanımlanır, proje formundan seçilir. Anahtarlar
+API'ye veya proje veritabanına girmez. [Yapılandırma ve sınırlar](docs/S3-SOURCES.md).
+Sabit `v0.1.0-pilot.1` etiketi önceki yerel dosya pilotudur; değiştirilmedi.
+
 - Genel bakış, proje ayarları, saklanan geçmişin tamamında arama, tarih/sonuç filtresi, sayfalama, rapor ve JSON indirme.
 - Filtrelenmiş geçmişi CSV olarak indirme; arşivlenmiş projeyi zamanlaması kapalı biçimde geri getirme.
 - Kalıcı PostgreSQL iş kuyruğu; aynı anda tek geri yükleme.

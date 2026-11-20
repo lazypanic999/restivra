@@ -1,0 +1,68 @@
+[
+  {
+    "project_id": "9ce38ec2a355d6c8c9e9462bf76319f2",
+    "job_id": "058ef2dcd29ed0f164d926052a4449ce",
+    "name": "S3 / Passing archive",
+    "status": "passed",
+    "error_code": null,
+    "source": {
+      "kind": "s3",
+      "profile": "qa-storage",
+      "bucket": "restivra-synthetic",
+      "key": "daily/current.dump",
+      "etag": "\"143fc6e62ec3ab967759066ea33e0413\""
+    },
+    "cleanup": "passed",
+    "sha256": "ea490c5bec0d9c7d1c987bc480d7a4f35054b6c570f93bfb93e256091f0e6d26",
+    "attempt_count": 1
+  },
+  {
+    "project_id": "8bda13d1ed80f790207c1b69985e7ef9",
+    "job_id": "4d0aad8a912c043485012243bb028a07",
+    "name": "S3 / False check",
+    "status": "failed",
+    "error_code": "checks_failed",
+    "source": {
+      "kind": "s3",
+      "profile": "qa-storage",
+      "bucket": "restivra-synthetic",
+      "key": "daily/current.dump",
+      "etag": "\"143fc6e62ec3ab967759066ea33e0413\""
+    },
+    "cleanup": "passed",
+    "sha256": "ea490c5bec0d9c7d1c987bc480d7a4f35054b6c570f93bfb93e256091f0e6d26",
+    "attempt_count": 1
+  },
+  {
+    "project_id": "50b0888509973f8a9af4bbe4f7b541b4",
+    "job_id": "0557d52d5b2079aa6f9f7cf176f0cfbf",
+    "name": "S3 / Missing object",
+    "status": "failed",
+    "error_code": "source_not_found",
+    "source": {
+      "kind": "s3",
+      "profile": "qa-storage",
+      "bucket": "restivra-synthetic"
+    },
+    "cleanup": "not_needed",
+    "sha256": null,
+    "attempt_count": 1
+  },
+  {
+    "project_id": "d08d99b53fc353812041a3bb205d6602",
+    "job_id": "39fcd6e633992e28b386c16ac2ef195a",
+    "name": "S3 / Corrupt object",
+    "status": "failed",
+    "error_code": "source_download_failed",
+    "source": {
+      "kind": "s3",
+      "profile": "qa-storage",
+      "bucket": "restivra-synthetic",
+      "key": "corrupt/bad.dump",
+      "etag": "\"78f0e0f373e088fc581a94696a272fe1\""
+    },
+    "cleanup": "not_needed",
+    "sha256": "eb9a92ea5d6ef6e453840a2aff3d2dc940353a9c5da1aec8b2f5364a0c0afeb0",
+    "attempt_count": 1
+  }
+]

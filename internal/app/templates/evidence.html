@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="{{.Lang}}">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Restivra — {{.Title}}</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 14mm;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font:
+          14px/1.5 system-ui,
+          sans-serif;
+        background: #fff;
+        color: #211c1e;
+        margin: 28px auto;
+        max-width: 950px;
+        padding: 0 20px;
+      }
+      header {
+        border-bottom: 3px solid #a6243c;
+        padding-bottom: 16px;
+      }
+      .brand {
+        font-weight: 750;
+        color: #a6243c;
+        font-size: 18px;
+        letter-spacing: 0.04em;
+      }
+      h1 {
+        font-size: 25px;
+        line-height: 1.2;
+        margin: 12px 0;
+      }
+      h2 {
+        font-size: 17px;
+        margin: 25px 0 10px;
+      }
+      p {
+        margin: 8px 0;
+      }
+      .notice {
+        padding: 10px;
+        border: 1px solid #a49a9e;
+        background: #f8f5f6;
+      }
+      .hint {
+        color: #51474c;
+        font-size: 12px;
+      }
+      dl {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px 22px;
+      }
+      dl div {
+        break-inside: avoid;
+      }
+      dt {
+        font-size: 12px;
+        color: #51474c;
+      }
+      dd {
+        margin: 2px 0;
+        overflow-wrap: anywhere;
+      }
+      code {
+        font:
+          12px/1.5 ui-monospace,
+          monospace;
+        overflow-wrap: anywhere;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 12px 0;
+        table-layout: fixed;
+      }
+      th,
+      td {
+        text-align: left;
+        border: 1px solid #bdb3b8;
+        padding: 7px;
+        vertical-align: top;
+        overflow-wrap: anywhere;
+      }
+      th {
+        background: #f2edef;
+      }
+      tr {
+        break-inside: avoid;
+      }
+      footer {
+        margin-top: 25px;
+        border-top: 1px solid #bdb3b8;
+        padding-top: 12px;
+        font-size: 11px;
+      }
+      .result {
+        font-size: 18px;
+        font-weight: 700;
+      }
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+          max-width: none;
+          font-size: 10pt;
+        }
+        .screen-only {
+          display: none;
+        }
+        h2 {
+          break-after: avoid;
+        }
+        thead {
+          display: table-header-group;
+        }
+      }
+      @media (max-width: 550px) {
+        dl {
+          grid-template-columns: 1fr;
+        }
+        body {
+          padding: 0 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="brand">Restivra</div>
+      <h1>{{.Title}}</h1>
+      <p>{{.Project}}</p>
+      <p class="result">{{.Result}}</p>
+      <p class="hint screen-only">{{index .Labels "print"}}</p>
+    </header>
+    {{if .Redacted}}
+    <p class="notice">{{index .Labels "redacted"}}</p>
+    {{end}}
+    <dl>
+      <div>
+        <dt>{{index .Labels "run"}}</dt>
+        <dd><code>{{.JobID}}</code></dd>
+      </div>
+      <div>
+        <dt>{{index .Labels "attempt"}}</dt>
+        <dd>{{.Attempt}}</dd>
+      </div>
+      <div>
+        <dt>{{index .Labels "current"}}</dt>
+        <dd>{{.CurrentState}}</dd>
+      </div>
+      <div>
+        <dt>{{index .Labels "queued"}}</dt>
+        <dd>{{.Queued}}</dd>
+      </div>
+      <div>
+        <dt>{{index .Labels "started"}}</dt>
+        <dd>{{.Started}}</dd>
+      </div>
+      <div>
+        <dt>{{index .Labels "finished"}}</dt>
+        <dd>{{.Finished}}</dd>
+      </div>
+      <div>
+        <dt>{{index .Labels "duration"}}</dt>
+        <dd>{{.Duration}}</dd>
+      </div>
+      {{if .ErrorCode}}
+      <div>
+        <dt>{{index .Labels "code"}}</dt>
+        <dd><code>{{.ErrorCode}}</code></dd>
+      </div>
+      {{end}}
+    </dl>
+    <h2>{{index .Labels "checks"}}</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>{{index .Labels "name"}}</th>
+          <th>{{index .Labels "status"}}</th>
+          <th>{{index .Labels "code"}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{index .Labels "restore"}}</td>
+          <td>{{.Restore}}</td>
+          <td>PostgreSQL 17</td>
+        </tr>
+        {{range .Checks}}
+        <tr>
+          <td>{{.Name}}</td>
+          <td>{{.Status}}</td>
+          <td><code>{{.Code}}</code></td>
+        </tr>
+        {{end}}
+        <tr>
+          <td>{{index .Labels "cleanup"}}</td>
+          <td>{{.Cleanup}}</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+    {{if not .Checks}}
+    <p class="notice">{{index .Labels "noChecks"}}</p>
+    {{end}}
+    <h2>{{index .Labels "archive"}}</h2>
+    <dl>
+      <div>
+        <dt>{{index .Labels "archive"}}</dt>
+        <dd><code>{{.Archive}}</code></dd>
+      </div>
+      <div>
+        <dt>{{index .Labels "bytes"}}</dt>
+        <dd>{{.Bytes}}</dd>
+      </div>
+      <div>
+        <dt>{{index .Labels "modified"}}</dt>
+        <dd>{{.Modified}}</dd>
+      </div>
+      <div>
+        <dt>{{index .Labels "source"}}</dt>
+        <dd>{{.Source}}</dd>
+      </div>
+      {{if .Profile}}
+      <div>
+        <dt>{{index .Labels "profile"}}</dt>
+        <dd>{{.Profile}}</dd>
+      </div>
+      {{end}}{{if .Object}}
+      <div>
+        <dt>{{index .Labels "object"}}</dt>
+        <dd><code>{{.Object}}</code></dd>
+      </div>
+      {{end}}{{if .Version}}
+      <div>
+        <dt>{{index .Labels "version"}}</dt>
+        <dd><code>{{.Version}}</code></dd>
+      </div>
+      {{end}}{{if .ETag}}
+      <div>
+        <dt>ETag</dt>
+        <dd><code>{{.ETag}}</code></dd>
+      </div>
+      {{end}}
+      <div>
+        <dt>SHA-256</dt>
+        <dd><code>{{.Hash}}</code></dd>
+      </div>
+      <div>
+        <dt>{{index .Labels "image"}}</dt>
+        <dd><code>{{.Image}}</code></dd>
+      </div>
+      <div>
+        <dt>{{index .Labels "imageID"}}</dt>
+        <dd><code>{{.ImageID}}</code></dd>
+      </div>
+    </dl>
+    {{if .Attempts}}
+    <h2>{{index .Labels "history"}}</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>{{index .Labels "attempt"}}</th>
+          <th>{{index .Labels "status"}}</th>
+          <th>{{index .Labels "finished"}}</th>
+          <th>{{index .Labels "code"}}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Attempts}}
+        <tr>
+          <td>{{.Number}}</td>
+          <td>{{.Status}}</td>
+          <td>{{.Finished}}</td>
+          <td><code>{{.Code}}</code></td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+    {{end}}
+    <footer>
+      <p>{{index .Labels "limits"}}</p>
+      <p>{{index .Labels "metadata"}}</p>
+      <p>{{index .Labels "generated"}}: {{.Generated}}</p>
+    </footer>
+  </body>
+</html>

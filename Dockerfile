@@ -18,6 +18,7 @@ FROM debian:bookworm-slim
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/* && useradd -u 10001 -m restivra
 COPY --from=dockercli /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=build /restivra /usr/local/bin/restivra
+COPY LICENSE THIRD_PARTY_NOTICES.md /usr/share/doc/restivra/
 WORKDIR /app
 USER restivra
 ENTRYPOINT ["restivra"]

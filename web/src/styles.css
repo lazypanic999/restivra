@@ -1099,3 +1099,5 @@ pre {
     animation: none !important;
   }
 }
+.evidence-options { padding: 0 24px 16px; border-top: 1px solid var(--border); }
+.evidence-options .checkbox-label { margin-top: 14px; }

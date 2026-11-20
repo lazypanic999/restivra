@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -13,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lazypanic999/restivra/internal/source"
 	"github.com/lazypanic999/restivra/internal/verify"
 )
 
@@ -25,6 +27,8 @@ type Worker struct {
 	WebhookURL        string
 	RetentionDays     int
 	Docker            verify.Commander
+	Sources           source.Profiles
+	sourceClients     map[string]source.S3Client
 	reconcileInterval time.Duration
 }
 
@@ -70,6 +74,14 @@ func (w *Worker) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	w.sourceClients = map[string]source.S3Client{}
+	for _, profile := range w.Sources.S3 {
+		w.sourceClients[profile.ID] = profile.Client()
+	}
+	publicProfiles, err := json.Marshal(w.Sources.Public())
+	if err != nil {
+		return errors.New("could not initialize source profile metadata")
+	}
 	if err = w.recover(ctx); err != nil {
 		return err
 	}
@@ -89,7 +101,7 @@ func (w *Worker) Run(ctx context.Context) error {
 		tickCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 		err = conn.PingContext(tickCtx)
 		if err == nil {
-			_, err = w.Store.DB.ExecContext(tickCtx, `INSERT INTO workers(instance,heartbeat_at) VALUES($1,clock_timestamp()) ON CONFLICT(instance) DO UPDATE SET heartbeat_at=EXCLUDED.heartbeat_at`, w.Instance)
+			_, err = w.Store.DB.ExecContext(tickCtx, `INSERT INTO workers(instance,heartbeat_at,source_profiles) VALUES($1,clock_timestamp(),$2) ON CONFLICT(instance) DO UPDATE SET heartbeat_at=EXCLUDED.heartbeat_at,source_profiles=EXCLUDED.source_profiles`, w.Instance, publicProfiles)
 		}
 		if err == nil {
 			err = w.Store.Schedule(tickCtx, time.Now().UTC())
@@ -331,7 +343,11 @@ func (w *Worker) execute(parent context.Context, conn *sql.Conn, root *os.Root, 
 		}
 	}()
 	work := filepath.Join(w.WorkDir, job.ID)
-	path, pathErr := latestBackup(root, job.BackupPattern)
+	path := job.BackupPattern
+	var pathErr error
+	if job.Source.Kind != "s3" {
+		path, pathErr = latestBackup(root, job.BackupPattern)
+	}
 	var report *verify.Report
 	status := "failed"
 	errorText := ""
@@ -339,7 +355,17 @@ func (w *Worker) execute(parent context.Context, conn *sql.Conn, root *os.Root, 
 	if pathErr != nil {
 		errorText = pathErr.Error()
 	} else {
-		result := (verify.Runner{Docker: w.Docker, WorkDir: work, RunID: job.ID, Instance: w.Instance, Installation: w.Installation, OpenBackup: root.Open}).Run(ctx, path, job.Config)
+		runner := verify.Runner{Docker: w.Docker, WorkDir: work, RunID: job.ID, Instance: w.Instance, Installation: w.Installation, OpenBackup: root.Open}
+		if job.Source.Kind == "s3" {
+			runner.SnapshotBackup = func(snapshotCtx context.Context, pattern, directory string, max int64) (*os.File, verify.Backup, error) {
+				client, ok := w.sourceClients[job.Source.Profile]
+				if !ok {
+					return nil, verify.Backup{Source: &verify.BackupSource{Kind: "s3", Profile: job.Source.Profile, Bucket: job.Source.Bucket}}, &source.Error{Code: "source_profile_missing", Message: "The S3 profile is not configured on this worker. Check its private source file and restart the worker."}
+				}
+				return source.Snapshot(snapshotCtx, client, job.Source, pattern, directory, max)
+			}
+		}
+		result := runner.Run(ctx, path, job.Config)
 		report = &result
 		cleanupFailed = result.CleanupStatus == "failed"
 		status = result.Status

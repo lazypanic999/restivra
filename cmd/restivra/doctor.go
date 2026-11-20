@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/lazypanic999/restivra/internal/app"
+	"github.com/lazypanic999/restivra/internal/source"
 	"github.com/lazypanic999/restivra/internal/verify"
 )
 
@@ -92,6 +93,12 @@ func doctor(ctx context.Context, args []string) int {
 	}
 	auth, err := app.NewAuth(os.Getenv("RESTIVRA_AUTH_TOKEN"))
 	if *role == "worker" {
+		profiles, profileErr := source.LoadProfiles(os.Getenv("RESTIVRA_SOURCES_FILE"))
+		if profileErr != nil {
+			add("storage_sources", "failed", "Private storage profiles are invalid or unreadable; credentials are never displayed.")
+		} else {
+			add("storage_sources", "passed", fmt.Sprintf("%d S3 profiles configured. This diagnostic does not contact storage.", len(profiles.S3)))
+		}
 		add("authentication", "skipped", "Worker holds no UI token. Confirm authentication_enabled through the signed-in API health endpoint.")
 	} else {
 		if err != nil {

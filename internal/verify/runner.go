@@ -18,12 +18,13 @@ import (
 )
 
 type Runner struct {
-	Docker       Commander
-	WorkDir      string
-	RunID        string
-	Instance     string
-	Installation string
-	OpenBackup   func(string) (*os.File, error)
+	Docker         Commander
+	WorkDir        string
+	RunID          string
+	Instance       string
+	Installation   string
+	OpenBackup     func(string) (*os.File, error)
+	SnapshotBackup func(context.Context, string, string, int64) (*os.File, Backup, error)
 }
 
 func (r Runner) Run(parent context.Context, source string, cfg Config) (report Report) {
@@ -83,10 +84,25 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 		fail("could not create work directory")
 		return
 	}
-	snapshot, backup, err := snapshotBackupWithOpener(ctx, source, r.WorkDir, cfg.MaxBackupBytes, r.OpenBackup)
+	var snapshot *os.File
+	var backup Backup
+	var err error
+	if r.SnapshotBackup != nil {
+		report.Stage = "source"
+		snapshot, backup, err = r.SnapshotBackup(ctx, source, r.WorkDir, cfg.MaxBackupBytes)
+	} else {
+		snapshot, backup, err = snapshotBackupWithOpener(ctx, source, r.WorkDir, cfg.MaxBackupBytes, r.OpenBackup)
+	}
 	report.Backup = backup
+	if backup.Source != nil && backup.Source.Kind == "s3" {
+		report.Warnings[1] = "S3 Last-Modified is object metadata, not a verified backup creation time. ETag is not assumed to be a content hash; SHA-256 is calculated from the downloaded bytes."
+	}
 	if err != nil {
 		fail(err.Error())
+		var coded interface{ ErrorCode() string }
+		if errors.As(err, &coded) {
+			report.ErrorCode = coded.ErrorCode()
+		}
 		return
 	}
 	defer func() {
@@ -322,6 +338,25 @@ func snapshotBackupWithOpener(ctx context.Context, source, work string, max int6
 	if b.Bytes > max {
 		return nil, b, errors.New("backup exceeds max_backup_bytes")
 	}
+	snapshot, b, err := SnapshotStream(ctx, in, b, work, max)
+	if err != nil {
+		return nil, b, err
+	}
+	after, err := in.Stat()
+	if err != nil || !after.ModTime().Equal(stat.ModTime()) {
+		snapshot.Close()
+		os.Remove(snapshot.Name())
+		return nil, b, errors.New("backup changed while being copied; use an atomically completed backup")
+	}
+	return snapshot, b, nil
+}
+
+// SnapshotStream creates one bounded, hashed, seekable private copy. The caller
+// owns and must close the input stream; the returned file belongs to the runner.
+func SnapshotStream(ctx context.Context, in io.Reader, b Backup, work string, max int64) (*os.File, Backup, error) {
+	if b.Bytes < 0 || b.Bytes > max {
+		return nil, b, errors.New("backup exceeds max_backup_bytes")
+	}
 	snapshot, err := os.CreateTemp(work, "snapshot-*.dump")
 	if err != nil {
 		return nil, b, errors.New("could not create private snapshot")
@@ -341,9 +376,8 @@ func snapshotBackupWithOpener(ctx context.Context, source, work string, max int6
 	if n > max || n != b.Bytes {
 		return nil, b, errors.New("backup grew or shrank while being copied")
 	}
-	after, err := in.Stat()
-	if err != nil || !after.ModTime().Equal(stat.ModTime()) {
-		return nil, b, errors.New("backup changed while being copied; use an atomically completed backup")
+	if ctx.Err() != nil {
+		return nil, b, errors.New("could not snapshot backup")
 	}
 	b.SHA256 = hex.EncodeToString(h.Sum(nil))
 	if _, err = snapshot.Seek(0, io.SeekStart); err != nil {

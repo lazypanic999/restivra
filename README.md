@@ -28,6 +28,8 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 - React dashboard in English and Turkish: overview, project settings, recent runs, report details and JSON downloads.
 - Search all retained runs with result/date filters, cursor pagination, shareable filter links and CSV exports.
 - Browse archived projects and restore their settings/history with scheduling disabled.
+- Read existing archives from local files or an S3-compatible bucket, with worker-only private credentials, bounded conditional downloads and source evidence.
+- Printable English/Turkish evidence reports, optional name redaction and browser-assisted PDF saving.
 - PostgreSQL-backed queue, immutable run settings, cancellation and one active run per project.
 - One restore worker per application database, enforced by a PostgreSQL session advisory lock.
 - Worker heartbeats and startup reconciliation of interrupted jobs, owned containers and private snapshots.
@@ -92,6 +94,12 @@ two projects labeled **Demo**. `./scripts/demo.ps1` runs only the standalone CLI
 
 ## Configuration
 
+For S3-compatible backups, configure an operator-managed read-only profile in
+`private/sources.json`, restart the idle worker, then choose it in the project
+form. The API never receives storage keys. [Storage setup and limits](docs/S3-SOURCES.md).
+The pinned `v0.1.0-pilot.1` remains the earlier local-file pilot; S3 support is
+currently on `main` and needs provider-specific external validation.
+
 Setup generates `.env` with independent random database/access credentials and a unique instance name. Existing `.env` files are preserved. Do not commit `.env`, dumps, reports or runtime data.
 
 | Variable | Default / meaning |
@@ -105,6 +113,7 @@ Setup generates `.env` with independent random database/access credentials and a
 | `RESTIVRA_DATABASE_URL` | Required for direct service execution; supplied by Compose. |
 | `RESTIVRA_BACKUP_ROOT` | `backups` directly; `/backups` in Compose. |
 | `RESTIVRA_WORK_DIR` | `work/jobs` directly; `/work/jobs` in Compose. |
+| `RESTIVRA_SOURCES_FILE` | Optional private worker profile file; `/run/restivra/sources.json` in Compose. |
 | `RESTIVRA_ALLOWED_HOSTS` | `localhost:7474,127.0.0.1:7474,[::1]:7474`; exact HTTP host allowlist. |
 
 Per-project defaults: 180-second run, 256 MiB archive, 512 MiB temporary database, 1536 MiB container memory, 1 CPU and 128 PIDs. The temporary database is RAM-backed and counts toward the memory limit. Increasing archive size does not increase restored-data capacity. One private archive copy also needs local disk space.
@@ -180,6 +189,10 @@ PowerShell: set `$env:RESTIVRA_INTEGRATION = '1'` before `go test`. Integration 
 
 Use **Runs** to search all retained history, including archived sources, and download up to 10,000 matching rows as CSV. Filters use queue time in your device time zone; exports use UTC. **Projects → Archived projects** restores a source with daily scheduling disabled. The overview counts all retained outcomes and displays six recent rows. See [history, exports and project recovery](docs/HISTORY.md).
 
+**Print / PDF report** opens a self-contained evidence document. Hide names before
+sharing if needed, then use the browser's Print command to save as PDF. SQL text
+and credentials are excluded. [Evidence and redaction](docs/EVIDENCE-REPORTS.md).
+
 ```sh
 docker compose logs --tail=100 api worker
 docker compose restart worker
@@ -217,6 +230,6 @@ Changes awaiting a tagged release are listed in the [changelog](CHANGELOG.md).
 
 ## Remaining work
 
-Real developer pilots on their own computers, extension compatibility, larger-database sizing and payment validation. S3, PDF, extra database engines/major versions, PITR and hosted multi-tenant operation are outside the MVP. See [ROADMAP.md](ROADMAP.md).
+Real developer pilots on their own computers, provider-specific S3 compatibility, extension compatibility, larger-database sizing and payment validation. PDF, extra database engines/major versions, PITR and hosted multi-tenant operation remain outside the MVP. See [ROADMAP.md](ROADMAP.md).
 
 References: [pg_restore](https://www.postgresql.org/docs/17/app-pgrestore.html), [advisory locks](https://www.postgresql.org/docs/17/explicit-locking.html#ADVISORY-LOCKS), [Docker run](https://docs.docker.com/reference/cli/docker/container/run/).

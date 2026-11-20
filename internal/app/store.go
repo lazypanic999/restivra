@@ -50,6 +50,9 @@ CREATE INDEX IF NOT EXISTS job_history_cursor ON jobs(queued_at DESC,id DESC);
 CREATE INDEX IF NOT EXISTS job_status_history ON jobs(status,queued_at DESC,id DESC);
 CREATE INDEX IF NOT EXISTS project_job_history ON jobs(project_id,queued_at DESC,id DESC);
 CREATE TABLE IF NOT EXISTS workers(instance text PRIMARY KEY, heartbeat_at timestamptz NOT NULL);
+ALTER TABLE workers ADD COLUMN IF NOT EXISTS source_profiles jsonb NOT NULL DEFAULT '[]';
+ALTER TABLE projects ADD COLUMN IF NOT EXISTS source jsonb NOT NULL DEFAULT '{"kind":"local"}';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS source jsonb NOT NULL DEFAULT '{"kind":"local"}';
 CREATE TABLE IF NOT EXISTS installation(singleton boolean PRIMARY KEY DEFAULT true CHECK(singleton), id text NOT NULL UNIQUE);
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS attempt_count integer NOT NULL DEFAULT 0;
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS retry_at timestamptz;
@@ -90,29 +93,35 @@ func (s *Store) InstallationID(ctx context.Context) (string, error) {
 
 type scanner interface{ Scan(...any) error }
 
-const projectCols = `id,name,backup_pattern,config,schedule_time,timezone,next_run_at,created_at,archived`
+const projectCols = `id,name,backup_pattern,config,schedule_time,timezone,next_run_at,created_at,archived,source`
 
 func scanProject(row scanner) (Project, error) {
 	var p Project
-	var raw []byte
-	err := row.Scan(&p.ID, &p.Name, &p.BackupPattern, &raw, &p.ScheduleTime, &p.Timezone, &p.NextRunAt, &p.CreatedAt, &p.Archived)
+	var raw, sourceRaw []byte
+	err := row.Scan(&p.ID, &p.Name, &p.BackupPattern, &raw, &p.ScheduleTime, &p.Timezone, &p.NextRunAt, &p.CreatedAt, &p.Archived, &sourceRaw)
 	if err != nil {
+		return p, err
+	}
+	if err = json.Unmarshal(sourceRaw, &p.Source); err != nil {
 		return p, err
 	}
 	err = json.Unmarshal(raw, &p.Config)
 	return p, err
 }
 
-const jobCols = `id,project_id,project_name,backup_pattern,config,status,trigger,queued_at,started_at,finished_at,heartbeat_at,cancel_requested,report,error,notification_status,notification_attempts,attempt_count,retry_at`
+const jobCols = `id,project_id,project_name,backup_pattern,config,status,trigger,queued_at,started_at,finished_at,heartbeat_at,cancel_requested,report,error,notification_status,notification_attempts,attempt_count,retry_at,source`
 
 func scanJob(row scanner) (Job, error) {
 	var j Job
-	var cfg, report []byte
-	err := row.Scan(&j.ID, &j.ProjectID, &j.ProjectName, &j.BackupPattern, &cfg, &j.Status, &j.Trigger, &j.QueuedAt, &j.StartedAt, &j.FinishedAt, &j.HeartbeatAt, &j.CancelRequested, &report, &j.Error, &j.NotificationStatus, &j.NotificationAttempts, &j.AttemptCount, &j.RetryAt)
+	var cfg, report, sourceRaw []byte
+	err := row.Scan(&j.ID, &j.ProjectID, &j.ProjectName, &j.BackupPattern, &cfg, &j.Status, &j.Trigger, &j.QueuedAt, &j.StartedAt, &j.FinishedAt, &j.HeartbeatAt, &j.CancelRequested, &report, &j.Error, &j.NotificationStatus, &j.NotificationAttempts, &j.AttemptCount, &j.RetryAt, &sourceRaw)
 	if err != nil {
 		return j, err
 	}
 	if err = json.Unmarshal(cfg, &j.Config); err != nil {
+		return j, err
+	}
+	if err = json.Unmarshal(sourceRaw, &j.Source); err != nil {
 		return j, err
 	}
 	if len(report) > 0 {
@@ -157,15 +166,22 @@ ORDER BY p.created_at DESC,p.id DESC`, archived)
 }
 func (s *Store) SaveProject(ctx context.Context, p Project, create bool) (Project, error) {
 	p.Archived = false
+	if p.Source.Kind == "" {
+		p.Source.Kind = "local"
+	}
+	sourceRaw, err := json.Marshal(p.Source)
+	if err != nil {
+		return p, err
+	}
 	raw, err := json.Marshal(p.Config)
 	if err != nil {
 		return p, err
 	}
 	if create {
 		p.ID = NewID()
-		err = s.DB.QueryRowContext(ctx, `INSERT INTO projects(id,name,backup_pattern,config,schedule_time,timezone,next_run_at) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING created_at`, p.ID, p.Name, p.BackupPattern, raw, p.ScheduleTime, p.Timezone, p.NextRunAt).Scan(&p.CreatedAt)
+		err = s.DB.QueryRowContext(ctx, `INSERT INTO projects(id,name,backup_pattern,config,schedule_time,timezone,next_run_at,source) VALUES($1,$2,$3,$4,$5,$6,$7,$8) RETURNING created_at`, p.ID, p.Name, p.BackupPattern, raw, p.ScheduleTime, p.Timezone, p.NextRunAt, sourceRaw).Scan(&p.CreatedAt)
 	} else {
-		err = s.DB.QueryRowContext(ctx, `UPDATE projects SET name=$2,backup_pattern=$3,config=$4,schedule_time=$5,timezone=$6,next_run_at=$7 WHERE id=$1 AND NOT archived RETURNING created_at`, p.ID, p.Name, p.BackupPattern, raw, p.ScheduleTime, p.Timezone, p.NextRunAt).Scan(&p.CreatedAt)
+		err = s.DB.QueryRowContext(ctx, `UPDATE projects SET name=$2,backup_pattern=$3,config=$4,schedule_time=$5,timezone=$6,next_run_at=$7,source=$8 WHERE id=$1 AND NOT archived RETURNING created_at`, p.ID, p.Name, p.BackupPattern, raw, p.ScheduleTime, p.Timezone, p.NextRunAt, sourceRaw).Scan(&p.CreatedAt)
 	}
 	if errors.Is(err, sql.ErrNoRows) {
 		return p, ErrNotFound
@@ -232,7 +248,11 @@ func enqueue(ctx context.Context, tx *sql.Tx, p Project, trigger string) (Job, e
 	if err != nil {
 		return Job{}, err
 	}
-	j, err := scanJob(tx.QueryRowContext(ctx, `INSERT INTO jobs(id,project_id,project_name,backup_pattern,config,status,trigger) VALUES($1,$2,$3,$4,$5,'queued',$6) RETURNING `+jobCols, NewID(), p.ID, p.Name, p.BackupPattern, raw, trigger))
+	sourceRaw, err := json.Marshal(p.Source)
+	if err != nil {
+		return Job{}, err
+	}
+	j, err := scanJob(tx.QueryRowContext(ctx, `INSERT INTO jobs(id,project_id,project_name,backup_pattern,config,status,trigger,source) VALUES($1,$2,$3,$4,$5,'queued',$6,$7) RETURNING `+jobCols, NewID(), p.ID, p.Name, p.BackupPattern, raw, trigger, sourceRaw))
 	var pgErr *pgconn.PgError
 	if errors.As(err, &pgErr) && pgErr.Code == "23505" {
 		return j, ErrConflict

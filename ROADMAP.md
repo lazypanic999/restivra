@@ -20,6 +20,8 @@
 - [x] Archived-project browsing and restoration with scheduling disabled.
 - [x] Idle reconciliation of late Docker resources and stale-attempt completion fencing.
 - [x] Six transparent mascot poses, prompt sources and downloadable pack.
+- [x] S3-compatible read-only sources, worker-only profiles, conditional bounded snapshots and source evidence in UI/history/CSV.
+- [x] Self-contained printable evidence, English/Turkish, optional name redaction and browser-assisted PDF saving.
 
 ## Pilot acceptance — requires real users
 
@@ -31,4 +33,4 @@
 
 ## Later
 
-S3, PDF, extra PostgreSQL versions/custom extension images, project-list pagination beyond 500 entries, public remote deployment, roles and billing. Hosted multi-tenancy and hostile-dump execution require a separate security design. Other engines and PITR require separate restore strategies.
+Provider-specific S3 pilots, PDF, extra PostgreSQL versions/custom extension images, project-list pagination beyond 500 entries, public remote deployment, roles and billing. Hosted multi-tenancy and hostile-dump execution require a separate security design. Other engines and PITR require separate restore strategies.

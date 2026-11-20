@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "created_from_browser": true,
+  "actual_s3_restore": "passed",
+  "actual_customer_check": "passed",
+  "cleanup": "passed",
+  "english_turkish_verified": true,
+  "object_version_visible": true,
+  "redacted_names_absent": true,
+  "fingerprint_preserved": true,
+  "print_report_verified": true,
+  "console_warnings_errors": 0
+}

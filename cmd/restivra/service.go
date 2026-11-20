@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/lazypanic999/restivra/internal/app"
+	"github.com/lazypanic999/restivra/internal/source"
 	"github.com/lazypanic999/restivra/internal/webui"
 )
 
@@ -60,7 +61,12 @@ func service(ctx context.Context, mode string, args []string) int {
 			log.Print("RESTIVRA_RETENTION_DAYS must be between 1 and 3650")
 			return 2
 		}
-		worker := app.Worker{Store: store, BackupRoot: env("RESTIVRA_BACKUP_ROOT", "backups"), WorkDir: env("RESTIVRA_WORK_DIR", "work/jobs"), Instance: instance, WebhookURL: webhook, RetentionDays: days}
+		sources, err := source.LoadProfiles(env("RESTIVRA_SOURCES_FILE", ""))
+		if err != nil {
+			log.Print(err)
+			return 2
+		}
+		worker := app.Worker{Store: store, BackupRoot: env("RESTIVRA_BACKUP_ROOT", "backups"), WorkDir: env("RESTIVRA_WORK_DIR", "work/jobs"), Instance: instance, WebhookURL: webhook, RetentionDays: days, Sources: sources}
 		if err := worker.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
 			log.Print("worker stopped: ", err)
 			return 1

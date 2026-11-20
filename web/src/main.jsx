@@ -244,6 +244,7 @@ function App({ onUnauthorized, onLogout }) {
     [jobs, setJobs] = useState([]),
     [runSummary, setRunSummary] = useState(null),
     [health, setHealth] = useState(null),
+    [sourceProfiles, setSourceProfiles] = useState([]),
     [session, setSession] = useState(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
@@ -279,15 +280,17 @@ function App({ onUnauthorized, onLogout }) {
   );
   const refresh = useCallback(async () => {
     try {
-      const [p, history, h] = await Promise.all([
+      const [p, history, h, sources] = await Promise.all([
         api("/projects"),
         api("/history?limit=6"),
         api("/health"),
+        api("/sources"),
       ]);
       setProjects(p);
       setJobs(history.items);
       setRunSummary(history.summary);
       setHealth(h);
+      setSourceProfiles(sources.profiles);
       setError("");
       setUpdated(new Date().toISOString());
     } catch (e) {
@@ -653,7 +656,9 @@ function App({ onUnauthorized, onLogout }) {
                                 {project.name}
                               </strong>
                               <code className="file-path">
-                                {project.backup_pattern}
+                                {project.source?.kind === "s3"
+                                  ? `s3://${project.source.bucket}/${project.backup_pattern}`
+                                  : project.backup_pattern}
                               </code>
                             </td>
                             <td>
@@ -814,7 +819,7 @@ function App({ onUnauthorized, onLogout }) {
                 )}
               </section>
             )}
-            {page === "setup" && <Setup />}
+            {page === "setup" && <Setup sourceProfiles={sourceProfiles} />}
           </>
         )}
         <footer className="app-footer">
@@ -826,11 +831,13 @@ function App({ onUnauthorized, onLogout }) {
       {form && (
         <ProjectForm
           project={form}
+          sourceProfiles={sourceProfiles}
           onClose={() => setForm(null)}
           onSave={async (value) => {
             const body = {
               name: value.name,
               backup_pattern: value.backup_pattern,
+              source: value.source || { kind: "local" },
               config: value.config,
               schedule_time: value.schedule_time,
               timezone: value.timezone,
@@ -928,13 +935,15 @@ function Modal({ title, description, onClose, children }) {
     </dialog>
   );
 }
-function ProjectForm({ project, onClose, onSave, onArchive }) {
+function ProjectForm({ project, sourceProfiles, onClose, onSave, onArchive }) {
   const { t, explain } = useLanguage();
   const [value, setValue] = useState(() => structuredClone(project)),
     [saving, setSaving] = useState(false),
     [error, setError] = useState(""),
     [archiveConfirm, setArchiveConfirm] = useState(false);
   const update = (key, next) => setValue((old) => ({ ...old, [key]: next }));
+  const source = value.source || { kind: "local" };
+  const setSource = (key, next) => update("source", { ...source, [key]: next });
   const config = (key, next) =>
     setValue((old) => ({ ...old, config: { ...old.config, [key]: next } }));
   const updateCheck = (index, key, next) =>
@@ -991,7 +1000,76 @@ function ProjectForm({ project, onClose, onSave, onArchive }) {
             />
           </label>
           <label className="field">
-            {t("backupPattern")}
+            {t("backupSource")}
+            <select
+              aria-label={t("backupSource")}
+              value={source.kind || "local"}
+              onChange={(event) =>
+                update(
+                  "source",
+                  event.target.value === "s3"
+                    ? { kind: "s3", profile: "", bucket: "" }
+                    : { kind: "local" },
+                )
+              }
+            >
+              <option value="local">{t("sourceLocal")}</option>
+              <option value="s3">{t("sourceS3")}</option>
+            </select>
+          </label>
+          {source.kind === "s3" && (
+            <>
+              <div className="field-grid">
+                <label className="field">
+                  {t("sourceProfile")}
+                  <select
+                    required
+                  aria-label={t("sourceProfile")}
+                    value={source.profile || ""}
+                    onChange={(event) =>
+                      setSource("profile", event.target.value)
+                    }
+                  >
+                    <option value="">{t("chooseSourceProfile")}</option>
+                    {source.profile &&
+                      !sourceProfiles.some(
+                        (profile) => profile.id === source.profile,
+                      ) && (
+                        <option value={source.profile}>
+                          {source.profile} · {t("sourceUnavailable")}
+                        </option>
+                      )}
+                    {sourceProfiles.map((profile) => (
+                      <option key={profile.id} value={profile.id}>
+                        {profile.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field">
+                  {t("sourceBucket")}
+                  <input
+                    required
+                    maxLength={63}
+                    value={source.bucket || ""}
+                    placeholder="application-backups"
+                    onChange={(event) =>
+                      setSource("bucket", event.target.value)
+                    }
+                  />
+                </label>
+              </div>
+              <p className="help-text">
+                {t(
+                  sourceProfiles.length
+                    ? "sourceSecretHint"
+                    : "sourceNoProfiles",
+                )}
+              </p>
+            </>
+          )}
+          <label className="field">
+            {t(source.kind === "s3" ? "sourceObjectPattern" : "backupPattern")}
             <input
               required
               className="code-input"
@@ -999,7 +1077,9 @@ function ProjectForm({ project, onClose, onSave, onArchive }) {
               value={value.backup_pattern}
               onChange={(event) => update("backup_pattern", event.target.value)}
             />
-            <small>{t("patternHint")}</small>
+            <small>
+              {t(source.kind === "s3" ? "sourcePatternHint" : "patternHint")}
+            </small>
           </label>
           <p className="format-note">{t("supportedFormat")}</p>
           <fieldset>
@@ -1175,9 +1255,12 @@ function ProjectForm({ project, onClose, onSave, onArchive }) {
   );
 }
 function Report({ job, duration, onClose, onCancel }) {
-  const { t, explain, formatDate } = useLanguage(),
+  const { t, explain, formatDate, language } = useLanguage(),
     [copied, setCopied] = useState(false),
-    [copyError, setCopyError] = useState("");
+    [copyError, setCopyError] = useState(""),
+    [redactEvidence, setRedactEvidence] = useState(false);
+  const evidenceLink = (attempt) =>
+    `/api/jobs/${job.id}/evidence.html?${new URLSearchParams({ lang: language, redact: redactEvidence ? "1" : "0", ...(attempt ? { attempt: String(attempt) } : {}) })}`;
   const report = job.report;
   const copy = async () => {
     try {
@@ -1229,7 +1312,7 @@ function Report({ job, duration, onClose, onCancel }) {
                       <th>{t("attempt")}</th>
                       <th>{t("result")}</th>
                       <th>{t("details")}</th>
-                      <th>JSON</th>
+                      <th>{t("report")}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1248,8 +1331,21 @@ function Report({ job, duration, onClose, onCancel }) {
                               href={`/api/jobs/${job.id}/report?attempt=${a.number}`}
                               download
                             >
-                              {t("download")}
+                              JSON
                             </a>
+                          )}
+                          {a.report && (
+                            <>
+                              {" "}
+                              ·{" "}
+                              <a
+                                href={evidenceLink(a.number)}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                {t("printReport")}
+                              </a>
+                            </>
                           )}
                         </td>
                       </tr>
@@ -1323,6 +1419,49 @@ function Report({ job, duration, onClose, onCancel }) {
             <h3 className="report-section-title">{t("archive")}</h3>
             <dl className="archive-facts">
               <div>
+                <dt>{t("backupSource")}</dt>
+                <dd>
+                  {report.backup.source?.kind === "s3"
+                    ? t("sourceS3")
+                    : t("sourceLocal")}
+                </dd>
+              </div>
+              {report.backup.source?.kind === "s3" && (
+                <>
+                  <div>
+                    <dt>{t("sourceProfile")}</dt>
+                    <dd>
+                      <code>{report.backup.source.profile}</code>
+                    </dd>
+                  </div>
+                  {report.backup.source.key && (
+                    <div>
+                      <dt>{t("sourceObject")}</dt>
+                      <dd>
+                        <code>
+                          s3://{report.backup.source.bucket}/
+                          {report.backup.source.key}
+                        </code>
+                      </dd>
+                    </div>
+                  )}
+                  {report.backup.source.version_id && (
+                    <div>
+                      <dt>{t("sourceVersion")}</dt>
+                      <dd>
+                        <code>{report.backup.source.version_id}</code>
+                      </dd>
+                    </div>
+                  )}
+                  <div>
+                    <dt>ETag</dt>
+                    <dd>
+                      <code>{report.backup.source.etag}</code>
+                    </dd>
+                  </div>
+                </>
+              )}
+              <div>
                 <dt>{t("file")}</dt>
                 <dd>
                   <code>{report.backup.name}</code>
@@ -1382,6 +1521,19 @@ function Report({ job, duration, onClose, onCancel }) {
             ` (${t("attempts", { count: job.notification_attempts })})`}
         </p>
       </div>
+      {report && (
+        <div className="evidence-options">
+          <label className="checkbox-label">
+            <input
+              type="checkbox"
+              checked={redactEvidence}
+              onChange={(event) => setRedactEvidence(event.target.checked)}
+            />
+            {t("redactEvidence")}
+          </label>
+          <p className="help-text">{t("evidenceHint")}</p>
+        </div>
+      )}
       <footer className="modal-footer">
         {active(job) && (
           <Button
@@ -1395,6 +1547,16 @@ function Report({ job, duration, onClose, onCancel }) {
         <Button onClick={onClose}>{t("close")}</Button>
         {report && (
           <a
+            className="button"
+            href={evidenceLink()}
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t("printReport")}
+          </a>
+        )}
+        {report && (
+          <a
             className="button primary"
             href={`/api/jobs/${job.id}/report`}
             download
@@ -1406,7 +1568,7 @@ function Report({ job, duration, onClose, onCancel }) {
     </Modal>
   );
 }
-function Setup() {
+function Setup({ sourceProfiles }) {
   const { t } = useLanguage(),
     [shell, setShell] = useState("powershell");
   const installation =
@@ -1445,6 +1607,27 @@ function Setup() {
             )}
           </section>
         ))}
+        <section className="setup-step">
+          <h3>{t("sourceSetupTitle")}</h3>
+          <p>{t("sourceSetupHelp")}</p>
+          <p>{t("sourceSetupRestart")}</p>
+          {sourceProfiles.length > 0 && (
+            <ul>
+              {sourceProfiles.map((profile) => (
+                <li key={profile.id}>
+                  {profile.name} <code>{profile.id}</code>
+                </li>
+              ))}
+            </ul>
+          )}
+          <a
+            href="https://github.com/lazypanic999/restivra/blob/main/docs/S3-SOURCES.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            {t("sourceSetupGuide")}
+          </a>
+        </section>
       </section>
       <aside className="setup-notes">
         <h2>{t("documented")}</h2>

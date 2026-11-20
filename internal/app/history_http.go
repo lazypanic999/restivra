@@ -41,9 +41,9 @@ func (a *API) history(w http.ResponseWriter, r *http.Request) {
 	var body bytes.Buffer
 	c := csv.NewWriter(&body)
 	c.UseCRLF = true
-	_ = c.Write([]string{"run_id", "project_id", "project_name", "status", "trigger", "queued_at_utc", "started_at_utc", "finished_at_utc", "attempts", "latest_attempt_duration_ms", "archive_name", "archive_bytes", "archive_sha256", "cleanup_status", "error_code", "notification_status"})
+	_ = c.Write([]string{"run_id", "project_id", "project_name", "status", "trigger", "queued_at_utc", "started_at_utc", "finished_at_utc", "attempts", "latest_attempt_duration_ms", "archive_name", "archive_bytes", "archive_sha256", "cleanup_status", "error_code", "notification_status", "source_kind", "source_profile", "source_bucket", "source_key", "source_version_id", "source_etag"})
 	for _, j := range page.Items {
-		_ = c.Write([]string{j.ID, j.ProjectID, csvText(j.ProjectName), j.Status, j.Trigger, csvTime(&j.QueuedAt), csvTime(j.StartedAt), csvTime(j.FinishedAt), strconv.Itoa(j.AttemptCount), csvNumber(j.DurationMS), csvText(j.BackupName), csvNumber(j.BackupBytes), j.BackupSHA256, j.CleanupStatus, j.ErrorCode, j.NotificationStatus})
+		_ = c.Write([]string{j.ID, j.ProjectID, csvText(j.ProjectName), j.Status, j.Trigger, csvTime(&j.QueuedAt), csvTime(j.StartedAt), csvTime(j.FinishedAt), strconv.Itoa(j.AttemptCount), csvNumber(j.DurationMS), csvText(j.BackupName), csvNumber(j.BackupBytes), j.BackupSHA256, j.CleanupStatus, j.ErrorCode, j.NotificationStatus, j.SourceKind, csvText(j.SourceProfile), csvText(j.SourceBucket), csvText(j.SourceKey), csvText(j.SourceVersionID), csvText(j.SourceETag)})
 	}
 	c.Flush()
 	if c.Error() != nil {

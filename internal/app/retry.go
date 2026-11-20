@@ -19,10 +19,10 @@ func transientFailure(status string, report *verify.Report) bool {
 		return false
 	}
 	switch report.ErrorCode {
-	case "engine_unavailable", "database_start_failed", "cleanup_failed":
+	case "engine_unavailable", "database_start_failed", "cleanup_failed", "source_unavailable":
 		return true
 	case "run_timeout":
-		return report.Stage == "start" || report.Stage == "engine" || report.Stage == "image"
+		return report.Stage == "start" || report.Stage == "engine" || report.Stage == "image" || report.Stage == "source"
 	default:
 		return false
 	}

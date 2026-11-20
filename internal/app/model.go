@@ -9,6 +9,7 @@ import (
 	"time"
 	_ "time/tzdata"
 
+	"github.com/lazypanic999/restivra/internal/source"
 	"github.com/lazypanic999/restivra/internal/verify"
 )
 
@@ -16,38 +17,40 @@ var ErrConflict = errors.New("project has an active job")
 var ErrNotFound = errors.New("not found")
 
 type Project struct {
-	ID            string        `json:"id"`
-	Name          string        `json:"name"`
-	BackupPattern string        `json:"backup_pattern"`
-	Config        verify.Config `json:"config"`
-	ScheduleTime  string        `json:"schedule_time"`
-	Timezone      string        `json:"timezone"`
-	NextRunAt     *time.Time    `json:"next_run_at"`
-	CreatedAt     time.Time     `json:"created_at"`
-	LastJob       *Job          `json:"last_job,omitempty"`
-	Archived      bool          `json:"archived"`
+	ID            string           `json:"id"`
+	Name          string           `json:"name"`
+	BackupPattern string           `json:"backup_pattern"`
+	Config        verify.Config    `json:"config"`
+	ScheduleTime  string           `json:"schedule_time"`
+	Timezone      string           `json:"timezone"`
+	NextRunAt     *time.Time       `json:"next_run_at"`
+	CreatedAt     time.Time        `json:"created_at"`
+	LastJob       *Job             `json:"last_job,omitempty"`
+	Archived      bool             `json:"archived"`
+	Source        source.Selection `json:"source"`
 }
 
 type Job struct {
-	ID                   string         `json:"id"`
-	ProjectID            string         `json:"project_id"`
-	ProjectName          string         `json:"project_name"`
-	BackupPattern        string         `json:"backup_pattern"`
-	Config               verify.Config  `json:"config"`
-	Status               string         `json:"status"`
-	Trigger              string         `json:"trigger"`
-	QueuedAt             time.Time      `json:"queued_at"`
-	StartedAt            *time.Time     `json:"started_at"`
-	FinishedAt           *time.Time     `json:"finished_at"`
-	HeartbeatAt          *time.Time     `json:"heartbeat_at"`
-	CancelRequested      bool           `json:"cancel_requested"`
-	Report               *verify.Report `json:"report,omitempty"`
-	Error                string         `json:"error,omitempty"`
-	NotificationStatus   string         `json:"notification_status"`
-	NotificationAttempts int            `json:"notification_attempts"`
-	AttemptCount         int            `json:"attempt_count"`
-	RetryAt              *time.Time     `json:"retry_at,omitempty"`
-	Attempts             []Attempt      `json:"attempts,omitempty"`
+	ID                   string           `json:"id"`
+	ProjectID            string           `json:"project_id"`
+	ProjectName          string           `json:"project_name"`
+	BackupPattern        string           `json:"backup_pattern"`
+	Config               verify.Config    `json:"config"`
+	Status               string           `json:"status"`
+	Trigger              string           `json:"trigger"`
+	QueuedAt             time.Time        `json:"queued_at"`
+	StartedAt            *time.Time       `json:"started_at"`
+	FinishedAt           *time.Time       `json:"finished_at"`
+	HeartbeatAt          *time.Time       `json:"heartbeat_at"`
+	CancelRequested      bool             `json:"cancel_requested"`
+	Report               *verify.Report   `json:"report,omitempty"`
+	Error                string           `json:"error,omitempty"`
+	NotificationStatus   string           `json:"notification_status"`
+	NotificationAttempts int              `json:"notification_attempts"`
+	AttemptCount         int              `json:"attempt_count"`
+	RetryAt              *time.Time       `json:"retry_at,omitempty"`
+	Attempts             []Attempt        `json:"attempts,omitempty"`
+	Source               source.Selection `json:"source"`
 }
 
 type Attempt struct {
@@ -78,16 +81,21 @@ func (p *Project) Validate(now time.Time) error {
 		return errors.New("proje adı 1–120 bayt olmalı")
 	}
 	p.BackupPattern = strings.TrimSpace(p.BackupPattern)
-	if !filepath.IsLocal(p.BackupPattern) || len(p.BackupPattern) > 512 || strings.Contains(p.BackupPattern, "\\") || strings.Contains(p.BackupPattern, ":") {
-		return errors.New("yedek yolu, yedek köküne göre bağıl bir yol olmalı; örnek: musteri/*.dump")
+	if err := p.Source.Validate(p.BackupPattern); err != nil {
+		return err
 	}
-	for _, part := range strings.Split(p.BackupPattern, "/") {
-		if part == ".." {
-			return errors.New("üst klasörlere erişim yasak")
+	if p.Source.Kind == "local" {
+		if !filepath.IsLocal(p.BackupPattern) || len(p.BackupPattern) > 512 || strings.Contains(p.BackupPattern, "\\") || strings.Contains(p.BackupPattern, ":") {
+			return errors.New("yedek yolu, yedek köküne göre bağıl bir yol olmalı; örnek: musteri/*.dump")
 		}
-	}
-	if _, err := filepath.Match(p.BackupPattern, ""); err != nil {
-		return errors.New("geçersiz dosya eşleşmesi")
+		for _, part := range strings.Split(p.BackupPattern, "/") {
+			if part == ".." {
+				return errors.New("üst klasörlere erişim yasak")
+			}
+		}
+		if _, err := filepath.Match(p.BackupPattern, ""); err != nil {
+			return errors.New("geçersiz dosya eşleşmesi")
+		}
 	}
 	if err := p.Config.Validate(); err != nil {
 		return err

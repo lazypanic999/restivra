@@ -11,4 +11,9 @@ if [ ! -e .env ]; then
   printf 'Sign in with RESTIVRA_AUTH_TOKEN from your private .env file.\n'
 fi
 mkdir -p backups
+umask 077
+mkdir -p private
+if [ ! -e private/sources.json ]; then
+  (set -C; printf '{"s3":[]}\n' > private/sources.json)
+fi
 printf 'Next: docker pull postgres:17-bookworm && docker compose up --build -d\n'

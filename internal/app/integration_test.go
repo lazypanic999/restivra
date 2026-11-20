@@ -411,6 +411,8 @@ func TestIntegrationApp(t *testing.T) {
 	}
 	testRetryPolicy(t, ctx, store, p)
 	testHistoryAndProjectRestore(t, ctx, store, p)
+	testSourceSelections(t, ctx, store, p)
+	testEvidenceEndpoint(t, ctx, store, p)
 }
 
 type rejectCleanup struct {

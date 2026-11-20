@@ -25,6 +25,7 @@ jobs:
       - run: go vet ./...
       - run: go run golang.org/x/vuln/cmd/govulncheck@v1.10.0 ./...
       - run: docker pull postgres:17-bookworm
+      - run: docker pull rustfs/rustfs:1.0.5
       - run: go test -p 1 ./... -count=1 -timeout=10m
         env:
           RESTIVRA_INTEGRATION: '1'
@@ -39,8 +40,10 @@ jobs:
           try {
             ./scripts/setup.ps1
             $original = (Get-FileHash .env).Hash
+            $sourceProfiles = (Get-FileHash private/sources.json).Hash
             ./scripts/setup.ps1
             if ((Get-FileHash .env).Hash -ne $original) { throw 'Repeated setup changed credentials.' }
+            if ((Get-FileHash private/sources.json).Hash -ne $sourceProfiles) { throw 'Repeated setup changed private source profiles.' }
             docker compose up --build -d --wait --wait-timeout 180
             if ($LASTEXITCODE -ne 0) { throw 'Fresh Compose installation failed.' }
             ./scripts/pilot-smoke.ps1 -Base http://127.0.0.1:17474

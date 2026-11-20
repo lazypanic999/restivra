@@ -51,6 +51,12 @@ type HistoryItem struct {
 	CleanupStatus      string     `json:"cleanup_status"`
 	ErrorCode          string     `json:"error_code"`
 	NotificationStatus string     `json:"notification_status"`
+	SourceKind         string     `json:"source_kind"`
+	SourceProfile      string     `json:"source_profile"`
+	SourceBucket       string     `json:"source_bucket"`
+	SourceKey          string     `json:"source_key"`
+	SourceVersionID    string     `json:"source_version_id"`
+	SourceETag         string     `json:"source_etag"`
 }
 
 type HistorySummary struct {
@@ -159,7 +165,8 @@ func (f HistoryFilter) where(cursor bool) (string, []any) {
 // and report download continue to use the existing authenticated job endpoint.
 const historyCols = `id,project_id,project_name,status,trigger,queued_at,started_at,finished_at,attempt_count,retry_at,
 COALESCE((report->>'duration_ms')::bigint,CASE WHEN started_at IS NOT NULL AND finished_at IS NOT NULL THEN (extract(epoch FROM (finished_at-started_at))*1000)::bigint END),
-(report->'backup'->>'bytes')::bigint,COALESCE(report->'backup'->>'name',''),COALESCE(report->'backup'->>'sha256',''),COALESCE(report->>'cleanup_status',''),COALESCE(report->>'error_code',''),notification_status`
+(report->'backup'->>'bytes')::bigint,COALESCE(report->'backup'->>'name',''),COALESCE(report->'backup'->>'sha256',''),COALESCE(report->>'cleanup_status',''),COALESCE(report->>'error_code',''),notification_status,
+COALESCE(NULLIF(source->>'kind',''),'local'),COALESCE(source->>'profile',''),COALESCE(source->>'bucket',''),COALESCE(report->'backup'->'source'->>'key',''),COALESCE(report->'backup'->'source'->>'version_id',''),COALESCE(report->'backup'->'source'->>'etag','')`
 
 func readHistoryItems(ctx context.Context, tx *sql.Tx, f HistoryFilter, limit int, cursor bool) ([]HistoryItem, error) {
 	where, args := f.where(cursor)
@@ -172,7 +179,7 @@ func readHistoryItems(ctx context.Context, tx *sql.Tx, f HistoryFilter, limit in
 	items := []HistoryItem{}
 	for rows.Next() {
 		var j HistoryItem
-		if err = rows.Scan(&j.ID, &j.ProjectID, &j.ProjectName, &j.Status, &j.Trigger, &j.QueuedAt, &j.StartedAt, &j.FinishedAt, &j.AttemptCount, &j.RetryAt, &j.DurationMS, &j.BackupBytes, &j.BackupName, &j.BackupSHA256, &j.CleanupStatus, &j.ErrorCode, &j.NotificationStatus); err != nil {
+		if err = rows.Scan(&j.ID, &j.ProjectID, &j.ProjectName, &j.Status, &j.Trigger, &j.QueuedAt, &j.StartedAt, &j.FinishedAt, &j.AttemptCount, &j.RetryAt, &j.DurationMS, &j.BackupBytes, &j.BackupName, &j.BackupSHA256, &j.CleanupStatus, &j.ErrorCode, &j.NotificationStatus, &j.SourceKind, &j.SourceProfile, &j.SourceBucket, &j.SourceKey, &j.SourceVersionID, &j.SourceETag); err != nil {
 			return nil, err
 		}
 		items = append(items, j)

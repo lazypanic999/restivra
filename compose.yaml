@@ -51,10 +51,12 @@ services:
       RESTIVRA_INSTANCE: ${RESTIVRA_INSTANCE:-restivra-main}
       RESTIVRA_WEBHOOK_URL: ${RESTIVRA_WEBHOOK_URL:-}
       RESTIVRA_RETENTION_DAYS: ${RESTIVRA_RETENTION_DAYS:-30}
+      RESTIVRA_SOURCES_FILE: /run/restivra/sources.json
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./backups:/backups:ro
       - worker-data:/work
+      - ./private:/run/restivra:ro
     depends_on:
       db: {condition: service_healthy}
     read_only: true
