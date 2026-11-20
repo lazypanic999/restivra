@@ -37,6 +37,7 @@ function Release-ReadManifest([string]$Version) {
 }
 function Release-ValidateManifest($m, [string]$Version) {
     if ($m.format -ne 'restivra.release.v1' -or $m.version -cne $Version -or
+        $m.version -cnotmatch '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9]+([.-][a-z0-9]+)*)?$' -or
         $m.image -cnotmatch '^ghcr\.io/lazypanic999/restivra@sha256:[a-f0-9]{64}$' -or
         $m.revision -cnotmatch '^[a-f0-9]{40}$' -or $m.binary_sha256 -cnotmatch '^[a-f0-9]{64}$' -or
         $m.platform -ne 'linux/amd64' -or $m.metadata_contract -ne 1) { throw 'Unsupported or invalid release manifest; no services changed.' }
@@ -48,6 +49,7 @@ function Release-BinarySHA([string]$Image) {
     $Matches[1]
 }
 function Release-VerifyImage($Manifest, [switch]$Pull) {
+    Release-ValidateManifest $Manifest $Manifest.version
     if ($Pull) { Write-Host "Downloading $($Manifest.version)..."; Release-Docker @('pull',$Manifest.image) 600 | Out-Null }
     $labels = (Release-Docker @('image','inspect',$Manifest.image,'--format','{{json .Config.Labels}}')) | ConvertFrom-Json
     if ($labels.'org.opencontainers.image.source' -ne 'https://github.com/lazypanic999/restivra' -or
@@ -84,9 +86,11 @@ function Release-Idle {
     if ((Release-SQL "SELECT count(*) FROM jobs WHERE status IN ('queued','running')") -ne '0') { throw 'Queued/running jobs exist. Wait for an idle window and try again.' }
 }
 function Release-Start([string]$Image, [int]$WaitSeconds=120) {
+    $expectedImageID=Release-ImageID $Image
     $env:RESTIVRA_IMAGE = $Image
     try {
         Release-Docker @('compose','up','--no-build','--no-deps','--pull','never','-d','--wait','--wait-timeout',"$WaitSeconds",'api') ($WaitSeconds+30) | Out-Null
+        if((Release-Service 'api').image -ne $expectedImageID){throw 'API did not start the requested image; inspect Compose overrides.'}
         Release-Docker @('compose','run','--rm','--no-deps','worker','doctor','--role','worker') 60 | Out-Null
         $config=(Release-Docker @('compose','config','--format','json'))|ConvertFrom-Json
         $instance=$config.services.worker.environment.RESTIVRA_INSTANCE.Replace("'","''")
@@ -95,7 +99,7 @@ function Release-Start([string]$Image, [int]$WaitSeconds=120) {
         # A running process alone is insufficient: require a fresh worker heartbeat.
         for ($n=0; $n -lt 30; $n++) {
             $worker = Release-Service 'worker'
-            if (-not $worker.running) { throw 'Worker stopped after startup.' }
+            if (-not $worker.running -or $worker.image -ne $expectedImageID) { throw 'Worker did not remain running on the requested image.' }
             $online = Release-SQL "SELECT count(*) FROM workers WHERE instance='$instance' AND heartbeat_at > '$started'::timestamptz AND heartbeat_at > now() - interval '15 seconds'"
             if ([int]$online -gt 0) { return }
             Start-Sleep -Seconds 1

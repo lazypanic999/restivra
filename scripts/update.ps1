@@ -27,7 +27,10 @@ try {
     if($Rollback){
         if(-not $state -or -not $state.previous){throw 'No previous deployment is available.'}
         $target=$state.previous
-        if($target.manifest){$null=Release-VerifyImage $target.manifest -Pull}
+        if($target.manifest){
+            if($target.image -ne $target.manifest.image){throw 'Previous deployment manifest/image mismatch.'}
+            $null=Release-VerifyImage $target.manifest -Pull
+        }
         if((Release-ImageID $target.image) -ne $target.image_id){throw 'Previous image changed or is unavailable.'}
     }else{
         $manifest=Release-ReadManifest $Version
@@ -46,6 +49,7 @@ try {
         Release-Docker @('tag',$api.image,$savedTag)|Out-Null
         $previous=[pscustomobject]@{manifest=$null;image=$savedTag;image_id=$api.image}
     }else{throw 'Unmanaged installation. Explicit -Adopt is required for a binary-identical source installation.'}
+    if((Release-ImageID $previous.image) -ne $api.image){throw 'The current rollback image reference changed or is unavailable.'}
     if($previous.image -eq $target.image){Write-Host 'Already running the requested release.';return}
     Release-Idle
     $checkpoint=Join-Path $script:ReleaseRoot ('private/checkpoints/'+[datetime]::UtcNow.ToString('yyyyMMddTHHmmss')+'-'+[guid]::NewGuid().ToString('N'))
