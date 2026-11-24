@@ -11,6 +11,14 @@ try {
     $existing=Release-Docker @('compose','ps','--all','--quiet')
     $pendingPath=Join-Path $script:ReleaseRoot 'private/install-pending.json'
     if ($existing -and -not (Test-Path $pendingPath)) { throw 'Existing containers found. Use update.ps1 -Adopt for a reviewed, binary-identical source installation.' }
+    if(-not $existing){
+        $config=(Release-Docker @('compose','config','--format','json'))|ConvertFrom-Json
+        $ports=@($config.services.api.ports)
+        if($ports.Count -ne 1 -or $ports[0].host_ip -ne '127.0.0.1' -or $ports[0].target -ne 7474 -or $ports[0].protocol -ne 'tcp' -or $ports[0].published -notmatch '^\d{1,5}$'){
+            throw 'Ready-image installation requires one loopback TCP API port; inspect Compose overrides.'
+        }
+        Release-RequireFreePort ([int]$ports[0].published)
+    }
     $manifest=Release-ReadManifest $Version
     $imageID=Release-VerifyImage $manifest -Pull
     if(Test-Path $pendingPath){

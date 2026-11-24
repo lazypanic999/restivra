@@ -22,6 +22,11 @@ For a custom port, use the URL printed by the installer. `pilot-check.ps1` and
 precedence). The prerequisite check verifies the actual API container's loopback
 port and directory ownership before authenticating, so a mismatched `-Base`
 cannot silently target another local installation.
+Fresh installation also checks that the loopback port can be bound before
+downloading a release or creating Docker data volumes. If it is unavailable,
+choose another `RESTIVRA_PORT` in this new installation's `.env`. Existing
+applications remain running. Docker still checks the port when starting; another
+process could acquire it between preflight and startup.
 The installer creates random credentials only if absent, downloads the explicit
 release manifest from this repository, pulls its GHCR digest, checks image labels
 and the binary hash, and waits for API readiness and a new worker heartbeat.

@@ -21,6 +21,14 @@ function Release-Lock {
     try { [IO.File]::Open((Join-Path $script:ReleaseRoot 'private/release-operation.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None) }
     catch { throw 'Another install/update operation holds the installation lock.' }
 }
+function Release-RequireFreePort([ValidateRange(1024,65535)][int]$Port) {
+    $listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,$Port)
+    try{
+        $listener.ExclusiveAddressUse=$true
+        $listener.Start()
+    }catch{throw 'The API port is unavailable. Choose an unused RESTIVRA_PORT before installing; existing applications were not changed.'}
+    finally{$listener.Stop()}
+}
 function Release-ReadManifest([string]$Version) {
     if ($Version -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9]+([.-][a-z0-9]+)*)?$') { throw 'Specify an explicit release tag, for example v0.1.0-pilot.3.' }
     $url = "https://github.com/lazypanic999/restivra/releases/download/$Version/restivra-release.json"

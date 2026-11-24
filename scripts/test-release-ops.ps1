@@ -70,5 +70,12 @@ namespace Restivra {
     $lock=Release-Lock
     try{Expect-Rejection {$other=Release-Lock;$other.Dispose()}}finally{$lock.Dispose()}
     $lock=Release-Lock;$lock.Dispose()
+    $listener=[Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,0)
+    $listener.ExclusiveAddressUse=$true
+    $listener.Start()
+    $heldPort=$listener.LocalEndpoint.Port
+    try{Expect-Rejection {Release-RequireFreePort $heldPort}}
+    finally{$listener.Stop()}
+    Release-RequireFreePort $heldPort
     Write-Host 'Release manifest validation, credential preservation, duplicate-key rejection and exclusive lock passed.'
 }finally{$script:ReleaseRoot=$originalRoot}
