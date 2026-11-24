@@ -99,11 +99,17 @@ cancellation and worker termination during actual restores, recovery and a sched
 run. It re-read all results and confirmed zero owned restore containers and private
 job files after the tests.
 
+The published image also completed a [75-minute fault test](soak-pilot5-75min.json)
+with [131 expected outcomes](soak-pilot5-runs.ndjson): 96 passes, 27 deliberate
+failures and eight cancellations. The worker recovered after two forced shutdowns;
+restores passed after two metadata database restarts and an eight-second database
+stall. A real scheduled run passed. The [wrapper](soak-pilot5-wrapper.json) re-read
+all 131 stored outcomes, checked available reports against the fixed verifier and
+restore image, and confirmed zero remaining restore containers or private job files.
+
 Exact-source [pilot.5 CI](https://github.com/lazypanic999/restivra/actions/runs/45422028750)
 and [image publication](https://github.com/lazypanic999/restivra/actions/runs/45423136704)
-completed successfully. A separate fixed published-image soak is recorded only
-after it finishes; the development-build duration below does not qualify this
-new image's elapsed runtime.
+completed successfully.
 
 CI also runs the PostgreSQL engine/listing regressions, S3-compatible integration,
 SQL-template edge cases, frontend tests/build/audit, Go vet/vulnerability checks,
@@ -133,8 +139,6 @@ matched each available report's verifier build and restore image to the fixed
 runtime, and found zero owned restore containers or private job files.
 This evidence belongs to that development image, not the later published tag.
 
-Additional long-duration and final published-image evidence is added only after
-completion.
 Customer/provider pilots, other PostgreSQL majors, arbitrary extensions,
 macOS/ARM64, hostile dumps, billing and hosted multi-tenancy remain outside this
 acceptance.
