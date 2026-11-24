@@ -12,6 +12,8 @@ function New-SetupRoot([string]$Name) {
     $null=New-Item -ItemType Directory (Join-Path $root 'scripts')
     Copy-Item (Join-Path $sourceRoot 'scripts/setup.ps1') (Join-Path $root 'scripts/setup.ps1')
     Copy-Item (Join-Path $sourceRoot 'scripts/setup.sh') (Join-Path $root 'scripts/setup.sh')
+    Copy-Item (Join-Path $sourceRoot 'scripts/private-io.ps1') (Join-Path $root 'scripts/private-io.ps1')
+    Copy-Item (Join-Path $sourceRoot 'scripts/native-command.ps1') (Join-Path $root 'scripts/native-command.ps1')
     Copy-Item (Join-Path $sourceRoot 'compose.yaml') $root
     return $root
 }
@@ -38,6 +40,9 @@ try {
     & (Join-Path $first 'scripts/setup.ps1')
     & (Join-Path $second 'scripts/setup.ps1')
     $a=Settings $first;$b=Settings $second
+    if(-not $IsWindows){
+        if((Get-RestivraUnixMode (Join-Path $first '.env')) -ne 384 -or (Get-RestivraUnixMode (Join-Path $first 'private/sources.json')) -ne 384 -or (Get-RestivraUnixMode (Join-Path $first 'private')) -ne 448){throw 'PowerShell setup did not create owner-only private files/directories.'}
+    }
     if($a.COMPOSE_PROJECT_NAME -notmatch '^restivra-[a-f0-9]{12}$' -or $a.COMPOSE_PROJECT_NAME -ceq $b.COMPOSE_PROJECT_NAME){throw 'Fresh installations did not receive separate project identities.'}
     foreach($key in @('POSTGRES_PASSWORD','RESTIVRA_AUTH_TOKEN')){
         if($a[$key] -notmatch '^[a-f0-9]{64}$' -or $a[$key] -ceq $b[$key]){throw 'Fresh installations did not receive independent credentials.'}

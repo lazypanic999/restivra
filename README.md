@@ -43,6 +43,7 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 - SHA-256 fingerprints, unchanged-file warnings and file-age warnings.
 - Optional failure webhook, with three persisted delivery attempts and independent delivery status.
 - Docker Compose installation; only the worker has Docker socket access.
+- Owner-only Unix configuration/metadata files and a worker mount limited to the private source profile; [permission behavior](docs/PRIVATE-FILES.md).
 - Standalone CLI for one-off verification.
 - Access-token sign-in with eight-hour HttpOnly sessions on fresh installations.
 - Readiness healthcheck, prerequisite diagnostics and [isolated metadata backup verification](docs/METADATA-CHECK.md).

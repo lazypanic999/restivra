@@ -51,6 +51,7 @@ function Release-Recover($Journal,$State,[string]$StatePath,[string]$JournalPath
     # operation are disposable. Never touch arbitrary one-off worker commands.
     Release-CleanupDiagnostics $Journal
     Release-Start $previous.image $HealthTimeoutSeconds -OperationID $Journal.operation_id
+    Release-ProtectPrivate
     if((Release-Service db).id -cne $db.id){throw 'Metadata database container changed during recovery.'}
     Release-SetImage $previous.image
     $restored=if($before){$before}else{@{format='restivra.deployment.v1';installation=$installation;current=$previous;previous=$null;checkpoint=$Journal.checkpoint}}

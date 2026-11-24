@@ -55,11 +55,18 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./backups:/backups:ro
       - worker-data:/work
-      - ./private:/run/restivra:ro
+      - type: bind
+        source: ./private/sources.json
+        target: /run/restivra/sources.json
+        read_only: true
+        bind: {create_host_path: false}
     depends_on:
       db: {condition: service_healthy}
     read_only: true
     cap_drop: [ALL]
+    # The Docker-admin worker must read owner-only bind-mounted profiles on
+    # Linux. API and temporary restore containers receive no added capability.
+    cap_add: [DAC_READ_SEARCH]
     security_opt: [no-new-privileges:true]
     stop_grace_period: 45s
     restart: unless-stopped

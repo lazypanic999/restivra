@@ -45,6 +45,7 @@ jobs:
           try {
             ./scripts/test-native-command.ps1
             ./scripts/test-release-ops.ps1
+            ./scripts/test-private-io.ps1
             ./scripts/test-setup.ps1
             ./scripts/test-api-session.ps1
             ./scripts/test-install-preflight.ps1

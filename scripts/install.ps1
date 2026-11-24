@@ -39,6 +39,7 @@ try {
     try { if(-not $existing){Release-Docker @('compose','up','--no-build','--pull','never','-d','--wait','--wait-timeout','120','db') 150 | Out-Null} }
     finally { Remove-Item Env:RESTIVRA_IMAGE -ErrorAction SilentlyContinue }
     Release-Start $manifest.image
+    Release-ProtectPrivate
     Release-SetImage $manifest.image
     $installation=Release-SQL 'SELECT id FROM installation'
     Release-JSON $statePath @{format='restivra.deployment.v1';installation=$installation;current=@{manifest=$manifest;image=$manifest.image;image_id=$imageID};previous=$null;checkpoint=$null}

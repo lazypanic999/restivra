@@ -58,7 +58,7 @@ try {
     Release-Idle
     Release-Docker @('compose','exec','-T','worker','restivra','doctor','--role','worker') 60|Out-Null
     $checkpoint=Join-Path $script:ReleaseRoot ('private/checkpoints/'+[datetime]::UtcNow.ToString('yyyyMMddTHHmmss')+'-'+[guid]::NewGuid().ToString('N'))
-    $null=New-Item -ItemType Directory $checkpoint
+    New-RestivraPrivateDirectory $checkpoint
     Copy-Item -LiteralPath (Join-Path $script:ReleaseRoot '.env') -Destination (Join-Path $checkpoint '.env')
     Copy-Item -LiteralPath (Join-Path $script:ReleaseRoot 'private/sources.json') -Destination (Join-Path $checkpoint 'sources.json')
     $config=(Release-Docker @('compose','config','--format','json'))|ConvertFrom-Json
@@ -79,6 +79,7 @@ try {
     Release-Phase $journal $journalPath 'checkpoint_verified'
     Release-Start $target.image $HealthTimeoutSeconds -OperationID $journal.operation_id -OnAPIReady {Release-Phase $journal $journalPath 'api_ready'}
     Release-Phase $journal $journalPath 'services_healthy'
+    Release-ProtectPrivate
     if((Release-Service 'db').id -ne $db.id){throw 'Database container unexpectedly changed.'}
     Release-SetImage $target.image
     Release-Phase $journal $journalPath 'selector_written'

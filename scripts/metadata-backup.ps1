@@ -6,11 +6,12 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'native-command.ps1')
+. (Join-Path $PSScriptRoot 'private-io.ps1')
 $projectDir = Split-Path -Parent $PSScriptRoot
 $output = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($OutputPath)
 $partial = "$output.partial"
 if (Test-Path -LiteralPath $output) { throw 'Output already exists.' }
-$stream = [IO.File]::Open($partial,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+$stream = New-RestivraPrivateFile $partial
 try {
     $result = Invoke-RestivraNative -FilePath docker -WorkingDirectory $projectDir -Arguments @('compose','exec','-T','db','pg_dump','-U','restivra','-d','restivra','-Fc',"--lock-wait-timeout=${TimeoutSeconds}s") -TimeoutSeconds $TimeoutSeconds -OutputStream $stream -OutputByteLimit ([long]$MaxArchiveMB * 1MB)
     if($result.ExitCode -ne 0){throw 'Metadata export failed.'}

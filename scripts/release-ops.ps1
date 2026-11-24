@@ -2,6 +2,7 @@
 # Shared release operations. Native stderr/configuration may contain credentials:
 # retain only bounded stdout and never print Compose's expanded configuration.
 . (Join-Path $PSScriptRoot 'native-command.ps1')
+. (Join-Path $PSScriptRoot 'private-io.ps1')
 $script:ReleaseRoot = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 function Release-Docker([string[]]$Arguments, [int]$Seconds=60) {
     $r = Invoke-RestivraNative -FilePath docker -WorkingDirectory $script:ReleaseRoot -Arguments $Arguments -TimeoutSeconds $Seconds
@@ -17,7 +18,7 @@ function Release-LocalEngine {
     if ((Release-Docker @('info','--format','{{.OSType}}/{{.Architecture}}')) -notin @('linux/x86_64','linux/amd64')) { throw 'This pilot release supports Linux/amd64 Docker engines only.' }
 }
 function Release-Lock {
-    $null = New-Item -ItemType Directory -Force (Join-Path $script:ReleaseRoot 'private')
+    New-RestivraPrivateDirectory (Join-Path $script:ReleaseRoot 'private')
     try { [IO.File]::Open((Join-Path $script:ReleaseRoot 'private/release-operation.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None) }
     catch { throw 'Another install/update operation holds the installation lock.' }
 }
@@ -28,6 +29,20 @@ function Release-RequireFreePort([ValidateRange(1024,65535)][int]$Port) {
         $listener.Start()
     }catch{throw 'The API port is unavailable. Choose an unused RESTIVRA_PORT before installing; existing applications were not changed.'}
     finally{$listener.Stop()}
+}
+function Release-ProtectPrivate {
+    if($IsWindows){return}
+    $worker=Release-Service worker
+    $caps=(Release-Docker @('inspect',$worker.id,'--format','{{json .HostConfig.CapAdd}}'))|ConvertFrom-Json
+    if(-not @($caps|Where-Object{$_ -match '^(CAP_)?DAC_READ_SEARCH$'}).Count){throw 'Apply the supported Compose worker private-file capability before restricting legacy Unix permissions.'}
+    $directory=Join-Path $script:ReleaseRoot 'private'
+    $paths=@($directory,(Join-Path $script:ReleaseRoot '.env'),(Join-Path $directory 'sources.json'))
+    foreach($path in $paths){
+        if(([IO.File]::GetAttributes($path) -band [IO.FileAttributes]::ReparsePoint) -ne 0){throw 'Review symbolic-link configuration permissions manually; no linked target was changed.'}
+    }
+    Set-RestivraPrivateMode $directory 448
+    Set-RestivraPrivateMode $paths[1] 384
+    Set-RestivraPrivateMode $paths[2] 384
 }
 function Release-ReadManifest([string]$Version) {
     if ($Version -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9]+([.-][a-z0-9]+)*)?$') { throw 'Specify an explicit release tag, for example v0.1.0-pilot.3.' }
@@ -70,7 +85,7 @@ function Release-AtomicText([string]$Path,[string]$Value) {
     $temp = "$Path.$([guid]::NewGuid().ToString('N')).tmp"
     $bytes=[Text.UTF8Encoding]::new($false).GetBytes($Value)
     if($bytes.Length -gt 1MB){throw 'Deployment settings exceed the supported size.'}
-    $stream=[IO.File]::Open($temp,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+    $stream=New-RestivraPrivateFile $temp
     try{$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}
     # Concurrent readers/antivirus can temporarily deny Windows rename. Retain
     # the previous complete destination and retry briefly, never truncate it.
