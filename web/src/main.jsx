@@ -245,10 +245,12 @@ function App({ onUnauthorized, onLogout }) {
   const { language, t, explain, formatDate } = useLanguage();
   const [page, setPage] = useState(() => initialPage(location.search)),
     [projects, setProjects] = useState([]),
-    [archivedProjects, setArchivedProjects] = useState([]),
+    [projectTotal, setProjectTotal] = useState(0),
+    [directoryResult, setDirectoryResult] = useState(null),
+    [projectCursors, setProjectCursors] = useState([""]),
     [showArchived, setShowArchived] = useState(false),
-    [archiveLoading, setArchiveLoading] = useState(false),
-    [archiveError, setArchiveError] = useState(""),
+    [directoryLoading, setDirectoryLoading] = useState(false),
+    [directoryError, setDirectoryError] = useState(""),
     [jobs, setJobs] = useState([]),
     [runSummary, setRunSummary] = useState(null),
     [health, setHealth] = useState(null),
@@ -264,6 +266,11 @@ function App({ onUnauthorized, onLogout }) {
     [updated, setUpdated] = useState(null);
   const token = useRef("");
   const importInput = useRef(null);
+  const projectCursor = projectCursors[projectCursors.length - 1];
+  const directoryParams = new URLSearchParams({ archived: String(showArchived), q: search.trim(), limit: "50" });
+  if (projectCursor) directoryParams.set("cursor", projectCursor);
+  const directoryQuery = directoryParams.toString();
+  const directoryData = directoryResult?.key === directoryQuery ? directoryResult.data : null;
   const api = useCallback(
     async (path, options = {}) => {
       if (options.method) token.current = await currentCSRF();
@@ -290,12 +297,13 @@ function App({ onUnauthorized, onLogout }) {
   const refresh = useCallback(async () => {
     try {
       const [p, history, h, sources] = await Promise.all([
-        api("/projects"),
+        api("/projects/page?limit=6"),
         api("/history?limit=6"),
         api("/health"),
         api("/sources"),
       ]);
-      setProjects(p);
+      setProjects(p.items);
+      setProjectTotal(p.active_total);
       setJobs(history.items);
       setRunSummary(history.summary);
       setHealth(h);
@@ -323,25 +331,29 @@ function App({ onUnauthorized, onLogout }) {
     return () => clearInterval(timer);
   }, [api, refresh]);
   useEffect(() => {
-    if (page !== "projects" || !showArchived) return;
+    if (page !== "projects") return;
     let disposed = false;
-    api("/projects?archived=true")
+    const controller = new AbortController();
+    setDirectoryLoading(true);
+    setDirectoryError("");
+    api(`/projects/page?${directoryQuery}`, { signal: controller.signal })
       .then((data) => {
         if (!disposed) {
-          setArchivedProjects(data);
-          setArchiveError("");
+          setDirectoryResult({ key: directoryQuery, data });
+          setDirectoryError("");
         }
       })
       .catch((e) => {
-        if (!disposed) setArchiveError(e.message);
+        if (!disposed) setDirectoryError(e.message);
       })
       .finally(() => {
-        if (!disposed) setArchiveLoading(false);
+        if (!disposed) setDirectoryLoading(false);
       });
     return () => {
       disposed = true;
+      controller.abort();
     };
-  }, [api, page, showArchived, updated]);
+  }, [api, page, directoryQuery, updated]);
   useEffect(() => {
     if (!toast) return;
     const timer = setTimeout(() => setToast(""), 5000);
@@ -408,6 +420,7 @@ function App({ onUnauthorized, onLogout }) {
   const go = (destination, projectID = "") => {
     setPage(destination);
     setSearch("");
+    setProjectCursors([""]);
     const query = new URLSearchParams(location.search);
     if (destination === "history") {
       query.set("view", "history");
@@ -416,7 +429,8 @@ function App({ onUnauthorized, onLogout }) {
         query.set("project_id", projectID);
       }
     } else {
-      query.delete("view");
+      if (destination === "projects" || destination === "setup") query.set("view", destination);
+      else query.delete("view");
       for (const key of Object.keys(emptyHistoryFilters)) query.delete(key);
     }
     window.history.replaceState(
@@ -439,15 +453,9 @@ function App({ onUnauthorized, onLogout }) {
   const passed = runSummary?.passed || 0,
     failed = (runSummary?.failed || 0) + (runSummary?.interrupted || 0),
     running = (runSummary?.queued || 0) + (runSummary?.running || 0);
-  const matches = (name) =>
-    name
-      .toLocaleLowerCase(language)
-      .includes(search.toLocaleLowerCase(language));
   const visibleProjects =
-    page === "projects" && showArchived ? archivedProjects : projects;
-  const listedProjects = visibleProjects.filter((project) =>
-    matches(project.name),
-  );
+    page === "projects" ? (directoryData?.items || []) : projects;
+  const listedProjects = visibleProjects;
   const seconds = (job) =>
     job.duration_ms != null
       ? (job.duration_ms / 1000).toFixed(1)
@@ -595,7 +603,7 @@ function App({ onUnauthorized, onLogout }) {
               <div className="summary-line">
                 <p>
                   {t("summary", {
-                    projects: projects.length,
+                    projects: projectTotal,
                     passed,
                     failed,
                     cancelled: runSummary?.cancelled || 0,
@@ -618,7 +626,8 @@ function App({ onUnauthorized, onLogout }) {
                         <input
                           type="search"
                           value={search}
-                          onChange={(event) => setSearch(event.target.value)}
+                          maxLength={120}
+                          onChange={(event) => { setSearch(event.target.value); setProjectCursors([""]); }}
                         />
                       </label>
                       <label className="search-field">
@@ -627,12 +636,13 @@ function App({ onUnauthorized, onLogout }) {
                           aria-label={t("projectView")}
                           value={showArchived ? "archived" : "active"}
                           onChange={(event) => {
-                            setArchiveLoading(
+                            setDirectoryLoading(
                               event.target.value === "archived",
                             );
-                            setArchiveError("");
+                            setDirectoryError("");
                             setShowArchived(event.target.value === "archived");
                             setSearch("");
+                            setProjectCursors([""]);
                           }}
                         >
                           <option value="active">{t("activeProjects")}</option>
@@ -644,25 +654,22 @@ function App({ onUnauthorized, onLogout }) {
                     </div>
                   )}
                 </div>
-                {page === "projects" && showArchived && archiveError && (
+                {page === "projects" && directoryError && (
                   <div className="notice error-notice" role="alert">
-                    {explain(archiveError)}{" "}
+                    {explain(directoryError)}{" "}
                     <button onClick={refresh}>{t("refresh")}</button>
                   </div>
                 )}
                 {page === "projects" &&
                   showArchived &&
-                  archivedProjects.length > 0 && (
+                  visibleProjects.length > 0 && (
                     <p className="help-text">{t("archivedProjectsHelp")}</p>
                   )}
-                {page === "projects" &&
-                showArchived &&
-                archiveError &&
-                !archivedProjects.length ? null : page === "projects" &&
-                  showArchived &&
-                  archiveLoading &&
-                  !archivedProjects.length ? (
+                {page === "projects" && directoryError ? null : page === "projects" &&
+                  !directoryData ? (
                   <p role="status">{t("loading")}</p>
+                ) : page === "projects" && !visibleProjects.length && (search.trim() || projectCursors.length > 1) ? (
+                  <p className="no-results">{t("noMatches")}</p>
                 ) : page === "projects" &&
                   showArchived &&
                   !visibleProjects.length ? (
@@ -742,6 +749,8 @@ function App({ onUnauthorized, onLogout }) {
                                           { method: "POST", body: "{}" },
                                         );
                                         setShowArchived(false);
+                                        setProjectCursors([""]);
+                                        setSearch("");
                                         setToast({ key: "restoredToast" });
                                       })
                                     }
@@ -785,6 +794,13 @@ function App({ onUnauthorized, onLogout }) {
                     )}
                   </div>
                 )}
+                {page === "projects" && directoryData && <nav className="history-pagination" aria-label={t("projectPagination")}>
+                  <Button disabled={projectCursors.length === 1 || directoryLoading} onClick={() => setProjectCursors((value) => value.slice(0, -1))}>{t("historyNewer")}</Button>
+                  <span>{t("projectPageCount", { number: projectCursors.length, count: directoryData.total })}</span>
+                  <Button disabled={!directoryData.next_cursor || directoryLoading} onClick={() => setProjectCursors((value) => [...value, directoryData.next_cursor])}>{t("historyOlder")}</Button>
+                  {projectCursors.length > 1 && <button className="text-button" onClick={() => setProjectCursors([""])}>{t("historyLatest")}</button>}
+                </nav>}
+                {page === "overview" && projectTotal > projects.length && <p className="help-text">{t("overviewProjectWindow", { count: projects.length, total: projectTotal })} <button className="text-button" onClick={() => go("projects")}>{t("allProjects")}</button></p>}
               </section>
             )}
             {page === "history" && (
@@ -886,6 +902,11 @@ function App({ onUnauthorized, onLogout }) {
               method: form.id ? "PUT" : "POST",
               body: JSON.stringify(body),
             });
+            if (!form.id) {
+              setProjectCursors([""]);
+              setSearch("");
+              setShowArchived(false);
+            }
             setForm(null);
             setToast({ key: "savedToast" });
             await refresh();

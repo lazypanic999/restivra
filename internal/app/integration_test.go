@@ -416,6 +416,7 @@ func TestIntegrationApp(t *testing.T) {
 	testEvidenceEndpoint(t, ctx, store, p)
 	testComparisonEndpoint(t, ctx, store, p)
 	testSupportEndpoint(t, ctx, store, p)
+	testProjectPagination(t, ctx, store, p)
 }
 
 type rejectCleanup struct {

@@ -68,6 +68,7 @@ func (a *API) Handler() http.Handler {
 		}
 		jsonResponse(w, 200, p)
 	})
+	mux.HandleFunc("GET /api/projects/page", a.projectPage)
 	mux.HandleFunc("POST /api/projects", a.saveProject)
 	mux.HandleFunc("PUT /api/projects/{id}", a.saveProject)
 	mux.HandleFunc("POST /api/projects/{id}/restore", func(w http.ResponseWriter, r *http.Request) {

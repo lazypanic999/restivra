@@ -1,4 +1,8 @@
 export const messages = {
+  projectPagination: ["Project pages", "Proje sayfaları"],
+  projectPageCount: ["Page {number} · {count} matching projects", "Sayfa {number} · Eşleşen {count} proje"],
+  overviewProjectWindow: ["Showing the {count} newest of {total} active projects.", "{total} aktif projenin en yeni {count} tanesi gösteriliyor."],
+  allProjects: ["View all projects", "Tüm projeleri gör"],
   supportTitle: ["System check", "Sistem kontrolü"],
   supportHelp: ["Check the worker and waiting work before troubleshooting or updating.", "Sorun incelerken veya güncellemeden önce worker ve bekleyen işleri kontrol et."],
   supportVersion: ["Running version", "Çalışan sürüm"],

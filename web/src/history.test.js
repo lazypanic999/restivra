@@ -8,6 +8,12 @@ import {
   initialPage,
 } from "./history.js";
 
+test("project and setup views survive reload without accepting arbitrary views", () => {
+  assert.equal(initialPage("?view=projects"), "projects");
+  assert.equal(initialPage("?view=setup"), "setup");
+  assert.equal(initialPage("?view=unknown"), "overview");
+});
+
 test("history links preserve literal queries, result and selected project", () => {
   const filters = {
     ...emptyHistoryFilters,

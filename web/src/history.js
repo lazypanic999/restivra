@@ -14,9 +14,8 @@ export function historyFiltersFromSearch(search) {
 }
 
 export function initialPage(search) {
-  return new URLSearchParams(search).get("view") === "history"
-    ? "history"
-    : "overview";
+  const view = new URLSearchParams(search).get("view");
+  return ["history", "projects", "setup"].includes(view) ? view : "overview";
 }
 
 function localDay(value, followingDay = false) {
