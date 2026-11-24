@@ -14,11 +14,18 @@ $project="restivra-legacy-$($suffix.Substring(0,12))"
 $qaEnvironment=Enter-RestivraQAEnvironment $project $Port
 $script:ReleaseRoot=$root
 $proof=[ordered]@{status='failed';synthetic_data=$true;started_at=[datetime]::UtcNow.ToString('o');checks=@()}
+$proof.platform=if($IsWindows){'Windows/PowerShell/Linux-amd64-Docker'}else{'Unix/PowerShell/Linux-amd64-Docker'}
 function Assert-Legacy($Condition,[string]$Message){if(-not $Condition){throw $Message}}
 function Fingerprint {Release-SQL "SELECT json_build_object('projects',(SELECT md5(coalesce(jsonb_agg(to_jsonb(p) ORDER BY p.id)::text,'')) FROM projects p),'jobs',(SELECT md5(coalesce(jsonb_agg(to_jsonb(j) ORDER BY j.id)::text,'')) FROM jobs j),'attempts',(SELECT md5(coalesce(jsonb_agg(to_jsonb(a) ORDER BY a.job_id,a.number)::text,'')) FROM job_attempts a),'installation',(SELECT id FROM installation))::text"}
 try{
     $old=Release-ReadManifest 'v0.1.0-pilot.3'
     $imageID=Release-VerifyImage $old
+    $claimed=$old|ConvertTo-Json -Depth 5|ConvertFrom-Json
+    $claimed|Add-Member -NotePropertyName runtime_identity -NotePropertyValue $true -Force
+    $refused=$false
+    try{$null=Release-VerifyImage $claimed}catch{if($_.Exception.Message -match 'Docker operation failed: run|runtime identity'){$refused=$true}else{throw}}
+    Assert-Legacy $refused 'An old binary falsely declared runtime-identity support.'
+    $proof.checks+='old_binary_cannot_claim_the_new_runtime_identity_contract'
     # Download only immutable, official source files bound by the old manifest.
     $client=[Net.Http.HttpClient]::new();$client.Timeout=[timespan]::FromSeconds(45);$client.MaxResponseContentBufferSize=65536
     try{
@@ -57,11 +64,12 @@ try{
     Assert-Legacy ((Get-FileHash (Join-Path $root 'private/sources.json')).Hash -ceq $profilesHash) 'Legacy packaging upgrade rewrote source profiles.'
     if(-not $IsWindows){
         Assert-Legacy ((Get-RestivraUnixMode (Join-Path $root '.env')) -eq 384 -and (Get-RestivraUnixMode (Join-Path $root 'private/sources.json')) -eq 384 -and (Get-RestivraUnixMode (Join-Path $root 'private')) -eq 448) 'Legacy Unix configuration permissions were not restricted.'
+        $proof.checks+='legacy_unix_configuration_modes_restricted_to_0600_and_private_directory_to_0700'
     }
     $worker=Release-Service worker
     $mounts=(Release-Docker @('inspect',$worker.id,'--format','{{json .Mounts}}'))|ConvertFrom-Json
     Assert-Legacy (@($mounts|Where-Object{$_.Destination -eq '/run/restivra'}).Count -eq 0 -and @($mounts|Where-Object{$_.Destination -eq '/run/restivra/sources.json' -and -not $_.RW}).Count -eq 1) 'Worker still exposes the whole private directory.'
-    $proof.checks+='live_legacy_topology_upgraded_with_owner_only_unix_files_and_narrow_readonly_profile_mount'
+    $proof.checks+='live_legacy_topology_upgraded_with_narrow_readonly_profile_mount'
     # An atomic editor save changes the inode behind a file bind. Recreating the
     # idle worker must load the new profile without exposing its fake keys.
     . (Join-Path $root 'scripts/api-session.ps1')

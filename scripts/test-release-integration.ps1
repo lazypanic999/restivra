@@ -50,6 +50,25 @@ try{
     Check-Preserved
     Assert-Release ((State).current.manifest.version -eq $ToVersion) 'Target version not deployed.'
     $proof.checks+='compatible_update_preserves_all_metadata_and_database_container'
+    . (Join-Path $testRoot 'scripts/api-session.ps1')
+    $connection=New-RestivraSession -Base "http://127.0.0.1:$Port" -EnvFile (Join-Path $testRoot '.env')
+    $targetReports=@()
+    if($connection.Session.build){
+        $manifest=Release-ReadManifest $ToVersion
+        Assert-Release ($connection.Session.build.version -ceq $manifest.version -and $connection.Session.build.revision -ceq $manifest.revision) 'API runtime does not match the published manifest.'
+        & (Join-Path $testRoot 'scripts/pilot-smoke.ps1')
+        $latest=Get-ChildItem (Join-Path $testRoot 'work') -Directory -Filter 'pilot-*'|Sort-Object LastWriteTimeUtc -Descending|Select-Object -First 1
+        $sample=Get-Content (Join-Path $latest.FullName 'summary.json') -Raw|ConvertFrom-Json
+        foreach($entry in $sample.projects){
+            $job=Invoke-RestMethod "http://127.0.0.1:$Port/api/jobs/$($entry.job_id)" -WebSession $connection.WebSession -TimeoutSec 10
+            Assert-Release ($job.report.application_build.version -ceq $manifest.version -and $job.report.application_build.revision -ceq $manifest.revision) 'Target restore report did not record its published verifier build.'
+            $targetReports+=$entry.job_id
+        }
+        # These legitimate new sample runs now join the preserved baseline:
+        # old binaries may ignore an optional JSON field but must not erase it.
+        $script:baseline=Fingerprint
+        $proof.checks+='published_runtime_and_new_restore_reports_match_manifest_before_rollback'
+    }
     & (Join-Path $testRoot 'scripts/update.ps1') -Rollback
     Check-Preserved
     Assert-Release ((State).current.manifest.version -eq $FromVersion) 'Explicit rollback did not restore the previous version.'
@@ -92,6 +111,14 @@ services:
     $proof.checks+='real_failed_startup_automatically_recovers_previous_image_without_database_restore'
     & (Join-Path $testRoot 'scripts/pilot-check.ps1') -Base "http://127.0.0.1:$Port"
     $proof.checks+='authenticated_health_and_worker_diagnostics_after_recovery'
+    if($targetReports.Count){
+        $connection=New-RestivraSession -Base "http://127.0.0.1:$Port" -EnvFile (Join-Path $testRoot '.env')
+        foreach($id in $targetReports){
+            $job=Invoke-RestMethod "http://127.0.0.1:$Port/api/jobs/$id" -WebSession $connection.WebSession -TimeoutSec 10
+            Assert-Release ($job.report.application_build.version -ceq $manifest.version -and $job.report.application_build.revision -ceq $manifest.revision) 'Older-binary rollback lost the new report provenance.'
+        }
+        $proof.checks+='new_report_provenance_survives_older_binary_rollback_and_failed_startup_recovery'
+    }
     $proof.status='passed'
     $proof.metadata_fingerprint=$script:baseline|ConvertFrom-Json
     $proof.from_image=$targetState.previous.image

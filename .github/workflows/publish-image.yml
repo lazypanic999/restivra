@@ -95,6 +95,7 @@ jobs:
               'revision': os.environ['REVISION'], 'image': os.environ['IMAGE_REF'],
               'binary_sha256': os.environ['BINARY_SHA'], 'platform': 'linux/amd64',
               'metadata_contract': 1,
+              'runtime_identity': os.path.isfile('internal/buildinfo/buildinfo.go'),
               'published_at': datetime.datetime.now(datetime.timezone.utc).isoformat()
           }
           with open(os.path.join(os.environ['RUNNER_TEMP'], 'restivra-release.json'), 'w') as f:

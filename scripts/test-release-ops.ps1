@@ -12,6 +12,11 @@ try{
     if((Release-OwnDirectory $scratch.ToUpperInvariant()) -ne [bool]$IsWindows){throw 'Directory comparison did not respect platform case sensitivity.'}
     $m=[pscustomobject]@{format='restivra.release.v1';version='v0.1.0-pilot.3';revision=('a'*40);image=('ghcr.io/lazypanic999/restivra@sha256:'+('b'*64));binary_sha256=('c'*64);platform='linux/amd64';metadata_contract=1}
     Release-ValidateManifest $m $m.version
+    $runtimeManifest=$m|ConvertTo-Json|ConvertFrom-Json
+    $runtimeManifest|Add-Member -NotePropertyName runtime_identity -NotePropertyValue $true
+    Release-ValidateManifest $runtimeManifest $m.version
+    $runtimeManifest.runtime_identity='true'
+    Expect-Rejection {Release-ValidateManifest $runtimeManifest $m.version}
     $record=[pscustomobject]@{manifest=$m;image=$m.image;image_id=('sha256:'+('d'*64))}
     Release-ValidateRecord $record
     $badRecord=$record|ConvertTo-Json -Depth 8|ConvertFrom-Json

@@ -59,6 +59,7 @@ function Release-ReadManifest([string]$Version) {
     $m
 }
 function Release-ValidateManifest($m, [string]$Version) {
+    if($m.PSObject.Properties.Name -contains 'runtime_identity' -and $m.runtime_identity -isnot [bool]){throw 'Unsupported or invalid runtime-identity declaration.'}
     if ($m.format -ne 'restivra.release.v1' -or $m.version -cne $Version -or
         $m.version -cnotmatch '^v[0-9]+\.[0-9]+\.[0-9]+(-[a-z0-9]+([.-][a-z0-9]+)*)?$' -or
         $m.image -cnotmatch '^ghcr\.io/lazypanic999/restivra@sha256:[a-f0-9]{64}$' -or
@@ -79,6 +80,12 @@ function Release-VerifyImage($Manifest, [switch]$Pull) {
         $labels.'org.opencontainers.image.version' -cne $Manifest.version -or
         $labels.'org.opencontainers.image.revision' -cne $Manifest.revision -or $labels.'io.restivra.metadata-contract' -ne '1' -or
         (Release-BinarySHA $Manifest.image) -cne $Manifest.binary_sha256) { throw 'Downloaded image does not match the official manifest.' }
+    if($Manifest.runtime_identity){
+        $runtime=(Release-Docker @('run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges:true',$Manifest.image,'version'))|ConvertFrom-Json
+        if($runtime.version -cne $Manifest.version -or $runtime.revision -cne $Manifest.revision -or $runtime.metadata_contract -ne $Manifest.metadata_contract -or $runtime.os -cne 'linux' -or $runtime.architecture -cne 'amd64'){
+            throw 'Application runtime identity does not match the official release manifest.'
+        }
+    }
     Release-ImageID $Manifest.image
 }
 function Release-AtomicText([string]$Path,[string]$Value) {

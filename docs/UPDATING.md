@@ -30,6 +30,9 @@ process could acquire it between preflight and startup.
 The installer creates random credentials only if absent, downloads the explicit
 release manifest from this repository, pulls its GHCR digest, checks image labels
 and the binary hash, and waits for API readiness and a new worker heartbeat.
+Manifests declaring `runtime_identity: true` additionally require the image's
+isolated `restivra version` output to match the release version, source revision,
+platform and metadata contract. Older immutable pilot manifests remain supported.
 It records the deployment privately and pins `RESTIVRA_IMAGE` in `.env`.
 `docker compose up -d` subsequently starts that exact image without a build.
 New setup files persist a random `COMPOSE_PROJECT_NAME` and `RESTIVRA_PORT` in
