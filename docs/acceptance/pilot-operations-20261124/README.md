@@ -71,7 +71,17 @@ source checkpoints include [2db2a4d](https://github.com/lazypanic999/restivra/ac
 [private-file packaging](https://github.com/lazypanic999/restivra/actions/runs/45410729259),
 and [QA isolation / legacy migration](https://github.com/lazypanic999/restivra/actions/runs/45415375966).
 
-Long-duration and final published-image evidence is added only after completion.
+The first fixed-image [120.01-minute soak](soak-7124103-120min.json) completed
+140 iterations and **204 expected outcomes**: 148 passes, 42 deliberate failures
+and 14 cancellations. Two worker SIGKILLs, two metadata restarts, an eight-second
+database stall and an actual scheduled run recovered. Its
+[wrapper/build record](soak-7124103-wrapper.json) identifies revision `7124103`,
+before verifier provenance was added; [outcomes](soak-7124103-runs.ndjson) are
+retained. This earlier wrapper did not independently re-read every retained result
+at the end. A later runner adds that additional audit; do not infer it here.
+
+Additional long-duration and final published-image evidence is added only after
+completion.
 Customer/provider pilots, other PostgreSQL majors, arbitrary extensions,
 macOS/ARM64, hostile dumps, billing and hosted multi-tenancy remain outside this
 acceptance.
