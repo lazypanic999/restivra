@@ -22,8 +22,15 @@ release manifest from this repository, pulls its GHCR digest, checks image label
 and the binary hash, and waits for API readiness and a new worker heartbeat.
 It records the deployment privately and pins `RESTIVRA_IMAGE` in `.env`.
 `docker compose up -d` subsequently starts that exact image without a build.
-For a second installation set a unique `COMPOSE_PROJECT_NAME` and `RESTIVRA_PORT`
-in the terminal before installing; use those same values for every operation.
+New setup files persist a random `COMPOSE_PROJECT_NAME` and `RESTIVRA_PORT` in
+`.env`, so later commands and a new terminal select the same containers and port.
+For a second installation select an unused `RESTIVRA_PORT` before installing.
+You may also choose a unique `COMPOSE_PROJECT_NAME` before setup; both are saved.
+Existing `.env` files are never rewritten by setup. Older installations without
+these entries still require their original project/port environment settings.
+Terminal environment variables override `.env`; clear stale overrides before
+operating another installation. Do not change an installed project's name, which
+would select different database volumes instead of moving existing data.
 
 ## Update or roll back
 

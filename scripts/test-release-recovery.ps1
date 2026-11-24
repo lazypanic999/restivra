@@ -19,7 +19,6 @@ $oldProject=$env:COMPOSE_PROJECT_NAME;$oldPort=$env:RESTIVRA_PORT
 $env:COMPOSE_PROJECT_NAME="restivra-recovery-$($suffix.Substring(0,12))";$env:RESTIVRA_PORT="$Port"
 $script:ReleaseRoot=$testRoot
 & (Join-Path $testRoot 'scripts/setup.ps1')
-[IO.File]::AppendAllText((Join-Path $testRoot '.env'),"`nCOMPOSE_PROJECT_NAME=$($env:COMPOSE_PROJECT_NAME)`nRESTIVRA_PORT=$Port`n")
 $journalPath=Join-Path $testRoot 'private/deployment-journal.json'
 $statePath=Join-Path $testRoot 'private/deployment.json'
 $children=[Collections.Generic.List[object]]::new()

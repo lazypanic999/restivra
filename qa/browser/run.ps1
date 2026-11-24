@@ -14,10 +14,8 @@ $testRoot=Join-Path $sourceRoot "work/browser-$suffix"
 $null=New-Item -ItemType Directory -Force $testRoot
 Copy-Item (Join-Path $sourceRoot 'compose.yaml') $testRoot
 Copy-Item (Join-Path $sourceRoot 'scripts') (Join-Path $testRoot 'scripts') -Recurse
-& (Join-Path $testRoot 'scripts/setup.ps1')
 $project="restivra-browser-$($suffix.Substring(0,12))"
 $envPath=Join-Path $testRoot '.env'
-[IO.File]::AppendAllText($envPath,"`nCOMPOSE_PROJECT_NAME=$project`nRESTIVRA_PORT=$Port`nRESTIVRA_IMAGE=$imageID`n")
 $artifacts=Join-Path $testRoot 'artifacts'
 $null=New-Item -ItemType Directory $artifacts
 $browserImage="restivra:browser-qa-$suffix"
@@ -31,6 +29,8 @@ $env:COMPOSE_PROJECT_NAME=$project
 $env:RESTIVRA_PORT="$Port"
 $script:ReleaseRoot=$testRoot
 try {
+    & (Join-Path $testRoot 'scripts/setup.ps1')
+    Release-SetImage $imageID
     Release-Docker @('compose','up','--no-build','--pull','never','-d','--wait','--wait-timeout','120') 150|Out-Null
     & (Join-Path $testRoot 'scripts/pilot-smoke.ps1') -Base "http://127.0.0.1:$Port"
     # Use the freshly generated smoke project's valid config/archive as a

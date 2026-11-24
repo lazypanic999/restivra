@@ -36,8 +36,13 @@ sözleşmesini kullanan sürümler desteklenir; büyük veritabanı geçişleri 
 
 Eski kaynak kurulumunda `-Adopt` yalnızca aynı uygulama dosyası hash değerine
 sahip sürümle kabul edilir. Eski imaj özel bir yerel etiketle saklanır. Kimlik
-doğrulama ayarın korunur. Başka kurulumlar için benzersiz `COMPOSE_PROJECT_NAME`
-ve `RESTIVRA_PORT` değerlerini kurulum, güncelleme ve kurtarmada aynı kullan.
+doğrulama ayarın korunur. Yeni kurulumlar benzersiz `COMPOSE_PROJECT_NAME` ve
+seçtiğin `RESTIVRA_PORT` değerini `.env` içine kaydeder; yeni terminalde de aynı
+konteynerler ve port seçilir. İkinci kurulumda boş bir port seç. Eski `.env`
+dosyaları değiştirilmez; bu iki kayıt yoksa önceki terminal ayarlarını koru.
+Terminal değişkenleri `.env` değerlerini geçersiz kılar. Başka klasöre geçerken
+eski değişkenleri temizle; kurulu projenin adını değiştirmek farklı veritabanı
+birimlerini seçer ve mevcut veriyi taşımaz.
 
 Elektrik kesilmesi veya Docker'ın kapanması otomatik geri dönüşü de engelleyebilir.
 Yarım kalmış işlem yeni güncellemeyi bloke eder. Volüm silme; özel günlükteki önceki
