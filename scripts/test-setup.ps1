@@ -75,7 +75,13 @@ try {
     # Validate the POSIX generator in Linux against only the disposable scratch
     # mount. No socket, existing .env, private profiles or network are exposed.
     $shell=New-SetupRoot 'shell'
-    Release-Docker @('run','--rm','--network','none','--cap-drop','ALL','--security-opt','no-new-privileges:true','--mount',"type=bind,source=$shell,target=/test",'--workdir','/test','--entrypoint','sh','postgres:17-bookworm','-ec','sh scripts/setup.sh; before=$(sha256sum .env private/sources.json); COMPOSE_PROJECT_NAME=ignored RESTIVRA_PORT=28000 sh scripts/setup.sh; test "$before" = "$(sha256sum .env private/sources.json)"')|Out-Null
+    $shellUser='0:0'
+    if($IsLinux){
+        $setupTestUID=(& id -u).Trim();$setupTestGID=(& id -g).Trim()
+        if($setupTestUID -notmatch '^\d+$' -or $setupTestGID -notmatch '^\d+$'){throw 'Cannot determine the synthetic bind mount owner.'}
+        $shellUser="${setupTestUID}:${setupTestGID}"
+    }
+    Release-Docker @('run','--rm','--user',$shellUser,'--network','none','--cap-drop','ALL','--security-opt','no-new-privileges:true','--mount',"type=bind,source=$shell,target=/test",'--workdir','/test','--entrypoint','sh','postgres:17-bookworm','-ec','sh scripts/setup.sh; before=$(sha256sum .env private/sources.json); COMPOSE_PROJECT_NAME=ignored RESTIVRA_PORT=28000 sh scripts/setup.sh; test "$before" = "$(sha256sum .env private/sources.json)"')|Out-Null
     $s=Settings $shell
     if($s.COMPOSE_PROJECT_NAME -notmatch '^restivra-[a-f0-9]{12}$'){throw 'Shell setup did not persist its random project name.'}
     Check-Selection $shell $s.COMPOSE_PROJECT_NAME 7474
