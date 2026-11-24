@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "synthetic_data": true,
+  "checks": [
+    "default_english_and_real_sign_in",
+    "sanitized_support_download_from_authenticated_ui",
+    "failed_refresh_does_not_show_old_healthy_status",
+    "failed_notification_notice_opens_filtered_history_and_csv",
+    "turkish_setup_and_mobile_layout",
+    "server_project_search_and_cursor_navigation",
+    "projects_route_survives_reload",
+    "create_run_edit_and_download_real_verification_report",
+    "archive_restore_preserves_history_and_disables_schedule"
+  ],
+  "started_at": "2026-11-24T13:24:45.503Z",
+  "build": {
+    "version": "development-20261124",
+    "revision": "2db2a4d9c5bbacfef75177c755f3190970978755",
+    "metadata_contract": 1,
+    "os": "linux",
+    "architecture": "amd64",
+    "go_version": "go1.27.4"
+  },
+  "page_errors": [],
+  "finished_at": "2026-11-24T13:25:04.336Z"
+}

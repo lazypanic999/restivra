@@ -1,5 +1,25 @@
 # Changelog
 
+## Unreleased — pilot operations
+
+- Safe authenticated support summaries and actual runtime build identity, with
+  English/Turkish system checks and explicit unavailable/clock-skew states.
+- Search/pagination across every project, including archived projects beyond the
+  old 500-row browsing cap, plus complete overview totals.
+- Separate notification-delivery history filtering, table state and CSV exports;
+  failed-delivery diagnostics link directly to the retained runs.
+- New reports retain the verifier build; UI/print evidence preserves older
+  provenance and comparisons flag recorded build changes.
+- `update.ps1 -Recover` validates an interrupted operation's original identity
+  and restarts the retained application without restoring metadata. Recovery is
+  exercised with real killed updater processes and interrupted adoption.
+- Fresh installations persist unique Compose identities/ports; occupied or wrong
+  ports are rejected before creating data or authenticating to another instance.
+- Owner-only Unix private files, narrow worker profile mounts, compatible legacy
+  migration, bounded atomic file updates and runtime-identity release checks.
+- Reproducible isolated Chromium, capacity-fixture and fault-soak runners;
+  [synthetic acceptance evidence](docs/acceptance/pilot-operations-20261124/).
+
 ## 0.1.0-pilot.3 — ready images and compatible application updates
 
 - Public Linux/amd64 GHCR release images, exact-source CI gate, immutable version

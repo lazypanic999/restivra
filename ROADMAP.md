@@ -27,6 +27,9 @@
 - [x] Versioned project settings transfer with review and disabled imported schedules.
 - [x] Bounded PowerShell metadata export and isolated restore/schema/count verification.
 - [x] Public digest-pinned release images, Docker-only installer and verified compatible updates with explicit/automatic application rollback.
+- [x] Complete project search/pagination, safe support summaries and retained verifier-build provenance.
+- [x] Delivery-state history filtering and CSV exports, including links from failed-notification diagnostics.
+- [x] Interrupted-operation recovery, unique persisted installation identity/port, and protected Unix private-file migration.
 
 ## Pilot acceptance — requires real users
 
@@ -38,4 +41,4 @@
 
 ## Later
 
-Provider-specific S3 pilots, server-generated PDF, extra PostgreSQL versions/custom extension images, project-list pagination beyond 500 entries, public remote deployment, roles and billing. Hosted multi-tenancy and hostile-dump execution require a separate security design. Other engines and PITR require separate restore strategies.
+Provider-specific S3 pilots, server-generated PDF, extra PostgreSQL versions/custom extension images, public remote deployment, roles and billing. Hosted multi-tenancy and hostile-dump execution require a separate security design. Other engines and PITR require separate restore strategies.
