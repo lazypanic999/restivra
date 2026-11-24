@@ -3,7 +3,8 @@
 param(
     [Parameter(Mandatory)][string]$ApplicationImage,
     [ValidateRange(3,180)][int]$Minutes=120,
-    [ValidateRange(1024,65535)][int]$Port=27484
+    [ValidateRange(1024,65535)][int]$Port=27484,
+    [switch]$RequireReportBuild
 )
 $ErrorActionPreference='Stop'
 $sourceRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
@@ -23,6 +24,9 @@ $env:COMPOSE_PROJECT_NAME=$project;$env:RESTIVRA_PORT="$Port"
 $script:ReleaseRoot=$testRoot
 $proof=[ordered]@{status='failed';synthetic_data=$true;image=$imageID;requested_minutes=$Minutes;started_at=[datetime]::UtcNow.ToString('o')}
 try {
+    $runtime=(Release-Docker @('run','--rm','--network','none','--read-only','--cap-drop','ALL','--security-opt','no-new-privileges:true',$imageID,'version'))|ConvertFrom-Json
+    $proof.build=$runtime
+    $proof.restore_image=Release-ImageID 'postgres:17-bookworm'
     & (Join-Path $testRoot 'scripts/setup.ps1')
     Release-SetImage $imageID
     # No ports or external network for the disposable source database.
@@ -69,6 +73,30 @@ try {
     foreach($service in @('api','worker')){
         if((Release-Service $service).image -cne $imageID){throw 'Soak did not retain its fixed application image.'}
     }
+    # Re-read every persisted result, not just the newest legacy 100-row list.
+    # This independently checks that later faults did not rewrite old evidence.
+    $records=@(Get-Content (Join-Path $testRoot 'evidence/runs.ndjson')|ForEach-Object{$_|ConvertFrom-Json})
+    foreach($record in $records){
+        $job=Invoke-RestMethod "$base/api/jobs/$($record.id)" -WebSession $session.WebSession -TimeoutSec 10
+        if($job.status -cne $record.status -or ($record.cleanup -and $job.report.cleanup_status -cne $record.cleanup)){
+            throw 'A retained outcome changed after its original assertion.'
+        }
+        if($job.report){
+            if($RequireReportBuild -and -not $job.report.application_build){throw 'A new restore report did not retain its verifier build.'}
+            if($job.report.application_build){
+                foreach($field in @('version','revision','metadata_contract','go_version','os','architecture')){
+                    if($job.report.application_build.$field -cne $runtime.$field){throw 'A persisted report has a different verifier identity from the fixed worker image.'}
+                }
+            }
+            if($job.report.image_id -and $job.report.image_id -cne $proof.restore_image){throw 'The restore image changed during the measured run.'}
+        }
+    }
+    $proof.persisted_outcomes_rechecked=$records.Count
+    $installation=Release-SQL 'SELECT id FROM installation'
+    if(Release-Docker @('ps','--all','--quiet','--filter',"label=restivra.installation=$installation")){throw 'An owned restore container remains after the soak.'}
+    $files=Release-Docker @('compose','exec','-T','worker','sh','-c','find /work/jobs -type f | wc -l')
+    if($files.Trim() -ne '0'){throw 'Private job files remain after the soak.'}
+    $proof.restore_containers=0;$proof.private_job_files=0
     $support=Invoke-RestMethod "$base/api/support" -WebSession $session.WebSession -TimeoutSec 10
     $support|ConvertTo-Json -Depth 12|Set-Content (Join-Path $testRoot 'support-final.json')
     $proof.status='passed'
