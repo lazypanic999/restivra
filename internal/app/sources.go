@@ -26,5 +26,5 @@ func (a *API) sources(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 503, "worker source state unavailable")
 		return
 	}
-	jsonResponse(w, 200, map[string]any{"profiles": profiles, "worker_online": err == nil && time.Since(beat) < 30*time.Second})
+	jsonResponse(w, 200, map[string]any{"profiles": profiles, "worker_online": err == nil && workerHeartbeatOnline(beat)})
 }

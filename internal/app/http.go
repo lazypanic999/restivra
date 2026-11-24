@@ -276,8 +276,7 @@ func (a *API) health(w http.ResponseWriter, r *http.Request) {
 	}
 	online := false
 	if beat != nil {
-		age := time.Since(*beat)
-		online = age >= -5*time.Second && age < 30*time.Second
+		online = workerHeartbeatOnline(*beat)
 	}
 	jsonResponse(w, 200, map[string]any{"database": "online", "worker_online": online, "worker_heartbeat": beat, "authentication_enabled": a.Auth != nil})
 }
