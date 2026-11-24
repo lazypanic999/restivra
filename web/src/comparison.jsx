@@ -70,11 +70,12 @@ export function RunComparison({ jobID, api, onInspect }) {
           <p>{t(`comparisonContent.${result.content}`)}</p>
           {(result.source_changed ||
             result.limits_changed ||
-            result.image_changed) && (
+            result.image_changed || result.verifier_changed) && (
             <ul className="comparison-context">
               {result.source_changed && <li>{t("comparisonSourceChanged")}</li>}
               {result.limits_changed && <li>{t("comparisonLimitsChanged")}</li>}
               {result.image_changed && <li>{t("comparisonImageChanged")}</li>}
+              {result.verifier_changed && <li>{t("comparisonVerifierChanged")}</li>}
             </ul>
           )}
           <div className="table-scroll">

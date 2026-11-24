@@ -23,15 +23,16 @@ type comparisonCheck struct {
 	Change string `json:"change"`
 }
 type runComparison struct {
-	Current       comparisonRun     `json:"current"`
-	Baseline      *comparisonRun    `json:"baseline"`
-	Content       string            `json:"content"`
-	SourceChanged bool              `json:"source_changed"`
-	LimitsChanged bool              `json:"limits_changed"`
-	ImageChanged  bool              `json:"image_changed"`
-	Restore       comparisonCheck   `json:"restore"`
-	Cleanup       comparisonCheck   `json:"cleanup"`
-	Checks        []comparisonCheck `json:"checks"`
+	Current         comparisonRun     `json:"current"`
+	Baseline        *comparisonRun    `json:"baseline"`
+	Content         string            `json:"content"`
+	SourceChanged   bool              `json:"source_changed"`
+	LimitsChanged   bool              `json:"limits_changed"`
+	ImageChanged    bool              `json:"image_changed"`
+	VerifierChanged bool              `json:"verifier_changed"`
+	Restore         comparisonCheck   `json:"restore"`
+	Cleanup         comparisonCheck   `json:"cleanup"`
+	Checks          []comparisonCheck `json:"checks"`
 }
 
 func outcomeChange(before, after string) string {
@@ -74,6 +75,9 @@ func compareRuns(current Job, baseline *Job) runComparison {
 	x, y := current.Config, baseline.Config
 	result.LimitsChanged = x.TimeoutSeconds != y.TimeoutSeconds || x.MaxBackupBytes != y.MaxBackupBytes || x.MemoryMB != y.MemoryMB || x.DataMB != y.DataMB
 	result.ImageChanged = a.Image != old.Image || (a.ImageID != "" && old.ImageID != "" && a.ImageID != old.ImageID)
+	if a.ApplicationBuild != nil && old.ApplicationBuild != nil {
+		result.VerifierChanged = *a.ApplicationBuild != *old.ApplicationBuild
+	}
 	result.Restore = comparisonCheck{"restore", old.RestoreStatus, a.RestoreStatus, outcomeChange(old.RestoreStatus, a.RestoreStatus)}
 	result.Cleanup = comparisonCheck{"cleanup", old.CleanupStatus, a.CleanupStatus, outcomeChange(old.CleanupStatus, a.CleanupStatus)}
 	type definition struct {

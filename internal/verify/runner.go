@@ -15,6 +15,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/lazypanic999/restivra/internal/buildinfo"
 )
 
 type Runner struct {
@@ -45,7 +47,8 @@ func (r Runner) Run(parent context.Context, source string, cfg Config) (report R
 			id = decoded
 		}
 	}
-	report = Report{SchemaVersion: 1, RunID: hex.EncodeToString(id), Status: "failed", Stage: "validate", StartedAt: start, Image: Image, RestoreStatus: "not_run", CleanupStatus: "not_needed", Checks: []CheckResult{}, Warnings: []string{
+	build := buildinfo.Current()
+	report = Report{ApplicationBuild: &build, SchemaVersion: 1, RunID: hex.EncodeToString(id), Status: "failed", Stage: "validate", StartedAt: start, Image: Image, RestoreStatus: "not_run", CleanupStatus: "not_needed", Checks: []CheckResult{}, Warnings: []string{
 		"This verifies a logical restore and selected checks, not full application recovery, ownership, grants or point-in-time recovery.",
 		"File modification time is not a verified backup creation time. Compare SHA-256 values across runs to detect unchanged backups.",
 	}}

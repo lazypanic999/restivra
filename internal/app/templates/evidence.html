@@ -179,6 +179,18 @@
       </div>
       {{end}}
     </dl>
+    <dl>
+      <div>
+        <dt>{{index .Labels "verifier"}}</dt>
+        <dd><code>{{.VerifierVersion}}</code></dd>
+      </div>
+      {{if .VerifierRevision}}
+      <div>
+        <dt>{{index .Labels "verifierRevision"}}</dt>
+        <dd><code>{{.VerifierRevision}}</code></dd>
+      </div>
+      {{end}}
+    </dl>
     <h2>{{index .Labels "checks"}}</h2>
     <table>
       <thead>

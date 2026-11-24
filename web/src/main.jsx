@@ -1593,6 +1593,13 @@ function Report({ job, duration, onClose, onCancel, api, onInspect }) {
                   {report.backup.dump_version || "—"}
                 </dd>
               </div>
+              <div>
+                <dt>{t("verifierBuild")}</dt>
+                <dd><code title={report.application_build?.revision || ""}>
+                  {report.application_build?.version || t("verifierBuildNotRecorded")}
+                  {report.application_build?.revision && ` · ${report.application_build.revision.slice(0, 12)}`}
+                </code></dd>
+              </div>
             </dl>
             <div className="fingerprint">
               <div>

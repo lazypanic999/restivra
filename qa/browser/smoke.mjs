@@ -167,6 +167,15 @@ try {
     assert.equal(report.restore_status, "passed");
     assert.equal(report.checks[0].status, "failed");
     assert.equal(report.cleanup_status, "passed");
+    assert.deepEqual(report.application_build, result.build);
+    await editor.getByText("Restivra verifier", { exact: true }).waitFor();
+    const printEvent = context.waitForEvent("page");
+    await editor.getByRole("link", { name: "Print / PDF report", exact: true }).click();
+    const printPage = await printEvent;
+    await printPage.getByText(result.build.revision, { exact: true }).waitFor();
+    await printPage.emulateMedia({ media: "print" });
+    await printPage.screenshot({ path: `${artifacts}/lifecycle-print-evidence.png`, fullPage: true });
+    await printPage.close();
     await page.screenshot({ path: `${artifacts}/lifecycle-failed-check.png` });
     await page.keyboard.press("Escape");
     const csvEvent = page.waitForEvent("download");
