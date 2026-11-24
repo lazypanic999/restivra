@@ -1,5 +1,5 @@
 #Requires -Version 7.2
-param([string]$Version='v0.1.0-pilot.3')
+param([string]$Version='v0.1.0-pilot.4')
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'release-ops.ps1')
 Release-LocalEngine

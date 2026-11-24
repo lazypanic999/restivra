@@ -1,6 +1,6 @@
 # Developer pilot handoff
 
-Pinned candidate: **`v0.1.0-pilot.3`**. The primary tested path is Windows,
+Pinned candidate: **`v0.1.0-pilot.4`**. The primary tested path is Windows,
 PowerShell 7.2+ (`pwsh`), Git and Docker Desktop with Linux/amd64 containers.
 Go, Node and a host PostgreSQL installation are not required: the installer pulls a published, digest-pinned image.
 
@@ -8,7 +8,7 @@ Go, Node and a host PostgreSQL installation are not required: the installer pull
 [Seven-day operator plan](PILOT-PLAN.tr.md) · [Private record template](PILOT-RECORD.tr.md)
 
 ```powershell
-git clone --branch v0.1.0-pilot.3 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
 cd restivra-pilot
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1
@@ -41,9 +41,11 @@ required a larger data limit in acceptance; this is an example, not a sizing rul
 Extensions, large databases and different major versions need prior compatibility
 review. This pilot is for trusted local inputs, not public uploads.
 
-If port 7474 is occupied, set `RESTIVRA_PORT=17474` in `.env` before starting and
-pass `-Base http://127.0.0.1:17474` to both pilot scripts. For a second installation
-on the same engine, also set a unique `COMPOSE_PROJECT_NAME` and use a separate
+If port 7474 is occupied, set `$env:RESTIVRA_PORT='17474'` before the first install.
+Setup saves that port and a unique Compose project name in the new `.env`.
+The installer prints the actual URL; pilot scripts read the saved port. For an
+already generated `.env`, edit its `RESTIVRA_PORT` before retrying installation.
+For a second installation on the same engine use a separate
 checkout, port, freshly generated `.env` and a pinned release image; follow
 [the second-installation steps](SECOND-INSTALL.md) before starting it. Never duplicate
 metadata ownership.

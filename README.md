@@ -53,7 +53,7 @@ This early MVP is ready for an unattended local developer pilot while the comput
 
 The large-archive listing correction and full restore/failure/cancellation
 acceptance are recorded in [the current pilot evidence](docs/acceptance/large-archive-fix-20261120/).
-Use the pinned guide below for `v0.1.0-pilot.3`; earlier interrupted development
+Use the pinned guide below for `v0.1.0-pilot.4`; earlier interrupted development
 runs remain separate historical evidence.
 
 ## Quick start
@@ -61,7 +61,7 @@ runs remain separate historical evidence.
 Requires Docker Engine / Docker Desktop with Linux containers and Docker Compose. Allow RAM for the application database plus a restore container (1536 MiB default restore limit).
 
 ```powershell
-git clone --branch v0.1.0-pilot.3 --depth 1 https://github.com/lazypanic999/restivra.git
+git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git
 cd restivra
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1
@@ -110,7 +110,7 @@ two projects labeled **Demo**. `./scripts/demo.ps1` runs only the standalone CLI
 ## Configuration
 
 For S3-compatible backups, configure an operator-managed read-only profile in
-`private/sources.json`, restart the idle worker, then choose it in the project
+`private/sources.json`, recreate the idle worker as described in the guide, then choose it in the project
 form. The API never receives storage keys. [Storage setup and limits](docs/S3-SOURCES.md).
 The pinned `v0.1.0-pilot.2` includes this integration; provider-specific external
 validation remains necessary. The earlier `v0.1.0-pilot.1` tag is unchanged.

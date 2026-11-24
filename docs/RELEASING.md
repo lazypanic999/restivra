@@ -18,7 +18,7 @@ manifest to repair a release; publish a new version.
 4. Dispatch `Publish release image` with that version:
 
    ```powershell
-   gh workflow run publish-image.yml -f version=v0.1.0-pilot.3
+   gh workflow run publish-image.yml -f version=v0.1.0-pilot.4
    ```
 
    The workflow checks the exact tag's CI, builds once with OCI source/revision/
@@ -30,7 +30,7 @@ manifest to repair a release; publish a new version.
 5. On the supported Windows/Docker environment, run the real release regression:
 
    ```powershell
-   ./scripts/test-release-integration.ps1 -FromVersion v0.1.0-pilot.2 -ToVersion v0.1.0-pilot.3
+   ./scripts/test-release-integration.ps1 -FromVersion v0.1.0-pilot.2 -ToVersion v0.1.0-pilot.4
    ```
 
    It creates a unique installation with synthetic data. It exercises a real

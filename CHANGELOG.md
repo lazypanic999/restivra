@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — pilot operations
+## 0.1.0-pilot.4 — pilot operations
 
 - Safe authenticated support summaries and actual runtime build identity, with
   English/Turkish system checks and explicit unavailable/clock-skew states.

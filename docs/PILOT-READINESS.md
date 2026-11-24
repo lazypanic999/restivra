@@ -1,10 +1,31 @@
-# Pilot readiness review — 2026-11-18
+# Pilot readiness review
 
 Scope: a developer verifying their own trusted PostgreSQL 17 archives on their
 computer, with Docker Desktop Linux containers and localhost access. PowerShell
 7.2+ on Windows is the primary handoff path; native Linux is an alternative.
 A real customer pilot remains
 the next product milestone. Public hosted SaaS readiness is a separate project.
+
+## November 24 pilot operations candidate
+
+**`v0.1.0-pilot.4`** adds safe support downloads, real runtime/verifier identity,
+complete project browsing, notification delivery filtering and recovery from
+interrupted compatible updates. Fresh setup persists its project/port, rejects
+occupied ports before creating data and limits Unix configuration access. The
+worker receives only the source-profile file rather than the private directory.
+
+[Operations acceptance](acceptance/pilot-operations-20261124/) distinguishes the
+tested source revisions and completed scenarios: real authenticated Chromium
+workflows, the original 59 MB archive, generated capacity fixtures, killed
+updaters, old Compose topology migration and compatible application rollback.
+Linux CI separately exercises owner-only permissions and preserves the existing
+database container and full metadata fingerprints. Release publication and any
+long-duration results are recorded there only after their checks complete.
+
+Use the pinned participant guides for this candidate. It still verifies existing,
+trusted PostgreSQL 17 custom archives locally; it does not produce backups or
+replace the participant's independent recovery procedure. External seven-day
+acceptance, provider-specific onboarding and willingness to pay remain open.
 
 ## November 20 ready-image packaging
 
@@ -13,7 +34,8 @@ release images. [Ready-image acceptance](acceptance/release-images-20261120/)
 records a fresh GitHub-tag install, real PostgreSQL smoke, compatible update,
 explicit rollback, queued-work refusal and automatic recovery from a real
 startup failure. The operator installation retained all 17 projects and 24 jobs.
-The participant guides now use this packaging release. See [updates/recovery](UPDATING.md).
+The participant guides originally used this packaging release; the November 24
+candidate supersedes it. See [updates/recovery](UPDATING.md).
 
 ## November 20 resumed pilot candidate
 
