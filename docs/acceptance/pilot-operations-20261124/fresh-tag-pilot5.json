@@ -1,0 +1,23 @@
+{
+  "status": "passed",
+  "synthetic_data": true,
+  "version": "v0.1.0-pilot.5",
+  "revision": "78f2a782f457ed94a087f89168028d293751273e",
+  "image": "ghcr.io/lazypanic999/restivra@sha256:65b9fe5771f5a3dc4d76795b333f980e2bff5a99501a511c0f70c0a25ce60ec2",
+  "checks": [
+    "fresh_public_git_tag_default_ready_image_install",
+    "new_terminal_saved_project_port_default_check_and_real_postgresql_smoke",
+    "repeated_setup_preserves_private_settings_and_database_container",
+    "authenticated_api_and_both_restore_reports_match_published_runtime"
+  ],
+  "started_at": "2026-11-24T15:16:39.0475204Z",
+  "build": {
+    "version": "v0.1.0-pilot.5",
+    "revision": "78f2a782f457ed94a087f89168028d293751273e",
+    "metadata_contract": 1,
+    "os": "linux",
+    "architecture": "amd64",
+    "go_version": "go1.27.4"
+  },
+  "finished_at": "2026-11-24T15:17:35.4220207Z"
+}

@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "checked_at": "2026-11-24T15:16:24.8503368Z",
+  "version": "v0.1.0-pilot.5",
+  "revision": "78f2a782f457ed94a087f89168028d293751273e",
+  "image": "ghcr.io/lazypanic999/restivra@sha256:65b9fe5771f5a3dc4d76795b333f980e2bff5a99501a511c0f70c0a25ce60ec2",
+  "checks": [
+    "anonymous_pull_with_empty_docker_configuration",
+    "oci_labels_and_binary_sha256_match_official_manifest",
+    "isolated_runtime_version_revision_platform_contract_match_manifest"
+  ],
+  "publication_run": "https://github.com/lazypanic999/restivra/actions/runs/45423136704"
+}

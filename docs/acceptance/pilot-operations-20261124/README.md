@@ -62,7 +62,48 @@ helper and its literal-path/permission contracts.
 [Published pilot.2 → pilot.3 integration](release-integration-2-to-3.json) covers
 real image installation, preserved metadata/credentials/database container,
 explicit rollback, queued-work refusal and actual failed-startup recovery using
-the new host scripts. It does not claim the future pilot.4 image was installed.
+the new host scripts. New runtime-identity and report-provenance paths are
+exercised separately by the later release integrations below.
+
+## Published releases
+
+The immutable [pilot.4 manifest](pilot4-release.json) and
+[anonymous pull](anonymous-pilot4.json) bind the published image to source
+`61c06e3a4e79fec5236b8ccdf6a4fc4b06fd8f7e`. Its
+[pilot.3 → pilot.4 integration](release-integration-3-to-4.json) additionally
+creates real new-version reports and verifies their recorded provenance survives
+rollback to the older binary and recovery after an actual failed startup.
+
+The recommended participant release is **pilot.5**. Final visual review found
+that pilot.4's setup/missing-profile copy still said restart, even though the
+storage guide correctly required recreation after atomic profile replacement.
+pilot.5 aligns those messages; pilot.4's tag/image were not changed.
+
+[pilot.5's manifest](pilot5-release.json) records source
+`78f2a782f457ed94a087f89168028d293751273e`.
+[Anonymous pull and isolated version/hash checks](anonymous-pilot5.json) passed.
+[A fresh public Git-tag install](fresh-tag-pilot5.json) used the tag's default
+installer, then opened clean child PowerShell processes with project/port
+overrides removed. The saved identity/port, authenticated checks, real
+passing/failing PostgreSQL samples, repeated setup and both reports' verifier
+identity passed. [pilot.3 → pilot.5 integration](release-integration-3-to-5.json)
+also passed update, rollback, queued-work refusal, real startup-failure recovery
+and preserved report provenance. Private settings, the original database
+container and full project/job/attempt fingerprints were checked.
+
+The [large-archive rerun](large-pilot5.json) used this same published digest and
+the original 59,244,344-byte reproduction archive. All [16 recorded outcomes](large-pilot5-runs.ndjson)
+matched expectations. The runner verified eight full restores with row and payload
+checks, invalid and truncated archives, a false check, insufficient restore space,
+cancellation and worker termination during actual restores, recovery and a scheduled
+run. It re-read all results and confirmed zero owned restore containers and private
+job files after the tests.
+
+Exact-source [pilot.5 CI](https://github.com/lazypanic999/restivra/actions/runs/45422028750)
+and [image publication](https://github.com/lazypanic999/restivra/actions/runs/45423136704)
+completed successfully. A separate fixed published-image soak is recorded only
+after it finishes; the development-build duration below does not qualify this
+new image's elapsed runtime.
 
 CI also runs the PostgreSQL engine/listing regressions, S3-compatible integration,
 SQL-template edge cases, frontend tests/build/audit, Go vet/vulnerability checks,
@@ -70,6 +111,8 @@ fresh installation and metadata export/isolated restore checks. Successful
 source checkpoints include [2db2a4d](https://github.com/lazypanic999/restivra/actions/runs/45403015772),
 [private-file packaging](https://github.com/lazypanic999/restivra/actions/runs/45410729259),
 and [QA isolation / legacy migration](https://github.com/lazypanic999/restivra/actions/runs/45415375966).
+
+## Long-duration development builds
 
 The first fixed-image [120.01-minute soak](soak-7124103-120min.json) completed
 140 iterations and **204 expected outcomes**: 148 passes, 42 deliberate failures
@@ -79,6 +122,16 @@ database stall and an actual scheduled run recovered. Its
 before verifier provenance was added; [outcomes](soak-7124103-runs.ndjson) are
 retained. This earlier wrapper did not independently re-read every retained result
 at the end. A later runner adds that additional audit; do not infer it here.
+
+The second fixed development build, revision `2db2a4d`, independently completed
+[120.01 minutes / 140 iterations](soak-2db2a4d-120min.json) with
+[204 expected outcomes](soak-2db2a4d-runs.ndjson): 148 passes, 42 deliberate
+failures and 14 cancellations. The same worker/metadata faults and actual
+schedule passed. Its [stronger wrapper](soak-2db2a4d-wrapper.json) independently
+re-read all 204 retained outcomes, including IDs outside the latest-100 list,
+matched each available report's verifier build and restore image to the fixed
+runtime, and found zero owned restore containers or private job files.
+This evidence belongs to that development image, not the later published tag.
 
 Additional long-duration and final published-image evidence is added only after
 completion.

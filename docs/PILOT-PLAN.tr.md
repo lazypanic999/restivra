@@ -31,6 +31,13 @@ belirle; bu belge otomatik bir takip veya bildirim oluşturmaz.
 | Gün 5 | Metaveriyi özel dosyaya yedekle ve izole geri yükleme kontrolünü çalıştır; varsa HTTPS alıcısına örnek başarısızlığı gönder | Export ve izole restore/şema/temizlik geçti mi; alıcı kullanılıyorsa teslim görüldü mü |
 | Gün 6–7 | Günlük sonuçları gözden geçir; bitiş görüşmesi ve devam/durdurma kararı | Beklenen/oluşan test sayısı, açıklanamayan atlama, müdahale, kullanım ve ödeme isteği |
 
+Başlangıçta checkout etiketinin yanında **Kurulum → Sistem kontrolü** bölümündeki
+çalışan sürümü de kaydet. Gün 4'te proje araması/sayfaları ve bildirimin teslim
+durumunu incele. Bildirim alıcısı yapılandırılmadıysa `Skipped / Atlandı`
+beklenir; bu, yedek doğrulamasının başarısız olduğu anlamına gelmez. Sorunda
+[destek özetini](SUPPORT-SUMMARY.md) yerel olarak indirip paylaşmadan önce incele;
+gerçek SQL, dump veya özel ayarları kayıt formuna koyma.
+
 Metaveri export'u almak, geri yüklenebildiğini kanıtlamaz. Önce
 [otomatik izole metaveri kontrolünü](METADATA-CHECK.md) çalıştır. Bu kontrolün
 sınırları içinde geri yükleme/şema/temizlik sonucunu kaydet. Uygulamanın bütünüyle

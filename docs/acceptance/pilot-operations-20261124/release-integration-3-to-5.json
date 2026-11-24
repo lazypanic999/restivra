@@ -1,0 +1,29 @@
+{
+  "status": "passed",
+  "from": "v0.1.0-pilot.3",
+  "to": "v0.1.0-pilot.5",
+  "synthetic_data": true,
+  "platform": "Windows/PowerShell/Linux-amd64-Docker",
+  "checks": [
+    "fresh_public_image_install",
+    "real_postgresql_pass_and_intentional_sql_failure",
+    "repeat_setup_preserves_credentials",
+    "compatible_update_preserves_all_metadata_and_database_container",
+    "published_runtime_and_new_restore_reports_match_manifest_before_rollback",
+    "explicit_rollback_preserves_all_metadata",
+    "queued_work_rejected_before_stopping_services",
+    "real_failed_startup_automatically_recovers_previous_image_without_database_restore",
+    "authenticated_health_and_worker_diagnostics_after_recovery",
+    "new_report_provenance_survives_older_binary_rollback_and_failed_startup_recovery"
+  ],
+  "started_at": "2026-11-24T15:17:12.0999338Z",
+  "metadata_fingerprint": {
+    "projects": "0364d2674d5a899233d8f63e87bc8caa",
+    "jobs": "fa8b59d7bb3a232bdbc9adfbbe9b46b2",
+    "attempts": "9063783448bfcbfefbc322ef2a4bada2",
+    "installation": "d68c8937b3b5016856ecc372ed88a0f2"
+  },
+  "from_image": "ghcr.io/lazypanic999/restivra@sha256:7a051ff655e2e86b9155c9e9b1ac08b118c7b604b52e64c8454010db7176890d",
+  "to_image": "ghcr.io/lazypanic999/restivra@sha256:65b9fe5771f5a3dc4d76795b333f980e2bff5a99501a511c0f70c0a25ce60ec2",
+  "finished_at": "2026-11-24T15:20:21.9468627Z"
+}

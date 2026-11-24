@@ -1,0 +1,11 @@
+{
+  "format": "restivra.release.v1",
+  "version": "v0.1.0-pilot.4",
+  "revision": "61c06e3a4e79fec5236b8ccdf6a4fc4b06fd8f7e",
+  "image": "ghcr.io/lazypanic999/restivra@sha256:fd65893abcc2761c7912e745a7fa1584990900dbafcc23a03366fb94647f0143",
+  "binary_sha256": "061ac5f990da61c43dad427a9937d4f16406bfd5ce0d4c0d3d847522124cf4ca",
+  "platform": "linux/amd64",
+  "metadata_contract": 1,
+  "runtime_identity": true,
+  "published_at": "2026-11-24T18:06:51.695881+03:00"
+}

@@ -9,8 +9,9 @@ hash bile operasyonel metaveridir; paylaşmadan önce değerlendir.
 - Pilot kodu (kişisel bilgi içermeyen):
 - Başlangıç / planlanan bitiş:
 - Git etiketi / `git rev-parse HEAD`:
+- Gerçekte çalışan sürüm / kaynak revizyonu (Kurulum → Sistem kontrolü; checkout etiketiyle karıştırma):
 - İşletim sistemi / CPU mimarisi / PowerShell / Docker sürümü:
-- Kullanılabilir Docker RAM ve disk:
+- Kullanılabilir Docker RAM / Docker diski / fiziksel bilgisayar diski:
 - PostgreSQL / pg_dump ana sürümü ve extension gereksinimleri:
 - Yedek boyutu / biliniyorsa açılmış boyut:
 - Yedek üreticisi ve tamamlanma yöntemi:
@@ -44,6 +45,8 @@ yaz. Yedi güne karşılık otomatik yedi başarılı sonuç doldurma.
 - Metaveri export'u (özel konum, tarih):
 - Ayrı veritabanında metaveri geri yükleme: geçti / kaldı / yapılmadı:
 - İsteğe bağlı webhook: kullanılmıyor / gerçek teslim görüldü / başarısız / denenmedi:
+- Bildirim teslimi ile yedek doğrulama sonucunu ayrı okuyabildi mi:
+- Destek özeti alınabildi mi / özel konumu (dosyayı otomatik paylaşma):
 - Açıklanamayan atlanan test / yanlış başarı / temizlik sorunu:
 
 ## Bitiş
@@ -65,3 +68,14 @@ yaz. Yedi güne karşılık otomatik yedi başarılı sonuç doldurma.
 - Yazdırılabilir kanıt ve isim gizleme yeterli miydi:
 - Proje ayarları taşındıysa zamanlamanın kapalı başladığı görüldü mü:
 - Metaveri kontrolünde restore / şema / temizlik sonucu ve hata kodu:
+- Projelerde arama / eski sayfalara ve arşivlenmiş projelere erişim:
+- Yeni rapordaki doğrulayıcı sürümü ile çalışan panel sürümünü ayırt edebildi mi:
+- S3 profili düzenlendiyse iş yokken rehberdeki komutla worker yeniden oluşturuldu mu:
+
+## Sorun çıktığında kısa kayıt
+
+Önce saat, beklenen davranış, gerçek sonuç ve yapılan müdahaleyi yaz. Kurulum →
+Sistem kontrolü üzerinden destek özetini indir; paylaşmadan önce sürüm ve toplu
+sayıları incele. Dosya otomatik gönderilmez. Proje adları, SQL veya dump yerine
+sentetik bir yeniden üretim hazırla. Veritabanı kontrol edilemiyorsa `null`
+sayıları sıfır iş diye yorumlama. [Destek özetinin kapsamı](SUPPORT-SUMMARY.md).

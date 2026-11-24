@@ -11,7 +11,7 @@ body:
     id: environment
     attributes:
       label: Environment / Ortam
-      description: Commit, OS, Docker version and installation method.
+      description: Running version from Setup → System check, checkout commit, OS, Docker version and installation method.
     validations:
       required: true
   - type: textarea
@@ -31,4 +31,4 @@ body:
     id: diagnostics
     attributes:
       label: Sanitized diagnostics / Temizlenmiş tanı bilgileri
-      description: Optional logs or screenshots with private information removed.
+      description: Optional reviewed support summary from Setup → System check. It includes counts; review before sharing. Remove private information from any logs or screenshots. Never attach .env, source profiles or real restore reports.
