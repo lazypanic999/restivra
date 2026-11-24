@@ -91,6 +91,14 @@ also passed update, rollback, queued-work refusal, real startup-failure recovery
 and preserved report provenance. Private settings, the original database
 container and full project/job/attempt fingerprints were checked.
 
+The [large-archive rerun](large-pilot5.json) used this same published digest and
+the original 59,244,344-byte reproduction archive. All [16 recorded outcomes](large-pilot5-runs.ndjson)
+matched expectations. The runner verified eight full restores with row and payload
+checks, invalid and truncated archives, a false check, insufficient restore space,
+cancellation and worker termination during actual restores, recovery and a scheduled
+run. It re-read all results and confirmed zero owned restore containers and private
+job files after the tests.
+
 Exact-source [pilot.5 CI](https://github.com/lazypanic999/restivra/actions/runs/45422028750)
 and [image publication](https://github.com/lazypanic999/restivra/actions/runs/45423136704)
 completed successfully. A separate fixed published-image soak is recorded only
