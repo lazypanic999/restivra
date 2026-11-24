@@ -1,5 +1,6 @@
 export const messages = {
   systemUnknown: ["Status unavailable", "Durum doğrulanamıyor"],
+  workerDiagnostics: ["Worker diagnostics", "Worker tanılaması"],
   projectPagination: ["Project pages", "Proje sayfaları"],
   projectPageCount: ["Page {number} · {count} matching projects", "Sayfa {number} · Eşleşen {count} proje"],
   overviewProjectWindow: ["Showing the {count} newest of {total} active projects.", "{total} aktif projenin en yeni {count} tanesi gösteriliyor."],

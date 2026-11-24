@@ -1746,7 +1746,7 @@ function Setup({ sourceProfiles, api }) {
         <h2>{t("documented")}</h2>
         <p>{t("scopeNote")}</p>
         <p>{t("supportedFormat")}</p>
-        <h3>{t("workerOnline")}</h3>
+        <h3>{t("workerDiagnostics")}</h3>
         <p>{t("workerHelp")}</p>
         <pre>
           <code>docker compose logs worker</code>

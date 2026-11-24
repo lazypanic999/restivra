@@ -12,18 +12,29 @@ cd restivra-pilot
 ```
 
 Panel http://127.0.0.1:7474 adresinde. Giriş anahtarı sana özel `.env` dosyasında.
+Özel port seçtiysen kurucunun yazdırdığı adresi aç. `pilot-check.ps1` ve
+`pilot-smoke.ps1` kayıtlı portu kendileri okur; ayrıca `-Base` yazman gerekmez.
+Ön kontrol, giriş yapmadan önce API konteynerinin gerçekten bu dizine ve
+seçilen yerel porta ait olduğunu doğrular; başka kurulumun portunu reddeder.
 Dosyayı paylaşma. Kurulum yayımlanmış imajı indirir, içerik özeti ve uygulama
 dosyasının hash değerini doğrular. Sonraki `docker compose up -d` aynı imajı açar.
 
 Güncelleme için çalışan işlerin bitmesini bekle ve sürüm notlarını oku:
 
 ```powershell
+git fetch origin tag v0.1.0-pilot.3
+git checkout --detach v0.1.0-pilot.3
 ./scripts/update.ps1 -Version v0.1.0-pilot.3
 # Önceki sürüme dönmek gerekirse:
 ./scripts/update.ps1 -Rollback
 ```
 
 Açık sürüm etiketi kullanılır; `latest` kendiliğinden indirilmez. Betik önce
+uygulama imajını indirir; bilgisayardaki PowerShell betiklerini değiştirmez.
+Bu yüzden önce incelenen hedef sürümün etiketini yukarıdaki gibi getir ve seç.
+Git izlenen dosyalardaki çakışan değişiklikleri reddeder. Özel, Git tarafından
+izlenmeyen ayarlar ve veri birimleri korunur; `git clean` veya zorla checkout
+kullanma. Güncelleyici
 imajı doğrular, bekleyen/çalışan işler varsa durur. API ve worker kısa süreliğine
 kapanır; metaveri yedeği alınır ve ayrı PostgreSQL ortamında gerçekten geri
 yüklenip doğrulanır. Ardından uygulama değiştirilir. Sağlık kontrolü veya yeni

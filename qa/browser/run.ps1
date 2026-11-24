@@ -32,7 +32,14 @@ try {
     & (Join-Path $testRoot 'scripts/setup.ps1')
     Release-SetImage $imageID
     Release-Docker @('compose','up','--no-build','--pull','never','-d','--wait','--wait-timeout','120') 150|Out-Null
-    & (Join-Path $testRoot 'scripts/pilot-smoke.ps1') -Base "http://127.0.0.1:$Port"
+    # A wrong explicit port must be refused before authentication or mutations.
+    $wrongPort=if($Port -eq 65535){65534}else{$Port+1}
+    $refused=$false
+    try{& (Join-Path $testRoot 'scripts/pilot-check.ps1') -Base "http://127.0.0.1:$wrongPort"}
+    catch{if($_.Exception.Message -match 'origin does not match'){$refused=$true}else{throw}}
+    if(-not $refused){throw 'A different installation port was not refused.'}
+    # No -Base: prove the saved/selected port is used instead of hardcoded 7474.
+    & (Join-Path $testRoot 'scripts/pilot-smoke.ps1')
     # Use the freshly generated smoke project's valid config/archive as a
     # template; no real project, SQL, storage profile or metadata is copied.
     Release-SQL "INSERT INTO projects(id,name,backup_pattern,config,timezone,created_at,archived) SELECT md5('browser-$suffix-'||n::text),'BROWSER_PRIVATE_CANARY '||CASE WHEN n=610 THEN 'BROWSER_OLDEST_TARGET' ELSE lpad(n::text,4,'0') END,p.backup_pattern,p.config,'UTC',now()-n*interval '1 minute',n>610 FROM generate_series(1,620) n CROSS JOIN (SELECT backup_pattern,config FROM projects ORDER BY created_at LIMIT 1) p"|Out-Null
@@ -45,7 +52,7 @@ try {
     Release-Docker @('run','--rm','--init','--network',"container:$apiID",'--memory','1536m','--cpus','2','--pids-limit','256','--shm-size','256m','--mount',"type=bind,source=$tokenPath,target=/run/restivra-test-token,readonly",'--mount',"type=bind,source=$artifacts,target=/artifacts",$browserID) 240|Out-Null
     $proof=Get-Content (Join-Path $artifacts 'browser-summary.json') -Raw|ConvertFrom-Json
     if($proof.status -ne 'passed'){throw 'Browser checks did not pass. Inspect the private artifacts.'}
-    Write-Host 'Browser checks passed: login, safe support download, EN/TR, mobile, project pages and older-project editing.'
+    Write-Host 'Browser and pilot endpoint checks passed. See artifacts/browser-summary.json for the workflow assertions.'
 } finally {
     try {Release-Docker @('compose','down') 90|Out-Null}catch{Write-Warning 'Synthetic browser project cleanup needs review.'}
     $script:ReleaseRoot=$previousRoot

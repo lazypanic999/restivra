@@ -34,5 +34,7 @@ try {
     Release-SetImage $manifest.image
     $installation=Release-SQL 'SELECT id FROM installation'
     Release-JSON $statePath @{format='restivra.deployment.v1';installation=$installation;current=@{manifest=$manifest;image=$manifest.image;image_id=$imageID};previous=$null;checkpoint=$null}
-    Write-Host "Installed $Version. Open http://localhost:7474 (or your RESTIVRA_PORT). Sign in with the token in your private .env."
+    $config=(Release-Docker @('compose','config','--format','json'))|ConvertFrom-Json
+    $port=$config.services.api.ports[0].published
+    Write-Host "Installed $Version. Open http://127.0.0.1:$port. Sign in with the token in your private .env."
 } finally { $operationLock.Dispose() }

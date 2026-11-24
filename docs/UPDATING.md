@@ -17,6 +17,11 @@ cd restivra-pilot
 ```
 
 Open http://127.0.0.1:7474. The sign-in token is in your private `.env` file.
+For a custom port, use the URL printed by the installer. `pilot-check.ps1` and
+`pilot-smoke.ps1` read the saved port automatically (terminal overrides take
+precedence). The prerequisite check verifies the actual API container's loopback
+port and directory ownership before authenticating, so a mismatched `-Base`
+cannot silently target another local installation.
 The installer creates random credentials only if absent, downloads the explicit
 release manifest from this repository, pulls its GHCR digest, checks image labels
 and the binary hash, and waits for API readiness and a new worker heartbeat.
@@ -38,15 +43,23 @@ Read the target release notes first. Finish running tests; stop submitting work.
 In the existing installation directory, with the same Compose project/port:
 
 ```powershell
+# Bring the target release's host scripts into a clean tracked checkout first.
+git fetch origin tag v0.1.0-pilot.3
+git checkout --detach v0.1.0-pilot.3
 ./scripts/update.ps1 -Version v0.1.0-pilot.3
 # To return to the retained previous deployment:
 ./scripts/update.ps1 -Rollback
 ```
 
 Version tags are examples, not an automatic latest-version selector. Use an
-explicit published release with `restivra-release.json`. The updater downloads
-and verifies the target before stopping anything. Queued/running jobs, container
-ownership/image drift, a remote engine or an unsupported metadata contract abort
+explicit published release with `restivra-release.json`. Host PowerShell scripts
+come from the source checkout. Fetch and check out the reviewed target tag first;
+Git refuses conflicting tracked edits.
+Private ignored files and data volumes stay in place. Do not use `git clean` or
+force checkout to discard installation files.
+The updater downloads and verifies the target application image before stopping
+anything. Queued/running jobs, container ownership/image drift, a remote engine
+or an unsupported metadata contract abort
 the operation. An exclusive per-directory lock prevents concurrent installers.
 
 During a short maintenance window the API and worker stop. Idle state is checked

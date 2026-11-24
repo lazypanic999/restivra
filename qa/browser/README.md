@@ -22,7 +22,10 @@ controlled. The test visits only its own loopback application.
 
 Checks cover real sign-in, English default, Turkish switching, support-summary
 download/privacy, mobile page overflow, server search, paging, opening settings
-for the oldest project and retaining the Projects route after reload. Screenshots
+for the oldest project and retaining the Projects route after reload. It also
+creates a project through the interface, runs a real restore, edits the SQL to
+fail, downloads the JSON/CSV evidence, then archives/restores the project and
+checks that history survives while its schedule stays disabled. Screenshots
 and a structured summary are under `work/browser-*/artifacts/`. Review evidence
 before publishing. A failed assertion produces `failure.png` and an error summary.
 Cleanup stops/removes only this unique project's containers/networks; private

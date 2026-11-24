@@ -1,9 +1,10 @@
 #Requires -Version 7.2
 # Real PostgreSQL / pg_dump / live API acceptance run. Synthetic data only.
 # Requires the Compose app to be running. Source and restore containers have no ports.
-param([string]$Base = 'http://127.0.0.1:7474')
+param([string]$Base)
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'api-session.ps1')
+$Base=Resolve-RestivraBase -Base $Base
 $projectDir = Split-Path -Parent $PSScriptRoot
 $runSuffix = [guid]::NewGuid().ToString('N').Substring(0,8)
 $source = "restivra-commerce-source-$runSuffix"
