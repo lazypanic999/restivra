@@ -24,8 +24,8 @@ $statePath=Join-Path $testRoot 'private/deployment.json'
 $children=[Collections.Generic.List[object]]::new()
 $invokePath=Join-Path $testRoot 'invoke-update.ps1'
 @'
-param([string]$Version)
-try { & (Join-Path $PSScriptRoot 'scripts/update.ps1') -Version $Version; exit 0 }
+param([string]$Version,[switch]$Adopt)
+try { & (Join-Path $PSScriptRoot 'scripts/update.ps1') -Version $Version -Adopt:$Adopt; exit 0 }
 catch { Write-Output ('UPDATER_ERROR: '+$_.Exception.Message); exit 1 }
 '@ | Set-Content $invokePath
 $proof=[ordered]@{status='failed';synthetic_data=$true;from=$FromVersion;to=$ToVersion;checks=@();started_at=[datetime]::UtcNow.ToString('o')}
@@ -40,7 +40,11 @@ function Spawn([string]$File,[string[]]$Arguments) {
     $children.Add($handle);return $handle
 }
 function Kill-OwnChild($Handle){if($Handle -and -not $Handle.Process.HasExited){$Handle.Process.Kill($true);$null=$Handle.Process.WaitForExit(10000)}}
-function Start-Update {Spawn (Get-Process -Id $PID).Path @('-NoProfile','-File',$invokePath,'-Version',$ToVersion)}
+function Start-Update([switch]$Adopt) {
+    $arguments=@('-NoProfile','-File',$invokePath,'-Version',$ToVersion)
+    if($Adopt){$arguments+='-Adopt'}
+    Spawn (Get-Process -Id $PID).Path $arguments
+}
 function Wait-Phase($Handle,[string]$Phase,[switch]$Doctor) {
     $deadline=[datetime]::UtcNow.AddMinutes(3)
     while([datetime]::UtcNow -lt $deadline){
@@ -132,6 +136,17 @@ services:
     }
     Release-JSON $journalPath $interrupted
     $bad=$interrupted|ConvertTo-Json -Depth 20|ConvertFrom-Json
+    $bad.mode='unsupported'
+    Release-JSON $journalPath $bad
+    Assert-Refused {& (Join-Path $testRoot 'scripts/update.ps1') -Recover} 'Unsupported interrupted operation mode'
+    Release-JSON $journalPath $interrupted
+    # Temporarily hide a required table without dropping data or foreign keys.
+    # Recovery must refuse schema loss before changing the healthy candidate API.
+    Release-SQL 'ALTER TABLE projects RENAME TO projects_held_for_recovery_test'|Out-Null
+    try{Assert-Refused {& (Join-Path $testRoot 'scripts/update.ps1') -Recover} 'Metadata schema needs manual recovery'}
+    finally{Release-SQL 'ALTER TABLE projects_held_for_recovery_test RENAME TO projects'|Out-Null}
+    $proof.checks+='unsupported_operation_mode_and_missing_required_table_refused_before_stopping_apps'
+    $bad=$interrupted|ConvertTo-Json -Depth 20|ConvertFrom-Json
     $bad.previous.image_id='sha256:'+('f'*64)
     Release-JSON $journalPath $bad
     Assert-Refused {& (Join-Path $testRoot 'scripts/update.ps1') -Recover} 'image changed'
@@ -174,6 +189,24 @@ services:
     $proof.checks+='missing_regular_worker_container_is_recreated_with_original_data_volume'
     & (Join-Path $testRoot 'scripts/pilot-check.ps1') -Base "http://127.0.0.1:$Port"
     $proof.checks+='previous_release_authenticated_health_and_worker_checks_pass_after_recovery'
+    # Exercise the distinct adoption journal: a binary-identical unmanaged
+    # installation has no deployment_before snapshot or official old manifest.
+    $oldRecord=(Get-Content $statePath -Raw|ConvertFrom-Json).current
+    if($oldRecord.manifest.binary_sha256 -ceq $target.binary_sha256){
+        $unmanagedTag="restivra:qa-unmanaged-$suffix"
+        Release-Docker @('tag',$oldRecord.image,$unmanagedTag)|Out-Null
+        Release-SetImage $unmanagedTag
+        Remove-Item -LiteralPath $statePath
+        $updater=Start-Update -Adopt
+        $adopting=Wait-Phase $updater 'api_ready' -Doctor
+        Assert-Recovery ($adopting.mode -eq 'adopt' -and -not $adopting.deployment_before -and -not $adopting.previous.manifest) 'Actual adoption did not retain its distinct rollback identity.'
+        Kill-OwnChild $updater
+        & (Join-Path $testRoot 'scripts/update.ps1') -Recover
+        Check-Preserved
+        $adopted=Get-Content $statePath -Raw|ConvertFrom-Json
+        Assert-Recovery ($adopted.current.image -ceq $adopting.previous.image -and $adopted.current.binary_sha256 -ceq $target.binary_sha256 -and -not $adopted.previous) 'Interrupted adoption did not recover its retained local binary.'
+        $proof.checks+='actual_interrupted_binary_identical_adoption_recovers_verified_local_rollback_tag'
+    }
     $proof.status='passed'
 }finally{
     $childNumber=0
