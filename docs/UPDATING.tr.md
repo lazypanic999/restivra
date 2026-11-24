@@ -4,7 +4,7 @@ PowerShell 7.2+, Git ve yerel Linux/amd64 Docker motoru gerekir. Pilot için Win
 denendi. Go, Node veya bilgisayarına PostgreSQL kurman gerekmiyor.
 
 ```powershell
-git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+git clone --branch v0.1.0-pilot.5 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
 cd restivra-pilot
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1
@@ -22,9 +22,9 @@ dosyasının hash değerini doğrular. Sonraki `docker compose up -d` aynı imaj
 Güncelleme için çalışan işlerin bitmesini bekle ve sürüm notlarını oku:
 
 ```powershell
-git fetch origin tag v0.1.0-pilot.4
-git checkout --detach v0.1.0-pilot.4
-./scripts/update.ps1 -Version v0.1.0-pilot.4
+git fetch origin tag v0.1.0-pilot.5
+git checkout --detach v0.1.0-pilot.5
+./scripts/update.ps1 -Version v0.1.0-pilot.5
 # Önceki sürüme dönmek gerekirse:
 ./scripts/update.ps1 -Rollback
 ```

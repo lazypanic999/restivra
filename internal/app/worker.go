@@ -360,7 +360,7 @@ func (w *Worker) execute(parent context.Context, conn *sql.Conn, root *os.Root, 
 			runner.SnapshotBackup = func(snapshotCtx context.Context, pattern, directory string, max int64) (*os.File, verify.Backup, error) {
 				client, ok := w.sourceClients[job.Source.Profile]
 				if !ok {
-					return nil, verify.Backup{Source: &verify.BackupSource{Kind: "s3", Profile: job.Source.Profile, Bucket: job.Source.Bucket}}, &source.Error{Code: "source_profile_missing", Message: "The S3 profile is not configured on this worker. Check its private source file and restart the worker."}
+					return nil, verify.Backup{Source: &verify.BackupSource{Kind: "s3", Profile: job.Source.Profile, Bucket: job.Source.Bucket}}, &source.Error{Code: "source_profile_missing", Message: "The S3 profile is not configured on this worker. Check its private source file and recreate the idle worker using the storage guide."}
 				}
 				return source.Snapshot(snapshotCtx, client, job.Source, pattern, directory, max)
 			}

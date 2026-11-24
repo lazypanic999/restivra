@@ -7,7 +7,7 @@ belirle; bu belge otomatik bir takip veya bildirim oluşturmaz.
 
 ## Pilot öncesi: sorumlu ve katılımcı birlikte
 
-- Sürüm `v0.1.0-pilot.4`; Windows + PowerShell 7.2+ + Docker Linux/amd64 engine.
+- Sürüm `v0.1.0-pilot.5`; Windows + PowerShell 7.2+ + Docker Linux/amd64 engine.
   İşletim sistemi, CPU mimarisi, Docker sürümü ve kullanılabilir kaynakları kaydet.
 - Bir gerçek PostgreSQL 17 custom yedek, yetkili geliştirici, bilinen extension
   listesi ve beklenen açılmış boyut. Varsayılan sınırlara uymuyorsa başlamadan konuş.

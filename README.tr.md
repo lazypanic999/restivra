@@ -21,7 +21,7 @@ Video ve görüntülerdeki projeler sentetik demo verisidir. Başarısız bir SQ
 Docker'ın Linux konteyner motoru açık olmalı. PowerShell 7.2+:
 
 ```powershell
-git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git
+git clone --branch v0.1.0-pilot.5 --depth 1 https://github.com/lazypanic999/restivra.git
 cd restivra
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1
@@ -48,7 +48,7 @@ Bilgisayar/Docker kapalıyken test çalışmaz.
 
 Büyük arşivin Docker üzerinden listeleme hatası düzeltildi. Tam geri yükleme,
 bozuk dosya, iptal ve worker toparlanması [pilot kabul kaydında](docs/acceptance/large-archive-fix-20261120/).
-Yeni katılımcı `v0.1.0-pilot.4` etiketli başlangıç rehberini izlemeli.
+Yeni katılımcı `v0.1.0-pilot.5` etiketli başlangıç rehberini izlemeli.
 
 1. PostgreSQL 17 üzerinde `pg_dump` 17 ile `-Fc` formatında alınmış tamamlanmış yedeği `backups/` klasörüne koy.
 2. Panelde **Yeni proje** seç. Dosya yolunu klasöre göre yaz: örneğin `musteri/*.dump`.

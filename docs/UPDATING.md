@@ -9,7 +9,7 @@ remote Docker engines are rejected. Never download a script and pipe it to a she
 Start Docker Desktop, then:
 
 ```powershell
-git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+git clone --branch v0.1.0-pilot.5 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
 cd restivra-pilot
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1
@@ -52,9 +52,9 @@ In the existing installation directory, with the same Compose project/port:
 
 ```powershell
 # Bring the target release's host scripts into a clean tracked checkout first.
-git fetch origin tag v0.1.0-pilot.4
-git checkout --detach v0.1.0-pilot.4
-./scripts/update.ps1 -Version v0.1.0-pilot.4
+git fetch origin tag v0.1.0-pilot.5
+git checkout --detach v0.1.0-pilot.5
+./scripts/update.ps1 -Version v0.1.0-pilot.5
 # To return to the retained previous deployment:
 ./scripts/update.ps1 -Rollback
 ```
@@ -98,7 +98,7 @@ This one-time adoption is intentionally strict:
 # Bring the packaging scripts into the existing clean source checkout first.
 git fetch origin main
 git merge --ff-only origin/main
-./scripts/update.ps1 -Version v0.1.0-pilot.4 -Adopt
+./scripts/update.ps1 -Version v0.1.0-pilot.5 -Adopt
 ```
 
 Adoption requires the currently running API and worker to have the **identical

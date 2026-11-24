@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-pilot.5 — source-profile reload guidance
+
+- Align English/Turkish setup and missing-profile advice with the narrow file
+  mount introduced in pilot.4: recreate the idle worker to bind a profile saved
+  by an editor using atomic replacement. Existing reports keep their old text.
+- Retain pilot.4's operations features and metadata contract. Published pilot.4
+  tags/images remain immutable; new participant guides select pilot.5.
+
 ## 0.1.0-pilot.4 — pilot operations
 
 - Safe authenticated support summaries and actual runtime build identity, with

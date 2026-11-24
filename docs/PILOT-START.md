@@ -1,6 +1,6 @@
 # Developer pilot handoff
 
-Pinned candidate: **`v0.1.0-pilot.4`**. The primary tested path is Windows,
+Pinned candidate: **`v0.1.0-pilot.5`**. The primary tested path is Windows,
 PowerShell 7.2+ (`pwsh`), Git and Docker Desktop with Linux/amd64 containers.
 Go, Node and a host PostgreSQL installation are not required: the installer pulls a published, digest-pinned image.
 
@@ -8,7 +8,7 @@ Go, Node and a host PostgreSQL installation are not required: the installer pull
 [Seven-day operator plan](PILOT-PLAN.tr.md) · [Private record template](PILOT-RECORD.tr.md)
 
 ```powershell
-git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+git clone --branch v0.1.0-pilot.5 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
 cd restivra-pilot
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1
