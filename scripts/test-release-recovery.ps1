@@ -8,6 +8,7 @@ param(
 )
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'release-ops.ps1')
+. (Join-Path $PSScriptRoot 'qa-environment.ps1')
 Release-LocalEngine
 $sourceRoot=$script:ReleaseRoot
 $suffix=[guid]::NewGuid().ToString('N')
@@ -15,8 +16,7 @@ $testRoot=Join-Path $sourceRoot "work/recovery-$suffix"
 $null=New-Item -ItemType Directory $testRoot
 Copy-Item (Join-Path $sourceRoot 'compose.yaml') $testRoot
 Copy-Item (Join-Path $sourceRoot 'scripts') (Join-Path $testRoot 'scripts') -Recurse
-$oldProject=$env:COMPOSE_PROJECT_NAME;$oldPort=$env:RESTIVRA_PORT
-$env:COMPOSE_PROJECT_NAME="restivra-recovery-$($suffix.Substring(0,12))";$env:RESTIVRA_PORT="$Port"
+$qaEnvironment=Enter-RestivraQAEnvironment "restivra-recovery-$($suffix.Substring(0,12))" $Port
 $script:ReleaseRoot=$testRoot
 & (Join-Path $testRoot 'scripts/setup.ps1')
 $journalPath=Join-Path $testRoot 'private/deployment-journal.json'
@@ -219,6 +219,6 @@ services:
     $proof.finished_at=[datetime]::UtcNow.ToString('o')
     Release-JSON (Join-Path $testRoot 'recovery-summary.json') $proof
     try{Release-Docker @('compose','down','--remove-orphans') 90|Out-Null}catch{Write-Warning 'Recovery test cleanup needs review.'}
-    $script:ReleaseRoot=$sourceRoot;$env:COMPOSE_PROJECT_NAME=$oldProject;$env:RESTIVRA_PORT=$oldPort
+    $script:ReleaseRoot=$sourceRoot;Restore-RestivraQAEnvironment $qaEnvironment
     Write-Host "Recovery evidence retained under $testRoot"
 }

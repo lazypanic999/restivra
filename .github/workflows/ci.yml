@@ -46,6 +46,7 @@ jobs:
             ./scripts/test-native-command.ps1
             ./scripts/test-release-ops.ps1
             ./scripts/test-private-io.ps1
+            ./scripts/test-qa-environment.ps1
             ./scripts/test-setup.ps1
             ./scripts/test-api-session.ps1
             ./scripts/test-install-preflight.ps1
@@ -76,3 +77,6 @@ jobs:
       - name: Kill real updater processes and recover the previous release
         shell: pwsh
         run: ./scripts/test-release-recovery.ps1 -Port 27481
+      - name: Migrate old profile mounts and Unix permissions without replacing data
+        shell: pwsh
+        run: ./scripts/test-legacy-private-upgrade.ps1 -Port 27483

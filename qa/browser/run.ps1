@@ -7,6 +7,7 @@ param(
 $ErrorActionPreference='Stop'
 $sourceRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 . (Join-Path $sourceRoot 'scripts/release-ops.ps1')
+. (Join-Path $sourceRoot 'scripts/qa-environment.ps1')
 Release-LocalEngine
 $imageID=Release-ImageID $ApplicationImage
 $suffix=[guid]::NewGuid().ToString('N')
@@ -23,10 +24,7 @@ Write-Host 'Building the pinned Linux browser test runner...'
 Release-Docker @('build','--tag',$browserImage,$PSScriptRoot) 900 | Out-Null
 $browserID=Release-ImageID $browserImage
 $previousRoot=$script:ReleaseRoot
-$previousProject=$env:COMPOSE_PROJECT_NAME
-$previousPort=$env:RESTIVRA_PORT
-$env:COMPOSE_PROJECT_NAME=$project
-$env:RESTIVRA_PORT="$Port"
+$qaEnvironment=Enter-RestivraQAEnvironment $project $Port
 $script:ReleaseRoot=$testRoot
 try {
     & (Join-Path $testRoot 'scripts/setup.ps1')
@@ -59,7 +57,6 @@ try {
 } finally {
     try {Release-Docker @('compose','down') 90|Out-Null}catch{Write-Warning 'Synthetic browser project cleanup needs review.'}
     $script:ReleaseRoot=$previousRoot
-    $env:COMPOSE_PROJECT_NAME=$previousProject
-    $env:RESTIVRA_PORT=$previousPort
+    Restore-RestivraQAEnvironment $qaEnvironment
     Write-Host "Browser evidence and private test configuration retained under $testRoot"
 }

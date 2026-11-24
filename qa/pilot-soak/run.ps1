@@ -9,6 +9,7 @@ param(
 $ErrorActionPreference='Stop'
 $sourceRoot=Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 . (Join-Path $sourceRoot 'scripts/release-ops.ps1')
+. (Join-Path $sourceRoot 'scripts/qa-environment.ps1')
 Release-LocalEngine
 $imageID=Release-ImageID $ApplicationImage
 $suffix=[guid]::NewGuid().ToString('N')
@@ -18,9 +19,8 @@ Copy-Item (Join-Path $sourceRoot 'compose.yaml') $testRoot
 Copy-Item (Join-Path $sourceRoot 'scripts') (Join-Path $testRoot 'scripts') -Recurse
 $source="restivra-soak-source-$suffix"
 $sourceCreated=$false
-$oldProject=$env:COMPOSE_PROJECT_NAME;$oldPort=$env:RESTIVRA_PORT
 $project="restivra-pilot-soak-$($suffix.Substring(0,12))"
-$env:COMPOSE_PROJECT_NAME=$project;$env:RESTIVRA_PORT="$Port"
+$qaEnvironment=Enter-RestivraQAEnvironment $project $Port
 $script:ReleaseRoot=$testRoot
 $proof=[ordered]@{status='failed';synthetic_data=$true;image=$imageID;requested_minutes=$Minutes;started_at=[datetime]::UtcNow.ToString('o')}
 try {
@@ -109,6 +109,6 @@ try {
         $null=Release-Service db -AllowMissing
         Release-Docker @('compose','down') 90|Out-Null
     }catch{Write-Warning 'Synthetic soak project cleanup needs review.'}
-    $script:ReleaseRoot=$sourceRoot;$env:COMPOSE_PROJECT_NAME=$oldProject;$env:RESTIVRA_PORT=$oldPort
+    $script:ReleaseRoot=$sourceRoot;Restore-RestivraQAEnvironment $qaEnvironment
     Write-Host "Synthetic soak evidence and private configuration retained under $testRoot"
 }

@@ -8,6 +8,7 @@ param(
 )
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'release-ops.ps1')
+. (Join-Path $PSScriptRoot 'qa-environment.ps1')
 Release-LocalEngine
 $sourceRoot=$script:ReleaseRoot
 $testID=[guid]::NewGuid().ToString('N')
@@ -15,9 +16,7 @@ $testRoot=Join-Path $sourceRoot "work/release-integration-$testID"
 $null=New-Item -ItemType Directory -Force $testRoot
 Copy-Item (Join-Path $sourceRoot 'compose.yaml') $testRoot
 Copy-Item (Join-Path $sourceRoot 'scripts') (Join-Path $testRoot 'scripts') -Recurse
-$oldProject=$env:COMPOSE_PROJECT_NAME;$oldPort=$env:RESTIVRA_PORT
-$env:COMPOSE_PROJECT_NAME="restivra-release-$($testID.Substring(0,12))"
-$env:RESTIVRA_PORT="$Port"
+$qaEnvironment=Enter-RestivraQAEnvironment "restivra-release-$($testID.Substring(0,12))" $Port
 $script:ReleaseRoot=$testRoot
 & (Join-Path $testRoot 'scripts/setup.ps1')
 $proof=[ordered]@{status='failed';from=$FromVersion;to=$ToVersion;synthetic_data=$true;platform='Windows/PowerShell/Linux-amd64-Docker';checks=@();started_at=[datetime]::UtcNow.ToString('o')}
@@ -103,7 +102,7 @@ services:
     # Only the project's unique containers/networks are removed. Keep volumes,
     # checkpoints and evidence for review; never prune the engine or user data.
     try{Release-Docker @('compose','down') 90|Out-Null}catch{Write-Warning 'Test project cleanup needs review.'}
-    $env:COMPOSE_PROJECT_NAME=$oldProject;$env:RESTIVRA_PORT=$oldPort
+    Restore-RestivraQAEnvironment $qaEnvironment
     $script:ReleaseRoot=$sourceRoot
     Write-Host "Release integration evidence: $testRoot/summary.json"
 }
