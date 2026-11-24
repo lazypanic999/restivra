@@ -106,6 +106,13 @@ func testSupportEndpoint(t *testing.T, ctx context.Context, store *Store, templa
 		if got := api.supportSnapshot(ctx).Worker; got != tc.want {
 			t.Fatalf("heartbeat %s: got %s want %s", tc.interval, got, tc.want)
 		}
+		health := requestJSON(t, api.Handler(), "GET", "/api/health", nil, "")
+		var status struct {
+			Online bool `json:"worker_online"`
+		}
+		if health.Code != 200 || json.Unmarshal(health.Body.Bytes(), &status) != nil || status.Online != (tc.want == "online") {
+			t.Fatal("overview health disagrees with the scoped heartbeat diagnostic")
+		}
 	}
 	response := requestJSON(t, api.Handler(), "GET", "/api/support/download", nil, "")
 	if response.Code != 200 || strings.Contains(response.Body.String(), canary) || strings.Contains(response.Body.String(), template.BackupPattern) {

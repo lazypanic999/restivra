@@ -52,6 +52,21 @@ try {
     result.build = support.build;
     await page.screenshot({ path: `${artifacts}/system-check-en.png`, fullPage: true });
   });
+  await checked("failed_refresh_does_not_show_old_healthy_status", async () => {
+    await page.route("**/api/health", (route) => route.abort());
+    await page.route("**/api/support", (route) => route.abort());
+    const section = page.getByRole("region", { name: "System check", exact: true });
+    await section.getByRole("button", { name: "Refresh", exact: true }).click();
+    await page.getByText("System status could not be refreshed. Retry when the API is reachable.", { exact: true }).waitFor();
+    await page.getByText("Status unavailable", { exact: true }).waitFor();
+    assert.equal(await section.getByText("Running version", { exact: true }).count(), 0);
+    await page.screenshot({ path: `${artifacts}/failed-refresh.png` });
+    await page.unroute("**/api/health");
+    await page.unroute("**/api/support");
+    await section.getByRole("button", { name: "Refresh", exact: true }).click();
+    await section.getByText("Running version", { exact: true }).waitFor();
+    await page.getByText("Worker online", { exact: true }).first().waitFor();
+  });
   await checked("turkish_setup_and_mobile_layout", async () => {
     await page.getByRole("combobox", { name: "Interface language" }).selectOption("tr");
     await heading("Sistem kontrolü");

@@ -274,7 +274,11 @@ func (a *API) health(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 503, "worker state unavailable")
 		return
 	}
-	online := beat != nil && time.Since(*beat) < 30*time.Second
+	online := false
+	if beat != nil {
+		age := time.Since(*beat)
+		online = age >= -5*time.Second && age < 30*time.Second
+	}
 	jsonResponse(w, 200, map[string]any{"database": "online", "worker_online": online, "worker_heartbeat": beat, "authentication_enabled": a.Auth != nil})
 }
 func decodeJSON(w http.ResponseWriter, r *http.Request, dst any) error {

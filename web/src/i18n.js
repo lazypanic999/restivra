@@ -1,4 +1,5 @@
 export const messages = {
+  systemUnknown: ["Status unavailable", "Durum doğrulanamıyor"],
   projectPagination: ["Project pages", "Proje sayfaları"],
   projectPageCount: ["Page {number} · {count} matching projects", "Sayfa {number} · Eşleşen {count} proje"],
   overviewProjectWindow: ["Showing the {count} newest of {total} active projects.", "{total} aktif projenin en yeni {count} tanesi gösteriliyor."],
@@ -433,6 +434,9 @@ export function text(language, key, values = {}) {
 }
 
 const errorPairs = [
+  ["invalid project filters or page cursor", "proje filtreleri veya sayfa konumu geçersiz"],
+  ["API connection unavailable; refresh and try again", "API bağlantısı kurulamadı; yenileyip tekrar dene"],
+  ["The request could not be completed.", "İstek tamamlanamadı."],
   ["S3 could not accept the request. Check the bucket, profile region and provider compatibility.","S3 isteği kabul edemedi. Bucket, profil bölgesi ve sağlayıcı uyumluluğunu kontrol et."],
   ["S3 Last-Modified is object metadata, not a verified backup creation time. ETag is not assumed to be a content hash; SHA-256 is calculated from the downloaded bytes.","S3 Last-Modified nesne bilgisidir; doğrulanmış yedek oluşturma zamanı değildir. ETag içerik özeti sayılmaz; SHA-256 indirilen baytlardan hesaplanır."],
   ["unsupported backup source","desteklenmeyen yedek kaynağı"],

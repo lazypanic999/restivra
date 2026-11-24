@@ -274,7 +274,9 @@ function App({ onUnauthorized, onLogout }) {
   const api = useCallback(
     async (path, options = {}) => {
       if (options.method) token.current = await currentCSRF();
-      const response = await fetch(`/api${path}`, {
+      let response;
+      try {
+        response = await fetch(`/api${path}`, {
         ...options,
         headers: {
           ...(options.method
@@ -285,9 +287,15 @@ function App({ onUnauthorized, onLogout }) {
             : {}),
           ...options.headers,
         },
-      });
+        });
+      } catch (cause) {
+        if (cause.name === "AbortError") throw cause;
+        throw Error("API connection unavailable; refresh and try again");
+      }
       if (response.status === 401) onUnauthorized();
-      const data = await response.json();
+      let data;
+      try { data = await response.json(); }
+      catch { throw Error("The request could not be completed."); }
       if (!response.ok)
         throw Error(data.error || "The request could not be completed.");
       return data;
@@ -552,13 +560,13 @@ function App({ onUnauthorized, onLogout }) {
         </div>
         <div className="system-line">
           <span
-            className={`health ${health?.worker_online ? "connected" : "disconnected"}`}
+            className={`health ${!error && health?.worker_online ? "connected" : "disconnected"}`}
           >
             <i />
-            {t(health?.worker_online ? "workerOnline" : "workerOffline")}
+            {t(error || !health ? "systemUnknown" : health.worker_online ? "workerOnline" : "workerOffline")}
           </span>
-          {health && <span>{t("databaseOnline")}</span>}
-          {health && (
+          {health && !error && <span>{t("databaseOnline")}</span>}
+          {health && !error && (
             <span>
               {t(
                 health.authentication_enabled
