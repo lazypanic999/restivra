@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Existing release tag (for example v0.1.0-pilot.4)
+        description: Existing release tag (for example v0.1.0-pilot.5)
         required: true
         type: string
 permissions:

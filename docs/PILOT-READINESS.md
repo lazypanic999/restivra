@@ -14,6 +14,11 @@ interrupted compatible updates. Fresh setup persists its project/port, rejects
 occupied ports before creating data and limits Unix configuration access. The
 worker receives only the source-profile file rather than the private directory.
 
+**`v0.1.0-pilot.5`** also corrects the setup/missing-profile advice to recreate an
+idle worker after profile edits. A plain restart can retain the old mounted file
+after atomic editor saves. The participant guides select this follow-up; pilot.4
+remains immutable and its storage guide already documents the recreation command.
+
 [Operations acceptance](acceptance/pilot-operations-20261124/) distinguishes the
 tested source revisions and completed scenarios: real authenticated Chromium
 workflows, the original 59 MB archive, generated capacity fixtures, killed

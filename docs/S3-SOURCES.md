@@ -145,7 +145,8 @@ metadata does not prove the provider account's identity.
 - `source_too_large`: inspect size/capacity before changing project limits.
 - `source_selection_limit`: narrow the literal key prefix.
 - `source_configuration`: correct endpoint/region or provider metadata support.
-- `source_profile_missing`: add the profile to this worker and restart when idle.
+- `source_profile_missing`: add the profile, then recreate the idle worker using
+  the command above so an atomically replaced file is mounted again.
 - `source_download_failed`: incomplete or invalid archive snapshot; inspect source.
 - `source_unavailable`: transient request or HTTP body failure; the existing bounded 3-attempt
   infrastructure retry policy applies. Cancelled work does not retry.

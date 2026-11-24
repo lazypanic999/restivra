@@ -59,7 +59,7 @@ or backup freshness. External seven-day pilots and payment validation remain ope
 
 The large-archive listing correction and full restore/failure/cancellation
 acceptance are recorded in [the current pilot evidence](docs/acceptance/large-archive-fix-20261120/).
-Use the pinned guide below for `v0.1.0-pilot.4`; earlier interrupted development
+Use the pinned guide below for `v0.1.0-pilot.5`; earlier interrupted development
 runs remain separate historical evidence.
 
 ## Quick start
@@ -67,7 +67,7 @@ runs remain separate historical evidence.
 Requires Docker Engine / Docker Desktop with Linux containers and Docker Compose. Allow RAM for the application database plus a restore container (1536 MiB default restore limit).
 
 ```powershell
-git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git
+git clone --branch v0.1.0-pilot.5 --depth 1 https://github.com/lazypanic999/restivra.git
 cd restivra
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1

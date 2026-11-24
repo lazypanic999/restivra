@@ -1,6 +1,6 @@
 # Restivra: ilk geliştirici pilotu
 
-Bu rehberi katılımcıya gönder. Pilot sürüm: **`v0.1.0-pilot.4`**.
+Bu rehberi katılımcıya gönder. Pilot sürüm: **`v0.1.0-pilot.5`**.
 Hedef: geliştiricinin kendi bilgisayarında bir PostgreSQL 17 yedeğini gerçekten
 geri yükleyip uygulamaya özel kontrollerle doğrulaması, ardından bir hafta izlemesi.
 Veritabanı dosyaları bize gönderilmez; işlem katılımcının bilgisayarında yapılır.
@@ -24,7 +24,7 @@ Veritabanı dosyaları bize gönderilmez; işlem katılımcının bilgisayarınd
 Docker Desktop'ı aç. PowerShell 7 terminalinde:
 
 ```powershell
-git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+git clone --branch v0.1.0-pilot.5 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
 cd restivra-pilot
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1
