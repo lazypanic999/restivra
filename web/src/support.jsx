@@ -57,6 +57,7 @@ export function SupportDiagnostics({ api }) {
         {snapshot.notices.length > 0 && <ul className="support-notices">
           {snapshot.notices.map((notice) => <li key={notice}>{t(`supportNotice.${notice}`)}</li>)}
         </ul>}
+        {snapshot.counts?.failed_notifications > 0 && <p><a href="?view=history&notification=failed">{t("reviewFailedNotifications")}</a></p>}
         <small>{t("supportChecked", { time: formatDate(snapshot.generated_at, true) })}</small>
       </>}
     </div>

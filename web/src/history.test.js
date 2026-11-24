@@ -19,6 +19,7 @@ test("history links preserve literal queries, result and selected project", () =
     ...emptyHistoryFilters,
     q: "Ödeme %_ & archive",
     status: "failed",
+    notification: "failed",
     project_id: "a".repeat(32),
   };
   const search = historySearch(filters, "unrelated=keep");
@@ -29,6 +30,7 @@ test("history links preserve literal queries, result and selected project", () =
   assert.equal(params.get("q"), filters.q);
   assert.equal(params.get("project_id"), filters.project_id);
   assert.equal(params.get("status"), "failed");
+  assert.equal(params.get("notification"), "failed");
   assert.equal(params.has("cursor"), false);
   const cleared = historyFiltersFromSearch(
     historySearch(emptyHistoryFilters, search),

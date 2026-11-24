@@ -67,6 +67,28 @@ try {
     await section.getByText("Running version", { exact: true }).waitFor();
     await page.getByText("Worker online", { exact: true }).first().waitFor();
   });
+  await checked("failed_notification_notice_opens_filtered_history_and_csv", async () => {
+    await page.getByRole("link", { name: "Review failed notifications", exact: true }).click();
+    const filter = page.getByRole("combobox", { name: "Notification delivery", exact: true });
+    await filter.waitFor();
+    assert.equal(await filter.inputValue(), "failed");
+    await page.getByRole("table").getByText("Delivery failed", { exact: true }).waitFor();
+    assert.equal(await page.locator("table tbody tr").count(), 1);
+    assert.equal(new URL(page.url()).searchParams.get("notification"), "failed");
+    const event = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Download CSV", exact: true }).click();
+    const download = await event;
+    await download.saveAs(`${artifacts}/failed-notifications.csv`);
+    const csv = await fs.readFile(`${artifacts}/failed-notifications.csv`, "utf8");
+    assert.equal(csv.trim().split(/\r?\n/).length, 2);
+    assert.ok(csv.includes("notification_status") && csv.includes(",failed,"));
+    await page.setViewportSize({ width: 390, height: 844 });
+    await noPageOverflow();
+    await page.screenshot({ path: `${artifacts}/failed-notifications-mobile.png`, fullPage: true });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.getByRole("button", { name: "Setup", exact: true }).click();
+    await heading("System check");
+  });
   await checked("turkish_setup_and_mobile_layout", async () => {
     await page.getByRole("combobox", { name: "Interface language" }).selectOption("tr");
     await heading("Sistem kontrolü");

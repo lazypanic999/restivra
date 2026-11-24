@@ -15,6 +15,12 @@ const outcomes = [
   "queued",
   "cancelled",
 ];
+const deliveryMessages = {
+  pending: "notificationPending",
+  delivered: "notificationDelivered",
+  failed: "notificationFailed",
+  skipped: "notificationSkipped",
+};
 
 export function History({
   api,
@@ -170,6 +176,19 @@ export function History({
           </select>
         </label>
         <label className="search-field">
+          <span>{t("notificationFilter")}</span>
+          <select
+            aria-label={t("notificationFilter")}
+            value={draft.notification}
+            onChange={(e) => setField("notification", e.target.value)}
+          >
+            <option value="">{t("allNotifications")}</option>
+            {Object.entries(deliveryMessages).map(([value, label]) => (
+              <option key={value} value={value}>{t(label)}</option>
+            ))}
+          </select>
+        </label>
+        <label className="search-field">
           <span>{t("historyFrom")}</span>
           <input
             type="date"
@@ -252,6 +271,7 @@ export function History({
                     <tr>
                       <th>{t("project")}</th>
                       <th>{t("result")}</th>
+                      <th>{t("notification")}</th>
                       <th>{t("historyQueued")}</th>
                       <th className="numeric">{t("latestAttemptDuration")}</th>
                       <th>{t("trigger")}</th>
@@ -269,6 +289,9 @@ export function History({
                         </td>
                         <td>
                           <RunState job={job} />
+                        </td>
+                        <td className={`notification-result notification-${job.notification_status}`}>
+                          {t(deliveryMessages[job.notification_status] || "notificationUnknown")}
                         </td>
                         <td>{formatDate(job.queued_at, true)}</td>
                         <td className="numeric">

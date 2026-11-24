@@ -40,6 +40,9 @@ try {
     if(-not $refused){throw 'A different installation port was not refused.'}
     # No -Base: prove the saved/selected port is used instead of hardcoded 7474.
     & (Join-Path $testRoot 'scripts/pilot-smoke.ps1')
+    # Only the synthetic completed failure is marked undelivered. No webhook
+    # URL is configured and this terminal state never sends a notification.
+    Release-SQL "UPDATE jobs SET notification_status='failed',notification_attempts=3 WHERE id=(SELECT id FROM jobs WHERE status='failed' ORDER BY queued_at LIMIT 1)"|Out-Null
     # Use the freshly generated smoke project's valid config/archive as a
     # template; no real project, SQL, storage profile or metadata is copied.
     Release-SQL "INSERT INTO projects(id,name,backup_pattern,config,timezone,created_at,archived) SELECT md5('browser-$suffix-'||n::text),'BROWSER_PRIVATE_CANARY '||CASE WHEN n=610 THEN 'BROWSER_OLDEST_TARGET' ELSE lpad(n::text,4,'0') END,p.backup_pattern,p.config,'UTC',now()-n*interval '1 minute',n>610 FROM generate_series(1,620) n CROSS JOIN (SELECT backup_pattern,config FROM projects ORDER BY created_at LIMIT 1) p"|Out-Null
