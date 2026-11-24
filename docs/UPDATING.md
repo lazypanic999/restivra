@@ -86,6 +86,32 @@ killed PowerShell process or Docker outage can interrupt the maintenance window.
 An `in_progress` record in `private/deployment-journal.json` blocks further updates
 until an operator reviews it. Do not delete volumes or blindly rerun setup.
 
+For operations written by the current scripts (`restivra.operation.v2`), use:
+
+```powershell
+./scripts/update.ps1 -Recover
+./scripts/pilot-check.ps1
+```
+
+This resumes the **previous application image**, rather than retrying the failed
+update. The original metadata database container must still be running and
+unpaused, with the same installation identity and required tables. Recovery checks
+the journal's directory, Compose project, original database container, image
+digests, binary hash, metadata contract and image selectors before stopping an
+application. Queued work, paused containers, unexpected images or an unrelated
+one-off maintenance command block recovery. A missing API or worker container can
+be recreated; a missing metadata database requires manual review.
+
+The verified previous image can be used from the local Docker cache without a
+registry download. Recovery removes only diagnostic containers labelled for the
+interrupted operation. It checks API readiness and a fresh worker heartbeat,
+restores the previous deployment selector/state, and marks the journal recovered.
+It does **not** restore a database dump or replace credentials, source profiles,
+backup archives or history. Do not edit the journal to bypass an identity check.
+
+If the interrupted operation used older scripts without a v2 journal, or automatic
+recovery refuses an inconsistent installation, use this manual review procedure:
+
 1. Restore Docker availability. Read the private journal's `previous.image` and
    checkpoint location locally. Never paste private files into an issue.
 2. Set `RESTIVRA_IMAGE` in `.env` to that previous exact image, then run

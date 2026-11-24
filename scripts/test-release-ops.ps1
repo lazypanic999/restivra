@@ -8,8 +8,48 @@ $null=New-Item -ItemType Directory -Force $scratch
 $script:ReleaseRoot=$scratch
 function Expect-Rejection([scriptblock]$Action){$rejected=$false;try{&$Action}catch{$rejected=$true};if(-not $rejected){throw 'An unsafe operation was accepted.'}}
 try{
+    if(-not (Release-OwnDirectory $scratch) -or (Release-OwnDirectory (Join-Path $scratch 'another-installation'))){throw 'Directory ownership guard accepted a foreign root.'}
+    if((Release-OwnDirectory $scratch.ToUpperInvariant()) -ne [bool]$IsWindows){throw 'Directory comparison did not respect platform case sensitivity.'}
     $m=[pscustomobject]@{format='restivra.release.v1';version='v0.1.0-pilot.3';revision=('a'*40);image=('ghcr.io/lazypanic999/restivra@sha256:'+('b'*64));binary_sha256=('c'*64);platform='linux/amd64';metadata_contract=1}
     Release-ValidateManifest $m $m.version
+    $record=[pscustomobject]@{manifest=$m;image=$m.image;image_id=('sha256:'+('d'*64))}
+    Release-ValidateRecord $record
+    $badRecord=$record|ConvertTo-Json -Depth 8|ConvertFrom-Json
+    $badRecord.image='ghcr.io/other/project@sha256:'+('e'*64)
+    Expect-Rejection {Release-ValidateRecord $badRecord}
+    $badRecord.image=$m.image;$badRecord.image_id='not-an-image'
+    Expect-Rejection {Release-ValidateRecord $badRecord}
+    $local=[pscustomobject]@{manifest=$null;image=('restivra:rollback-'+('a'*32));image_id=('sha256:'+('b'*64));metadata_contract=1;binary_sha256=('c'*64)}
+    Release-ValidateRecord $local
+    $local.image='restivra:local'
+    Expect-Rejection {Release-ValidateRecord $local}
+    if(-not ('Restivra.ReleaseTestIO' -as [type])){
+        Add-Type -TypeDefinition @'
+using System.IO;
+using System.Threading.Tasks;
+namespace Restivra {
+    public static class ReleaseTestIO {
+        public static async Task CloseAfter(Stream stream, int milliseconds) {
+            await Task.Delay(milliseconds);
+            stream.Dispose();
+        }
+    }
+}
+'@
+    }
+    $journalTest=Join-Path $scratch 'journal.json'
+    Release-JSON $journalTest @{status='old'}
+    # A genuine reader denying delete temporarily blocks atomic replacement on
+    # Windows. A retry must succeed without ever truncating the old destination.
+    $readerLock=[IO.File]::Open($journalTest,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::ReadWrite)
+    $releaseReader=[Restivra.ReleaseTestIO]::CloseAfter($readerLock,250)
+    try{Release-JSON $journalTest @{status='new'};$null=$releaseReader.GetAwaiter().GetResult()}finally{$readerLock.Dispose()}
+    if((Release-ReadJSON $journalTest).status -ne 'new'){throw 'Atomic state replacement failed after a transient reader lock.'}
+    if($IsWindows){
+        $readerLock=[IO.File]::Open($journalTest,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::ReadWrite)
+        try{Expect-Rejection {Release-JSON $journalTest @{status='incomplete'}}}finally{$readerLock.Dispose()}
+        if((Release-ReadJSON $journalTest).status -ne 'new'){throw 'Failed atomic write replaced a complete destination.'}
+    }
     foreach($field in @('format','version','revision','image','binary_sha256','platform','metadata_contract')){
         $bad=$m|ConvertTo-Json|ConvertFrom-Json
         $bad.$field='invalid'

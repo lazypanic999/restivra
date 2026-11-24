@@ -58,10 +58,31 @@ function Release-VerifyImage($Manifest, [switch]$Pull) {
         (Release-BinarySHA $Manifest.image) -cne $Manifest.binary_sha256) { throw 'Downloaded image does not match the official manifest.' }
     Release-ImageID $Manifest.image
 }
-function Release-JSON([string]$Path, $Value) {
+function Release-AtomicText([string]$Path,[string]$Value) {
     $temp = "$Path.$([guid]::NewGuid().ToString('N')).tmp"
-    [IO.File]::WriteAllText($temp,($Value | ConvertTo-Json -Depth 20)+"`n",[Text.UTF8Encoding]::new($false))
-    [IO.File]::Move($temp,$Path,$true)
+    $bytes=[Text.UTF8Encoding]::new($false).GetBytes($Value)
+    if($bytes.Length -gt 1MB){throw 'Deployment settings exceed the supported size.'}
+    $stream=[IO.File]::Open($temp,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+    try{$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}
+    # Concurrent readers/antivirus can temporarily deny Windows rename. Retain
+    # the previous complete destination and retry briefly, never truncate it.
+    for($attempt=0;$attempt -lt 20;$attempt++){
+        try{[IO.File]::Move($temp,$Path,$true);return}
+        catch [IO.IOException]{if($attempt -eq 19){throw}}
+        catch [UnauthorizedAccessException]{if($attempt -eq 19){throw}}
+        Start-Sleep -Milliseconds 50
+    }
+}
+function Release-JSON([string]$Path, $Value) {
+    Release-AtomicText $Path (($Value|ConvertTo-Json -Depth 20)+"`n")
+}
+function Release-ReadJSON([string]$Path) {
+    $stream=[IO.File]::Open($Path,[IO.FileMode]::Open,[IO.FileAccess]::Read,([IO.FileShare]::ReadWrite -bor [IO.FileShare]::Delete))
+    try{
+        if($stream.Length -gt 1MB){throw 'Deployment record exceeds the supported size.'}
+        $reader=[IO.StreamReader]::new($stream,[Text.UTF8Encoding]::new($false),$true)
+        try{return $reader.ReadToEnd()|ConvertFrom-Json -ErrorAction Stop}finally{$reader.Dispose()}
+    }finally{$stream.Dispose()}
 }
 function Release-SetImage([string]$Image) {
     $path = Join-Path $script:ReleaseRoot '.env'
@@ -69,29 +90,57 @@ function Release-SetImage([string]$Image) {
     $pattern = '(?m)^RESTIVRA_IMAGE=[^\r\n]*'
     if ([regex]::Matches($raw,$pattern).Count -gt 1) { throw 'Duplicate RESTIVRA_IMAGE settings in .env.' }
     $raw = if ([regex]::IsMatch($raw,$pattern)) { [regex]::Replace($raw,$pattern,"RESTIVRA_IMAGE=$Image") } else { $raw.TrimEnd()+"`nRESTIVRA_IMAGE=$Image`n" }
-    $temp = "$path.$([guid]::NewGuid().ToString('N')).tmp"
-    [IO.File]::WriteAllText($temp,$raw,[Text.UTF8Encoding]::new($false))
-    [IO.File]::Move($temp,$path,$true)
+    Release-AtomicText $path $raw
 }
-function Release-Service([string]$Service) {
+function Release-Service([string]$Service, [switch]$AllowMissing) {
     $ids = @( (Release-Docker @('compose','ps','--all','--quiet',$Service)) -split '\r?\n' | Where-Object { $_ })
+    $ids = @($ids | Where-Object { (Release-Docker @('inspect',$_,'--format','{{index .Config.Labels "com.docker.compose.oneoff"}}')) -eq 'False' })
+    if ($AllowMissing -and $ids.Count -eq 0) { return $null }
     if ($ids.Count -ne 1) { throw "Expected one existing $Service container for this installation." }
     $id = $ids[0]
     $owner = Release-Docker @('inspect',$id,'--format','{{index .Config.Labels "com.docker.compose.project.working_dir"}}')
-    if ([IO.Path]::GetFullPath($owner) -ne $script:ReleaseRoot) { throw 'Compose project belongs to a different directory. Choose a unique COMPOSE_PROJECT_NAME.' }
-    [pscustomobject]@{id=$id;image=(Release-Docker @('inspect',$id,'--format','{{.Image}}'));running=(Release-Docker @('inspect',$id,'--format','{{.State.Running}}')) -eq 'true'}
+    if (-not (Release-OwnDirectory $owner)) { throw 'Compose project belongs to a different directory. Choose a unique COMPOSE_PROJECT_NAME.' }
+    [pscustomobject]@{id=$id;image=(Release-Docker @('inspect',$id,'--format','{{.Image}}'));running=(Release-Docker @('inspect',$id,'--format','{{.State.Running}}')) -eq 'true';paused=(Release-Docker @('inspect',$id,'--format','{{.State.Paused}}')) -eq 'true'}
+}
+function Release-OwnDirectory([string]$Path) {
+    if(-not $Path){return $false}
+    try{
+        $actual=[IO.Path]::TrimEndingDirectorySeparator([IO.Path]::GetFullPath($Path))
+        $expected=[IO.Path]::TrimEndingDirectorySeparator($script:ReleaseRoot)
+        $comparison=if($IsWindows){[StringComparison]::OrdinalIgnoreCase}else{[StringComparison]::Ordinal}
+        return $actual.Equals($expected,$comparison)
+    }catch{return $false}
+}
+function Release-StopService([string]$Service) {
+    $container=Release-Service $Service -AllowMissing
+    if(-not $container){return}
+    if($container.paused){throw 'Unpause application containers before changing deployments.'}
+    $grace=if($Service -eq 'worker'){45}else{10}
+    Release-Docker @('stop','--timeout',"$grace",$container.id) ($grace+30)|Out-Null
+}
+function Release-NoForeignOneoffs([string]$Project,[string]$OperationID='') {
+    $running=(Release-Docker @('ps','--quiet','--filter',"label=com.docker.compose.project=$Project",'--filter','label=com.docker.compose.oneoff=True')) -split '\r?\n'|Where-Object{$_}
+    foreach($id in $running){
+        $operation=Release-Docker @('inspect',$id,'--format','{{index .Config.Labels "io.restivra.operation"}}')
+        if(-not $OperationID -or $operation -cne $OperationID){throw 'Another one-off operation is running for this Compose project. Finish it before deployment or recovery.'}
+    }
 }
 function Release-SQL([string]$SQL) { Release-Docker @('compose','exec','-T','db','psql','-X','-At','-U','restivra','-d','restivra','-v','ON_ERROR_STOP=1','-c',$SQL) }
 function Release-Idle {
     if ((Release-SQL "SELECT count(*) FROM jobs WHERE status IN ('queued','running')") -ne '0') { throw 'Queued/running jobs exist. Wait for an idle window and try again.' }
 }
-function Release-Start([string]$Image, [int]$WaitSeconds=120) {
+function Release-Start([string]$Image, [int]$WaitSeconds=120, [string]$OperationID='', [scriptblock]$OnAPIReady=$null) {
+    if($OperationID -and $OperationID -cnotmatch '^[a-f0-9]{32}$'){throw 'Invalid operation identity.'}
     $expectedImageID=Release-ImageID $Image
     $env:RESTIVRA_IMAGE = $Image
     try {
         Release-Docker @('compose','up','--no-build','--no-deps','--pull','never','-d','--wait','--wait-timeout',"$WaitSeconds",'api') ($WaitSeconds+30) | Out-Null
         if((Release-Service 'api').image -ne $expectedImageID){throw 'API did not start the requested image; inspect Compose overrides.'}
-        Release-Docker @('compose','run','--rm','--no-deps','worker','doctor','--role','worker') 60 | Out-Null
+        if($OnAPIReady){& $OnAPIReady}
+        $doctorArgs=@('compose','run','--rm','--no-deps')
+        if($OperationID){$doctorArgs+=@('--label',"io.restivra.operation=$OperationID")}
+        $doctorArgs+=@('worker','doctor','--role','worker')
+        Release-Docker $doctorArgs 60 | Out-Null
         $config=(Release-Docker @('compose','config','--format','json'))|ConvertFrom-Json
         $instance=$config.services.worker.environment.RESTIVRA_INSTANCE.Replace("'","''")
         $started=Release-SQL "SELECT clock_timestamp()::text"
@@ -106,4 +155,32 @@ function Release-Start([string]$Image, [int]$WaitSeconds=120) {
         }
         throw 'Worker heartbeat did not appear.'
     } finally { Remove-Item Env:RESTIVRA_IMAGE -ErrorAction SilentlyContinue }
+}
+
+function Release-Phase($Journal,[string]$Path,[string]$Phase) {
+    $Journal.phase=$Phase
+    Release-JSON $Path $Journal
+}
+
+function Release-ValidateRecord($Record) {
+    if(-not $Record -or $Record.image_id -cnotmatch '^sha256:[a-f0-9]{64}$'){throw 'Deployment image identity is invalid.'}
+    if($Record.manifest){
+        Release-ValidateManifest $Record.manifest $Record.manifest.version
+        if($Record.image -cne $Record.manifest.image){throw 'Deployment manifest/image mismatch.'}
+    }elseif($Record.image -cnotmatch '^restivra:rollback-[a-f0-9]{32}$' -or $Record.metadata_contract -ne 1 -or $Record.binary_sha256 -cnotmatch '^[a-f0-9]{64}$'){
+        throw 'Local rollback image lacks a verified compatibility record.'
+    }
+}
+
+function Release-VerifyRecord($Record) {
+    Release-ValidateRecord $Record
+    if($Record.manifest){
+        $cached=$false
+        try{$null=Release-ImageID $Record.image;$cached=$true}catch{}
+        $resolved=if($cached){Release-VerifyImage $Record.manifest}else{Release-VerifyImage $Record.manifest -Pull}
+    }else{
+        $resolved=Release-ImageID $Record.image
+        if((Release-BinarySHA $Record.image) -cne $Record.binary_sha256){throw 'Local rollback binary changed.'}
+    }
+    if($resolved -cne $Record.image_id){throw 'Deployment image changed or is unavailable.'}
 }

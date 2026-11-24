@@ -19,6 +19,8 @@ $oldProject=$env:COMPOSE_PROJECT_NAME;$oldPort=$env:RESTIVRA_PORT
 $env:COMPOSE_PROJECT_NAME="restivra-release-$($testID.Substring(0,12))"
 $env:RESTIVRA_PORT="$Port"
 $script:ReleaseRoot=$testRoot
+& (Join-Path $testRoot 'scripts/setup.ps1')
+[IO.File]::AppendAllText((Join-Path $testRoot '.env'),"`nCOMPOSE_PROJECT_NAME=$($env:COMPOSE_PROJECT_NAME)`nRESTIVRA_PORT=$Port`n")
 $proof=[ordered]@{status='failed';from=$FromVersion;to=$ToVersion;synthetic_data=$true;platform='Windows/PowerShell/Linux-amd64-Docker';checks=@();started_at=[datetime]::UtcNow.ToString('o')}
 function Assert-Release($Condition,[string]$Message){if(-not $Condition){throw $Message}}
 function Fingerprint {

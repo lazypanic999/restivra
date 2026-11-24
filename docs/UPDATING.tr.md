@@ -42,3 +42,19 @@ ve `RESTIVRA_PORT` değerlerini kurulum, güncelleme ve kurtarmada aynı kullan.
 Elektrik kesilmesi veya Docker'ın kapanması otomatik geri dönüşü de engelleyebilir.
 Yarım kalmış işlem yeni güncellemeyi bloke eder. Volüm silme; özel günlükteki önceki
 imajla kurtarma ve ayrıntılı sınırlar için [işletim rehberini](UPDATING.md) izle.
+
+Güncel betiklerle başlayan bir güncelleme PowerShell kapanması veya elektrik
+kesintisi nedeniyle yarıda kalırsa Docker'ı tekrar açıp aynı kurulum dizininde
+`./scripts/update.ps1 -Recover`, ardından `./scripts/pilot-check.ps1` çalıştır.
+Bu komut önceki uygulama imajını geri başlatır; veritabanı yedeğini geri yüklemez.
+Asıl PostgreSQL konteyneri ve verileri duruyor olmalıdır. Dizin, Compose projesi,
+kurulum kimliği, imaj özeti ve ikili dosya doğrulanmadan uygulamayı durdurmaz.
+Bekleyen işler, duraklatılmış konteynerler veya başka bir bakım komutu varsa
+işlemi reddeder. Eksik API/worker konteynerini yeniden oluşturabilir; eksik
+veritabanını bu yöntemle kurtaramaz. Önceki doğrulanmış imaj yerel Docker
+önbelleğindeyse kayıt deposuna bağlanmadan kullanılabilir.
+
+Bu yol yalnızca `restivra.operation.v2` günlüğü içindir. Eski günlükte veya kimlik
+kontrolü başarısız olduğunda günlük dosyasını silip zorlamadan İngilizce rehberdeki
+elle inceleme adımlarını uygula. Kimlik bilgileri, kaynak profilleri ve geçmiş
+değiştirilmez; yalnızca yarıda kalan işleme ait tanılama konteynerleri temizlenir.

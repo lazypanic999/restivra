@@ -65,6 +65,14 @@ jobs:
           [[ "$REF" =~ ^ghcr\.io/[a-z0-9_-]+/[a-z0-9_-]+@sha256:[a-f0-9]{64}$ ]]
           BINARY_SHA=$(docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true --entrypoint sha256sum "$REF" /usr/local/bin/restivra | cut -d' ' -f1)
           [[ "$BINARY_SHA" =~ ^[a-f0-9]{64}$ ]]
+          # Older immutable pilot tags predate the runtime version command.
+          # New releases must prove the binary reports the same identity as OCI.
+          if test -f internal/buildinfo/buildinfo.go; then
+            docker run --rm --network none --read-only --cap-drop ALL \
+              --security-opt no-new-privileges:true "$REF" version |
+              jq -e --arg version "$VERSION" --arg revision "$REVISION" \
+                '.version == $version and .revision == $revision and .os == "linux" and .architecture == "amd64" and .metadata_contract == 1' >/dev/null
+          fi
           echo "IMAGE_REF=$REF" >> "$GITHUB_ENV"
           echo "BINARY_SHA=$BINARY_SHA" >> "$GITHUB_ENV"
       - name: Require anonymous public access

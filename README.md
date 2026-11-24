@@ -28,6 +28,7 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 - React dashboard in English and Turkish: overview, project settings, recent runs, report details and JSON downloads.
 - Search all retained runs with result/date filters, cursor pagination, shareable filter links and CSV exports.
 - Browse archived projects and restore their settings/history with scheduling disabled.
+- Search every active or archived project with cursor pages; the dashboard shows the newest projects and complete totals.
 - Read existing archives from local files or an S3-compatible bucket, with worker-only private credentials, bounded conditional downloads and source evidence.
 - Printable English/Turkish evidence reports, optional name redaction and browser-assisted PDF saving.
 - [Editable SQL templates](docs/CHECK-TEMPLATES.md) for existence, minimum rows, recent data and required columns.
@@ -45,6 +46,7 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 - Standalone CLI for one-off verification.
 - Access-token sign-in with eight-hour HttpOnly sessions on fresh installations.
 - Readiness healthcheck, prerequisite diagnostics and [isolated metadata backup verification](docs/METADATA-CHECK.md).
+- Download an authenticated, [private-data-free support summary](docs/SUPPORT-SUMMARY.md) with build identity and live operational counts.
 
 This early MVP is ready for an unattended local developer pilot while the computer and Docker are running. A fixed-image two-hour run passed all 210 expected outcomes; separate Docker/metadata fault drills recovered automatically. See the [readiness evidence and limits](docs/PILOT-READINESS.md). A passing run establishes a logical restore and your selected checks, not complete application recovery, original permissions, PITR or backup freshness. Real customer pilots and payment validation remain to be done.
 
@@ -149,7 +151,7 @@ Jobs snapshot the project name, path and checks. Edits affect future jobs. Alrea
 
 Recovery uses the metadata database's installation ID and exact legacy running-job IDs. It does not delete another installation's resources based on a shared instance name. Failed cleanup stops the worker before it claims another job; restart reconciles remaining resources first.
 
-History searches all retained runs with cursor pages; overview counters cover all retained outcomes. The project list displays up to 500 records per active/archived view. Archiving preserves history until retention removes it.
+History searches all retained runs with cursor pages; overview counters cover all retained outcomes. [Project search](docs/PROJECT-PAGES.md) searches all active or archived projects, with 50 per interface page and no legacy 500-project browsing cap. Archiving preserves history until retention removes it.
 
 ## Access and trust boundary
 

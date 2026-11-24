@@ -64,3 +64,11 @@ jobs:
           } finally {
             docker compose down
           }
+  interrupted-release-recovery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Kill real updater processes and recover the previous release
+        shell: pwsh
+        run: ./scripts/test-release-recovery.ps1 -Port 27481
