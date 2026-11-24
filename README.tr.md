@@ -21,7 +21,7 @@ Video ve görüntülerdeki projeler sentetik demo verisidir. Başarısız bir SQ
 Docker'ın Linux konteyner motoru açık olmalı. PowerShell 7.2+:
 
 ```powershell
-git clone --branch v0.1.0-pilot.3 --depth 1 https://github.com/lazypanic999/restivra.git
+git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git
 cd restivra
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1
@@ -36,13 +36,19 @@ Panel: **[http://127.0.0.1:7474](http://127.0.0.1:7474)**.
 
 Yeni kurulumda özel `.env` dosyasındaki `RESTIVRA_AUTH_TOKEN` ile giriş yap. Mevcut `.env` değiştirilmez; eski kurulumda anahtar yoksa oturum açma kapalı kalır. Başka bir geliştiriciye vermek için [sabit sürümlü pilot başlangıç rehberi](docs/PILOT-START.tr.md), [yedi günlük plan](docs/PILOT-PLAN.tr.md) ve [özel kayıt formu](docs/PILOT-RECORD.tr.md) hazır. Ayrıntılı kurtarma için [pilot işletim rehberi](docs/PILOT-RUNBOOK.md).
 
-Teslim durumu: bilgisayar ve Docker açıkken gözetimsiz yerel geliştirici pilotuna hazır. Sabit imajla iki saatlik testte 210 beklenen sonuç doğrulandı; ayrıca Docker takılması ve metaveri bağlantı kaybından otomatik toparlandı. Önceki 97. dakika hatası ve Windows'taki kesin tetikleyicinin hâlâ belirsiz olması [hazırlık incelemesinde](docs/PILOT-READINESS.md) korunuyor. Dış kullanıcıyla bir haftalık pilot henüz yapılmadı. Bilgisayar/Docker kapalıyken test çalışmaz.
+Teslim hedefi, bilgisayar ve Docker açıkken gözetimsiz yerel geliştirici pilotu.
+[Hazırlık incelemesi](docs/PILOT-READINESS.md) geri yükleme, hata ve süre testlerini
+gerçekte denenen sürümleriyle kaydeder;
+[24 Kasım kabul kaydı](docs/acceptance/pilot-operations-20261124/) yeni işletim
+özelliklerini kapsar. Önceki hatalar ve test sınırları da kayıtlarda tutulur.
+Dış kullanıcıyla bir haftalık pilot ve ödeme isteği henüz doğrulanmadı.
+Bilgisayar/Docker kapalıyken test çalışmaz.
 
 ## İlk proje
 
 Büyük arşivin Docker üzerinden listeleme hatası düzeltildi. Tam geri yükleme,
 bozuk dosya, iptal ve worker toparlanması [pilot kabul kaydında](docs/acceptance/large-archive-fix-20261120/).
-Yeni katılımcı `v0.1.0-pilot.3` etiketli başlangıç rehberini izlemeli.
+Yeni katılımcı `v0.1.0-pilot.4` etiketli başlangıç rehberini izlemeli.
 
 1. PostgreSQL 17 üzerinde `pg_dump` 17 ile `-Fc` formatında alınmış tamamlanmış yedeği `backups/` klasörüne koy.
 2. Panelde **Yeni proje** seç. Dosya yolunu klasöre göre yaz: örneğin `musteri/*.dump`.
@@ -76,6 +82,10 @@ Sabit `v0.1.0-pilot.1` etiketi önceki yerel dosya pilotudur; değiştirilmedi.
 
 - Genel bakış, proje ayarları, saklanan geçmişin tamamında arama, tarih/sonuç filtresi, sayfalama, rapor ve JSON indirme.
 - Filtrelenmiş geçmişi CSV olarak indirme; arşivlenmiş projeyi zamanlaması kapalı biçimde geri getirme.
+- Aktif/arşivlenmiş projelerin tamamında arama ve sayfalama; son 500 projeyle sınırlı değildir.
+- Bildirim teslimini sonuçtan bağımsız filtreleme ve başarısız teslimlere sistem kontrolünden erişim.
+- Proje adı, SQL, yedek yolu ve anahtar içermeyen [destek özeti](docs/SUPPORT-SUMMARY.md); otomatik gönderilmez.
+- Yeni raporda doğrulamayı yapan sürümün saklanması; eski rapora sonradan sürüm atanmaması.
 - [Önceki çalışmayla karşılaştırma](docs/RUN-COMPARISON.md); sorgu değişikliği, kötüleşme ve düzelme ayrı gösterilir.
 - [Proje ayarlarını dışa/içe aktarma](docs/PROJECT-TRANSFER.md); inceleme formu açılır, zamanlama kapalı başlar.
 - [İngilizce/Türkçe yazdırılabilir kanıt](docs/EVIDENCE-REPORTS.md); isimleri gizleme ve tarayıcıdan PDF kaydetme.
@@ -88,6 +98,8 @@ Sabit `v0.1.0-pilot.1` etiketi önceki yerel dosya pilotudur; değiştirilmedi.
 - Varsayılan 30 günlük tamamlanmış çalışma geçmişi.
 - Yeni kurulumda erişim anahtarıyla giriş, sekiz saatlik HttpOnly oturum ve çıkış.
 - Kurulum tanısı, API sağlık kontrolü ve Restivra metaverisini yedekleme betikleri.
+- Yarım kalan uyumlu güncellemeyi `update.ps1 -Recover` ile, metaveriyi geri yazmadan önceki uygulamaya döndürme.
+- [Unix dosya izinleri ve daraltılmış worker dosya bağlantısı](docs/PRIVATE-FILES.md).
 
 ## Sınırlar
 

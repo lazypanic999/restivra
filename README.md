@@ -49,7 +49,13 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 - Readiness healthcheck, prerequisite diagnostics and [isolated metadata backup verification](docs/METADATA-CHECK.md).
 - Download an authenticated, [private-data-free support summary](docs/SUPPORT-SUMMARY.md) with build identity and live operational counts.
 
-This early MVP is ready for an unattended local developer pilot while the computer and Docker are running. A fixed-image two-hour run passed all 210 expected outcomes; separate Docker/metadata fault drills recovered automatically. See the [readiness evidence and limits](docs/PILOT-READINESS.md). A passing run establishes a logical restore and your selected checks, not complete application recovery, original permissions, PITR or backup freshness. Real customer pilots and payment validation remain to be done.
+This early MVP targets an unattended local developer pilot while the computer
+and Docker are running. The [readiness review](docs/PILOT-READINESS.md) records
+completed restore/fault checks and durations against their actual tested builds;
+the [November 24 acceptance](docs/acceptance/pilot-operations-20261124/) covers the
+new operating features. A passing run establishes a logical restore and your
+selected checks, not complete application recovery, original permissions, PITR
+or backup freshness. External seven-day pilots and payment validation remain open.
 
 The large-archive listing correction and full restore/failure/cancellation
 acceptance are recorded in [the current pilot evidence](docs/acceptance/large-archive-fix-20261120/).
