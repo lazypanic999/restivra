@@ -62,7 +62,8 @@ helper and its literal-path/permission contracts.
 [Published pilot.2 → pilot.3 integration](release-integration-2-to-3.json) covers
 real image installation, preserved metadata/credentials/database container,
 explicit rollback, queued-work refusal and actual failed-startup recovery using
-the new host scripts. It does not claim the future pilot.4 image was installed.
+the new host scripts. New runtime-identity and report-provenance paths are
+exercised separately by the later release integrations below.
 
 ## Published releases
 
@@ -113,6 +114,16 @@ database stall and an actual scheduled run recovered. Its
 before verifier provenance was added; [outcomes](soak-7124103-runs.ndjson) are
 retained. This earlier wrapper did not independently re-read every retained result
 at the end. A later runner adds that additional audit; do not infer it here.
+
+The second fixed development build, revision `2db2a4d`, independently completed
+[120.01 minutes / 140 iterations](soak-2db2a4d-120min.json) with
+[204 expected outcomes](soak-2db2a4d-runs.ndjson): 148 passes, 42 deliberate
+failures and 14 cancellations. The same worker/metadata faults and actual
+schedule passed. Its [stronger wrapper](soak-2db2a4d-wrapper.json) independently
+re-read all 204 retained outcomes, including IDs outside the latest-100 list,
+matched each available report's verifier build and restore image to the fixed
+runtime, and found zero owned restore containers or private job files.
+This evidence belongs to that development image, not the later published tag.
 
 Additional long-duration and final published-image evidence is added only after
 completion.

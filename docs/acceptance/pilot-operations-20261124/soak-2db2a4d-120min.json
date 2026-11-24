@@ -1,0 +1,22 @@
+{
+  "started_at": "2026-11-24T13:28:08.1538482Z",
+  "finished_at": "2026-11-24T15:28:08.8484232Z",
+  "elapsed_minutes": 120.01,
+  "iterations": 140,
+  "runs": 204,
+  "failure": null,
+  "outcomes": [
+    {
+      "status": "cancelled",
+      "count": 14
+    },
+    {
+      "status": "failed",
+      "count": 42
+    },
+    {
+      "status": "passed",
+      "count": 148
+    }
+  ]
+}
