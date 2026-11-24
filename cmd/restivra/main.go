@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/lazypanic999/restivra/internal/buildinfo"
 	"github.com/lazypanic999/restivra/internal/verify"
 )
 
@@ -24,6 +25,14 @@ func run() int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	switch os.Args[1] {
+	case "version":
+		if len(os.Args) != 2 {
+			return 2
+		}
+		if json.NewEncoder(os.Stdout).Encode(buildinfo.Current()) != nil {
+			return 1
+		}
+		return 0
 	case "doctor":
 		return doctor(ctx, os.Args[2:])
 	case "healthcheck":
@@ -119,5 +128,5 @@ func run() int {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "Restivra — PostgreSQL 17 restore verification\n\n  restivra serve [--listen 127.0.0.1:7474]\n  restivra worker\n  restivra doctor [--role worker]\n  restivra healthcheck [--url http://127.0.0.1:7474/healthz]\n  restivra verify --backup file.dump [--config config.json] [--report work/report.json]\n  restivra cleanup --run-id <id>\n\nServices require RESTIVRA_DATABASE_URL. See README for installation.\nPrerequisite: Docker Linux engine; docker pull "+verify.Image+"\nExit codes: 0 passed, 1 verification/runtime failure, 2 invalid command/config.")
+	fmt.Fprintln(os.Stderr, "Restivra — PostgreSQL 17 restore verification\n\n  restivra serve [--listen 127.0.0.1:7474]\n  restivra worker\n  restivra version\n  restivra doctor [--role worker]\n  restivra healthcheck [--url http://127.0.0.1:7474/healthz]\n  restivra verify --backup file.dump [--config config.json] [--report work/report.json]\n  restivra cleanup --run-id <id>\n\nServices require RESTIVRA_DATABASE_URL. See README for installation.\nPrerequisite: Docker Linux engine; docker pull "+verify.Image+"\nExit codes: 0 passed, 1 verification/runtime failure, 2 invalid command/config.")
 }

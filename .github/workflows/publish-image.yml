@@ -51,6 +51,7 @@ jobs:
             docker pull "$IMAGE:$VERSION"
           else
             docker build --pull --platform linux/amd64 \
+              --build-arg "VERSION=$VERSION" --build-arg "REVISION=$REVISION" \
               --label "org.opencontainers.image.source=https://github.com/$GH_REPO" \
               --label "org.opencontainers.image.revision=$REVISION" \
               --label "org.opencontainers.image.version=$VERSION" \

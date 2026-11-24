@@ -6,6 +6,7 @@ import { LanguageProvider, useLanguage } from "./language.jsx";
 import { History } from "./history.jsx";
 import { CheckTemplates } from "./check-templates.jsx";
 import { RunComparison } from "./comparison.jsx";
+import { SupportDiagnostics } from "./support.jsx";
 import {
   exportProject,
   importProject,
@@ -858,11 +859,11 @@ function App({ onUnauthorized, onLogout }) {
                 )}
               </section>
             )}
-            {page === "setup" && <Setup sourceProfiles={sourceProfiles} />}
+            {page === "setup" && <Setup sourceProfiles={sourceProfiles} api={api} />}
           </>
         )}
         <footer className="app-footer">
-          <span>Restivra 0.1.0</span>
+          <span>Restivra {session?.version || "—"}</span>
           <span>{t("selfHosted")}</span>
           <span>{t("localTime")}</span>
         </footer>
@@ -1649,17 +1650,19 @@ function Report({ job, duration, onClose, onCancel, api, onInspect }) {
     </Modal>
   );
 }
-function Setup({ sourceProfiles }) {
+function Setup({ sourceProfiles, api }) {
   const { t } = useLanguage(),
     [shell, setShell] = useState("powershell");
   const installation =
     shell === "powershell"
-      ? "./scripts/setup.ps1\ndocker pull postgres:17-bookworm\ndocker compose up --build -d"
-      : "sh scripts/setup.sh\ndocker pull postgres:17-bookworm\ndocker compose up --build -d";
+      ? "./scripts/install.ps1\n./scripts/pilot-check.ps1"
+      : "sh scripts/setup.sh\ndocker pull postgres:17-bookworm\ndocker compose -f compose.yaml -f compose.build.yaml up --build -d";
   return (
     <div className="setup-layout">
       <section>
+        <SupportDiagnostics api={api} />
         <h2>{t("installation")}</h2>
+        <p>{t(shell === "powershell" ? "readyImageInstall" : "sourceBuildInstall")}</p>
         <label className="field shell-select">
           {t("shell")}
           <select
