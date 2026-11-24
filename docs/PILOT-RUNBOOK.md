@@ -13,6 +13,13 @@ service, backup creation, offsite storage, original-role recovery or PITR.
 
 ## Install and check prerequisites
 
+On Windows, the prerequisite script warns when the installation drive has less
+than 2 GiB free. Check physical host space as well as Docker's virtual filesystem:
+a WSL disk can report a large virtual capacity while the Windows drive is nearly
+full. Keep real archives, metadata volumes and private checkpoints intact when
+reviewing disposable build/test resources. See [Microsoft's WSL disk-space
+guide](https://learn.microsoft.com/en-us/windows/wsl/vhd-size).
+
 Follow the README quick start. A new setup creates independent random database
 and UI credentials in `.env`, plus a unique instance name. Keep `.env` private
 and backed up separately from Git. Running setup again preserves it.

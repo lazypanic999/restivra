@@ -89,16 +89,23 @@ try{
     $copy=Join-Path $root 'backups/capacity.dump'
     if($Archive){Copy-Item -LiteralPath $Archive -Destination $copy}
     else{
-        Release-Docker @('run','--detach','--name',$source,'--network','none','--memory','768m','--cpus','1','--pids-limit','128','--env','POSTGRES_HOST_AUTH_METHOD=trust','postgres:17-bookworm')|Out-Null
+        Release-Docker @('run','--detach','--name',$source,'--network','none','--read-only','--user','postgres','--cap-drop','ALL','--security-opt','no-new-privileges:true','--memory','1536m','--cpus','1','--pids-limit','128','--tmpfs','/var/lib/postgresql/data:rw,size=1024m,uid=999,gid=999,mode=0700','--tmpfs','/var/run/postgresql:rw,size=16m,uid=999,gid=999,mode=0755','--tmpfs','/tmp:rw,size=128m,mode=1777','--env','POSTGRES_HOST_AUTH_METHOD=trust','postgres:17-bookworm')|Out-Null
         $sourceCreated=$true;$ready=$false
         for($n=0;$n -lt 120;$n++){
             try{Release-Docker @('exec',$source,'sh','-c','test "$(cat /proc/1/comm)" = postgres && pg_isready -q -U postgres')|Out-Null;$ready=$true;break}catch{Start-Sleep -Milliseconds 500}
         }
         if(-not $ready){throw 'Disposable capacity source did not become ready.'}
-        Release-Docker @('cp',(Join-Path $sourceRoot 'testdata/capacity.sql'),"${source}:/tmp/capacity.sql")|Out-Null
-        Release-Docker @('exec',$source,'psql','-X','-U','postgres','-v','ON_ERROR_STOP=1','-f','/tmp/capacity.sql') 180|Out-Null
-        Release-Docker @('exec',$source,'pg_dump','-U','postgres','-Fc','-f','/tmp/capacity.dump','postgres') 180|Out-Null
-        Release-Docker @('cp',"${source}:/tmp/capacity.dump",$copy)|Out-Null
+        $sql=[IO.File]::OpenRead((Join-Path $sourceRoot 'testdata/capacity.sql'))
+        try{
+            $seed=Invoke-RestivraNative -FilePath docker -WorkingDirectory $root -Arguments @('exec','--interactive',$source,'psql','-X','-U','postgres','-v','ON_ERROR_STOP=1') -InputStream $sql -TimeoutSeconds 180
+            if($seed.ExitCode -ne 0 -or $seed.Truncated){throw 'Synthetic capacity SQL did not complete.'}
+        }finally{$sql.Dispose()}
+        $dump=New-RestivraPrivateFile $copy
+        try{
+            $export=Invoke-RestivraNative -FilePath docker -WorkingDirectory $root -Arguments @('exec',$source,'pg_dump','-U','postgres','-Fc','postgres') -TimeoutSeconds 180 -OutputStream $dump -OutputByteLimit 268435456
+            if($export.ExitCode -ne 0){throw 'Synthetic capacity archive export failed.'}
+            $dump.Flush($true)
+        }finally{$dump.Dispose()}
         Release-Docker @('rm','--force','--volumes',$source)|Out-Null;$sourceCreated=$false
     }
     $proof.archive_bytes=(Get-Item $copy).Length

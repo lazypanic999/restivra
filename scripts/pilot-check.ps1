@@ -10,6 +10,10 @@ $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $PSScriptRoot
 Push-Location $root
 try {
+    if($IsWindows){
+        $drive=[IO.DriveInfo]::new([IO.Path]::GetPathRoot([IO.Path]::GetFullPath($root)))
+        if($drive.AvailableFreeSpace -lt 2GB){Write-Warning 'The installation drive has less than 2 GiB free. Free space before adding large archives or checkpoints; review Docker Desktop backing-disk space too.'}
+    }
     $Base=Resolve-RestivraBase -Base $Base -EnvFile $EnvFile
     $uri = [uri]$Base
     if (-not $uri.IsLoopback -or $uri.Scheme -ne 'http') { throw 'The desktop pilot requires loopback HTTP.' }
