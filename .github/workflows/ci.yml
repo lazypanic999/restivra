@@ -8,7 +8,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-go@v7.1.0
@@ -60,6 +60,7 @@ jobs:
             $summary = Get-Content (Join-Path $smoke.FullName 'summary.json') -Raw | ConvertFrom-Json
             ./scripts/test-metadata-check.ps1 -MetadataArchive work/ci-metadata.dump -ApplicationArchive (Join-Path backups $summary.backup_pattern)
             ./scripts/test-metadata-paths.ps1
+            ./qa/browser/run.ps1 -ApplicationImage restivra:local -Port 27479
           } finally {
             docker compose down
           }
