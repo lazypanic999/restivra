@@ -2,7 +2,7 @@
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'api-session.ps1')
 $projectDir = Split-Path -Parent $PSScriptRoot
-$base = 'http://127.0.0.1:7474'
+$base = Resolve-RestivraBase
 Push-Location $projectDir
 try {
     & (Join-Path $PSScriptRoot 'demo.ps1')

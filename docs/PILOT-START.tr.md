@@ -1,6 +1,6 @@
 # Restivra: ilk geliştirici pilotu
 
-Bu rehberi katılımcıya gönder. Pilot sürüm: **`v0.1.0-pilot.3`**.
+Bu rehberi katılımcıya gönder. Pilot sürüm: **`v0.1.0-pilot.4`**.
 Hedef: geliştiricinin kendi bilgisayarında bir PostgreSQL 17 yedeğini gerçekten
 geri yükleyip uygulamaya özel kontrollerle doğrulaması, ardından bir hafta izlemesi.
 Veritabanı dosyaları bize gönderilmez; işlem katılımcının bilgisayarında yapılır.
@@ -24,7 +24,7 @@ Veritabanı dosyaları bize gönderilmez; işlem katılımcının bilgisayarınd
 Docker Desktop'ı aç. PowerShell 7 terminalinde:
 
 ```powershell
-git clone --branch v0.1.0-pilot.3 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
 cd restivra-pilot
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1
@@ -39,11 +39,12 @@ Arayüz İngilizce açılır; üstteki dil seçicisinden Türkçe seçebilirsin.
 `pilot-check` başarılıysa Docker, imaj, API/veritabanı, giriş koruması ve worker
 ön koşulları hazırdır. Henüz gerçek geri yükleme yapılmış değildir.
 
-Port çakışıyorsa ilk `compose up` öncesinde özel `.env` dosyana
-`RESTIVRA_PORT=17474` ekle; paneli `http://127.0.0.1:17474` ile aç ve iki pilot
-komutuna da `-Base http://127.0.0.1:17474` ver. Aynı Docker üzerinde başka Restivra
-da çalışıyorsa `.env` içine ayrıca benzersiz `COMPOSE_PROJECT_NAME=restivra-pilot-benim`
-ekle. Ayrı klasör, yeni `.env`, ayrı port ve benzersiz uygulama imaj etiketi kullan.
+Port çakışıyorsa ilk kurulumdan önce `$env:RESTIVRA_PORT='17474'` ayarla.
+Kurucu portu ve benzersiz Compose proje adını yeni `.env` dosyasına kaydeder;
+panel adresini yazdırır. Pilot komutları kayıtlı portu kendileri okur.
+`.env` zaten oluştuysa yeniden denemeden önce içindeki `RESTIVRA_PORT` değerini
+düzenle. Aynı Docker üzerinde ikinci kurulum için ayrı klasör, yeni `.env`,
+ayrı port ve içerik özeti sabitlenmiş yayımlanmış imaj kullan.
 Başlatmadan önce [ikinci kurulum adımlarını](SECOND-INSTALL.md) uygula; mevcut
 veritabanını kopyalama.
 
@@ -135,11 +136,13 @@ Gün gün görevler ve bitiş ölçütleri [pilot planında](PILOT-PLAN.tr.md).
   Docker düzeldikten sonra worker otomatik toparlanabilir. Devam ediyorsa güvenli
   tanı bilgilerini paylaş; Docker volume'larını veya geçici kaynakları rastgele silme.
 
-Native Linux alternatifi: aynı etiketi klonla, `sh scripts/setup.sh` çalıştır,
-imajı indir ve aynı Compose komutuyla başlat. `pilot-*.ps1` komutları PowerShell
-7.2+ ister; yüklü değilse [manuel ilk arşiv adımlarını](PILOT-RUNBOOK.md#connect-the-first-real-archive)
-izle. Bu otomatik başlangıç paketi Windows üzerinde denenmiştir; macOS/ARM için
-aynı doğrulama tamamlanmış sayılmaz.
+Linux/amd64 ve PowerShell 7.2+ ile aynı kurucu kullanılabilir; Linux CI yeni
+kurulumu ve eski dosya izinlerinden geçişi ayrıca sınar. Kaynak geliştirme yolu
+`sh scripts/setup.sh`, ardından
+`docker compose -f compose.yaml -f compose.build.yaml up --build -d` komutudur.
+`pilot-*.ps1` komutları PowerShell 7.2+ ister; yoksa
+[manuel ilk arşiv adımlarını](PILOT-RUNBOOK.md#connect-the-first-real-archive) izle.
+macOS/ARM için aynı doğrulama tamamlanmış sayılmaz.
 
 ## İlk başarıdan sonra isteğe bağlı özellikler
 

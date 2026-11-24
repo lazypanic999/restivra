@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lazypanic999/restivra/internal/buildinfo"
 	"github.com/lazypanic999/restivra/internal/verify"
 )
 
@@ -34,6 +35,22 @@ func TestComparisonSeparatesChangedRulesFromRegressions(t *testing.T) {
 	encoded, _ := json.Marshal(got)
 	if strings.Contains(string(encoded), "secret_count") || strings.Contains(string(encoded), "private_count") || strings.Contains(string(encoded), "SELECT") {
 		t.Fatal("comparison leaked SQL")
+	}
+}
+
+func TestComparisonFindsRecordedVerifierChangesWithoutInventingLegacyIdentity(t *testing.T) {
+	old := Job{Report: &verify.Report{ApplicationBuild: &buildinfo.Info{Version: "v0.0.1", Revision: strings.Repeat("a", 40)}}}
+	current := Job{Report: &verify.Report{ApplicationBuild: &buildinfo.Info{Version: "v0.0.1", Revision: strings.Repeat("a", 40)}}}
+	if compareRuns(current, &old).VerifierChanged {
+		t.Fatal("identical retained verifier metadata was marked changed")
+	}
+	current.Report.ApplicationBuild.Revision = strings.Repeat("b", 40)
+	if !compareRuns(current, &old).VerifierChanged {
+		t.Fatal("different verifier source revisions were hidden")
+	}
+	old.Report.ApplicationBuild = nil
+	if compareRuns(current, &old).VerifierChanged {
+		t.Fatal("a missing legacy verifier was treated as a recorded change")
 	}
 }
 

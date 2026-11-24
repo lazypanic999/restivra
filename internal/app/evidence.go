@@ -24,6 +24,7 @@ type evidenceDocument struct {
 	Duration, Archive, Bytes, Hash                 string
 	Image, ImageID, Source, Profile                string
 	Object, Version, ETag, Restore, Cleanup        string
+	VerifierVersion, VerifierRevision              string
 	Redacted                                       bool
 	Attempt                                        int
 	Checks                                         []evidenceRow
@@ -32,51 +33,54 @@ type evidenceDocument struct {
 }
 
 var evidenceText = map[string][2]string{
-	"title":           {"Restore verification evidence", "Geri yükleme doğrulama kanıtı"},
-	"project":         {"Project", "Proje"},
-	"run":             {"Run ID", "Çalışma kimliği"},
-	"result":          {"Selected attempt result", "Seçilen denemenin sonucu"},
-	"current":         {"Current run state", "Çalışmanın güncel durumu"},
-	"attempt":         {"Attempt", "Deneme"},
-	"queued":          {"Queued (UTC)", "Kuyruk zamanı (UTC)"},
-	"started":         {"Started (UTC)", "Başlangıç (UTC)"},
-	"finished":        {"Finished (UTC)", "Bitiş (UTC)"},
-	"duration":        {"Attempt duration", "Deneme süresi"},
-	"archive":         {"Tested archive", "Denenen arşiv"},
-	"bytes":           {"Archive bytes", "Arşiv boyutu (bayt)"},
-	"modified":        {"Source modified (UTC)", "Kaynak değiştirilme zamanı (UTC)"},
-	"source":          {"Source", "Kaynak"},
-	"profile":         {"Profile", "Profil"},
-	"object":          {"Object", "Nesne"},
-	"version":         {"Object version", "Nesne sürümü"},
-	"image":           {"Restore image", "Geri yükleme imajı"},
-	"imageID":         {"Image identity", "İmaj kimliği"},
-	"checks":          {"Verification checks", "Doğrulama kontrolleri"},
-	"name":            {"Check", "Kontrol"},
-	"status":          {"Result", "Sonuç"},
-	"code":            {"Diagnostic code", "Tanı kodu"},
-	"restore":         {"Archive restore", "Arşiv geri yükleme"},
-	"cleanup":         {"Temporary resource cleanup", "Geçici kaynak temizliği"},
-	"history":         {"Preserved attempts", "Korunan denemeler"},
-	"generated":       {"Generated (UTC)", "Oluşturulma zamanı (UTC)"},
-	"print":           {"Use your browser's Print command to save this report as PDF. No external fonts or assets are required.", "Bu raporu PDF olarak kaydetmek için tarayıcının Yazdır komutunu kullan. Harici yazı tipi veya görsel gerekmez."},
-	"limits":          {"This records a logical restore and selected SQL checks. It does not prove full application recovery, original roles/grants, backup freshness or point-in-time recovery. SHA-256 identifies tested bytes; modification time and ETag do not establish data recency. Keep an independent recovery procedure.", "Bu rapor mantıksal geri yüklemeyi ve seçilen SQL kontrollerini kaydeder. Tam uygulama kurtarmasını, eski rol/izinleri, yedek güncelliğini veya belirli ana dönüşü kanıtlamaz. SHA-256 denenen baytları tanımlar; değiştirilme zamanı ve ETag veri güncelliğini kanıtlamaz. Bağımsız kurtarma yöntemini koru."},
-	"redacted":        {"Project, source and check names are hidden. Run IDs and content fingerprints remain; review before sharing.", "Proje, kaynak ve kontrol adları gizlendi. Çalışma kimlikleri ve içerik özetleri korunur; paylaşmadan önce incele."},
-	"metadata":        {"Operational metadata. SQL text, credentials and restored rows are excluded.", "Operasyonel metaveri. SQL metni, erişim anahtarları ve geri yüklenen satırlar dahil değildir."},
-	"noChecks":        {"No custom checks were configured.", "Özel kontrol yapılandırılmamış."},
-	"redactedProject": {"Redacted project", "Adı gizlenmiş proje"},
-	"redactedCheck":   {"Check", "Kontrol"},
-	"local":           {"Local files", "Yerel dosyalar"},
-	"s3":              {"S3-compatible storage", "S3 uyumlu depolama"},
-	"passed":          {"Passed", "Başarılı"},
-	"failed":          {"Failed", "Başarısız"},
-	"interrupted":     {"Interrupted", "Yarıda kesildi"},
-	"cancelled":       {"Cancelled", "İptal edildi"},
-	"running":         {"Running", "Çalışıyor"},
-	"queuedStatus":    {"Queued", "Kuyrukta"},
-	"error":           {"Error", "Hata"},
-	"not_run":         {"Not run", "Çalıştırılmadı"},
-	"not_needed":      {"Not needed", "Gerekmedi"},
+	"title":            {"Restore verification evidence", "Geri yükleme doğrulama kanıtı"},
+	"project":          {"Project", "Proje"},
+	"run":              {"Run ID", "Çalışma kimliği"},
+	"result":           {"Selected attempt result", "Seçilen denemenin sonucu"},
+	"current":          {"Current run state", "Çalışmanın güncel durumu"},
+	"attempt":          {"Attempt", "Deneme"},
+	"queued":           {"Queued (UTC)", "Kuyruk zamanı (UTC)"},
+	"started":          {"Started (UTC)", "Başlangıç (UTC)"},
+	"finished":         {"Finished (UTC)", "Bitiş (UTC)"},
+	"duration":         {"Attempt duration", "Deneme süresi"},
+	"archive":          {"Tested archive", "Denenen arşiv"},
+	"bytes":            {"Archive bytes", "Arşiv boyutu (bayt)"},
+	"modified":         {"Source modified (UTC)", "Kaynak değiştirilme zamanı (UTC)"},
+	"source":           {"Source", "Kaynak"},
+	"profile":          {"Profile", "Profil"},
+	"object":           {"Object", "Nesne"},
+	"version":          {"Object version", "Nesne sürümü"},
+	"image":            {"Restore image", "Geri yükleme imajı"},
+	"imageID":          {"Image identity", "İmaj kimliği"},
+	"verifier":         {"Restivra verifier", "Restivra doğrulayıcısı"},
+	"verifierRevision": {"Verifier source revision", "Doğrulayıcı kaynak revizyonu"},
+	"buildNotRecorded": {"Not recorded in this report", "Bu raporda kaydedilmemiş"},
+	"checks":           {"Verification checks", "Doğrulama kontrolleri"},
+	"name":             {"Check", "Kontrol"},
+	"status":           {"Result", "Sonuç"},
+	"code":             {"Diagnostic code", "Tanı kodu"},
+	"restore":          {"Archive restore", "Arşiv geri yükleme"},
+	"cleanup":          {"Temporary resource cleanup", "Geçici kaynak temizliği"},
+	"history":          {"Preserved attempts", "Korunan denemeler"},
+	"generated":        {"Generated (UTC)", "Oluşturulma zamanı (UTC)"},
+	"print":            {"Use your browser's Print command to save this report as PDF. No external fonts or assets are required.", "Bu raporu PDF olarak kaydetmek için tarayıcının Yazdır komutunu kullan. Harici yazı tipi veya görsel gerekmez."},
+	"limits":           {"This records a logical restore and selected SQL checks. It does not prove full application recovery, original roles/grants, backup freshness or point-in-time recovery. SHA-256 identifies tested bytes; modification time and ETag do not establish data recency. Keep an independent recovery procedure.", "Bu rapor mantıksal geri yüklemeyi ve seçilen SQL kontrollerini kaydeder. Tam uygulama kurtarmasını, eski rol/izinleri, yedek güncelliğini veya belirli ana dönüşü kanıtlamaz. SHA-256 denenen baytları tanımlar; değiştirilme zamanı ve ETag veri güncelliğini kanıtlamaz. Bağımsız kurtarma yöntemini koru."},
+	"redacted":         {"Project, source and check names are hidden. Run IDs and content fingerprints remain; review before sharing.", "Proje, kaynak ve kontrol adları gizlendi. Çalışma kimlikleri ve içerik özetleri korunur; paylaşmadan önce incele."},
+	"metadata":         {"Operational metadata. SQL text, credentials and restored rows are excluded.", "Operasyonel metaveri. SQL metni, erişim anahtarları ve geri yüklenen satırlar dahil değildir."},
+	"noChecks":         {"No custom checks were configured.", "Özel kontrol yapılandırılmamış."},
+	"redactedProject":  {"Redacted project", "Adı gizlenmiş proje"},
+	"redactedCheck":    {"Check", "Kontrol"},
+	"local":            {"Local files", "Yerel dosyalar"},
+	"s3":               {"S3-compatible storage", "S3 uyumlu depolama"},
+	"passed":           {"Passed", "Başarılı"},
+	"failed":           {"Failed", "Başarısız"},
+	"interrupted":      {"Interrupted", "Yarıda kesildi"},
+	"cancelled":        {"Cancelled", "İptal edildi"},
+	"running":          {"Running", "Çalışıyor"},
+	"queuedStatus":     {"Queued", "Kuyrukta"},
+	"error":            {"Error", "Hata"},
+	"not_run":          {"Not run", "Çalıştırılmadı"},
+	"not_needed":       {"Not needed", "Gerekmedi"},
 }
 
 func makeEvidence(j Job, report *verify.Report, lang string, redact bool) evidenceDocument {
@@ -104,6 +108,11 @@ func makeEvidence(j Job, report *verify.Report, lang string, redact bool) eviden
 		return value.UTC().Format("2006-01-02 15:04:05Z")
 	}
 	d := evidenceDocument{Lang: lang, Title: labels["title"], Labels: labels, Project: j.ProjectName, JobID: j.ID, Result: status(report.Status), CurrentState: status(j.Status), Queued: at(&j.QueuedAt), Started: at(&report.StartedAt), Finished: at(&report.FinishedAt), Generated: at(timePointer(time.Now())), Duration: fmt.Sprintf("%.3f s", float64(report.DurationMS)/1000), Archive: report.Backup.Name, Bytes: strconv.FormatInt(report.Backup.Bytes, 10), Hash: report.Backup.SHA256, Image: report.Image, ImageID: report.ImageID, Restore: status(report.RestoreStatus), Cleanup: status(report.CleanupStatus), ErrorCode: report.ErrorCode, Redacted: redact, Attempt: report.Attempt, Source: labels["local"]}
+	d.VerifierVersion = labels["buildNotRecorded"]
+	if build := report.ApplicationBuild; build != nil && build.Version != "" {
+		d.VerifierVersion = build.Version
+		d.VerifierRevision = build.Revision
+	}
 	if d.Attempt == 0 {
 		d.Attempt = j.AttemptCount
 	}

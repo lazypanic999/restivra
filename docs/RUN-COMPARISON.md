@@ -25,6 +25,9 @@ silently turn unexecuted checks into passes or regressions.
 SHA-256 equality describes tested bytes, not recency. A different hash does not
 establish that a backup is newer or complete. Source-selection, resource-limit
 and restore-image changes are shown separately because they can affect outcomes.
+When both reports recorded a verifier build, a change in that build is also
+shown. A missing legacy build record is not treated as a known change or filled
+in from the current server; inspect each report's provenance when upgrading.
 The comparison describes observed results; it does not identify their cause or
 replace reviewing the individual reports and application recovery procedure.
 

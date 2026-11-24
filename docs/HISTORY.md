@@ -14,7 +14,13 @@ existing scripts.
 
 ## Filters and CSV
 
-Choose project-name text, result and optional dates, then **Apply filters**.
+Choose project-name text, result, notification delivery and optional dates, then
+**Apply filters**. Delivery is separate from the verification outcome: a failed
+restore may have a delivered alert, while an undelivered alert does not change
+the restore result. **System check → Review failed notifications** opens the
+retained runs whose delivery exhausted its automatic attempts. The history table
+shows delivery state, and the CSV uses the same applied filters. Browsing or
+downloading does not send or retry a notification.
 Dates use queue time in the browser's device time zone. The end date includes
 the whole local day, including daylight-saving changes. Applied filters stay in
 the URL and survive refresh. A project's **Run history** action scopes the view
@@ -65,6 +71,7 @@ History parameters:
 | `q` | Literal case-insensitive project-name substring, at most 480 UTF-8 bytes; database case rules apply |
 | `project_id` | 32-character lowercase hexadecimal identity |
 | `status` | `queued`, `running`, `passed`, `failed`, `interrupted` or `cancelled` |
+| `notification` | `pending`, `delivered`, `failed` or `skipped`; omitted means every delivery state |
 | `since` | Inclusive queue-time boundary, RFC 3339 timestamp with time zone |
 | `until` | Exclusive queue-time boundary, RFC 3339 timestamp with time zone |
 | `limit` | Page size, 1–100; defaults to 50; does not cap exports |
@@ -72,7 +79,8 @@ History parameters:
 
 Summary counts cover the full filtered selection, not just one page. Count and
 page rows share a transaction snapshot. The cursor is a pagination hint, not an
-access credential. Invalid filters or mismatched cursors return 400; oversized
+access credential. Unknown/duplicate parameters, invalid filters or mismatched
+cursors return 400; oversized
 exports return 422. A missing JSON report retains its existing 409 response.
 
 ## Worker recovery

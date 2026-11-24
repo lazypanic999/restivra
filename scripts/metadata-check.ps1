@@ -8,6 +8,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'native-command.ps1')
+. (Join-Path $PSScriptRoot 'private-io.ps1')
 if ($MemoryMB -lt $DataMB + 256) { throw 'MemoryMB must be at least DataMB + 256.' }
 $image = 'postgres:17-bookworm'
 $owner = [guid]::NewGuid().ToString('N')
@@ -32,7 +33,7 @@ try {
         $report.error_code='report_path_unavailable'
         $target = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($ReportPath)
         # Reserve before restoring; never overwrite an existing report.
-        $reserved = [IO.File]::Open($target,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None)
+        $reserved = New-RestivraPrivateFile $target
     }
     $report.error_code='archive_unavailable'
     $item = Get-Item -LiteralPath $Archive

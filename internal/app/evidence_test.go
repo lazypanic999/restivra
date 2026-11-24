@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/lazypanic999/restivra/internal/buildinfo"
 	"github.com/lazypanic999/restivra/internal/verify"
 )
 
@@ -50,6 +51,40 @@ func TestEvidenceEscapesNamesExcludesSQLAndRedactsIdentifiers(t *testing.T) {
 			}
 			if data.Result == data.CurrentState || data.Attempt != 1 {
 				t.Fatal("older attempt misrepresented by current job status")
+			}
+		}
+	}
+}
+
+func TestEvidenceUsesSelectedReportsVerifierInsteadOfCurrentServer(t *testing.T) {
+	j, report := evidenceFixture()
+	for _, lang := range []string{"en", "tr"} {
+		legacy := makeEvidence(j, report, lang, false)
+		if legacy.VerifierVersion != legacy.Labels["buildNotRecorded"] || legacy.VerifierRevision != "" {
+			t.Fatal("legacy report was assigned a verifier it did not record")
+		}
+	}
+	report.ApplicationBuild = &buildinfo.Info{Version: "v0.0.1-retained", Revision: strings.Repeat("b", 40)}
+	raw, err := json.Marshal(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var retained verify.Report
+	if err = json.Unmarshal(raw, &retained); err != nil {
+		t.Fatal(err)
+	}
+	for _, lang := range []string{"en", "tr"} {
+		for _, redact := range []bool{false, true} {
+			d := makeEvidence(j, &retained, lang, redact)
+			if d.VerifierVersion != "v0.0.1-retained" || d.VerifierRevision != strings.Repeat("b", 40) {
+				t.Fatal("selected attempt lost its original verifier after JSON reload or redaction")
+			}
+			var body bytes.Buffer
+			if err = evidenceTemplate.Execute(&body, d); err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(body.String(), d.VerifierVersion) || !strings.Contains(body.String(), d.VerifierRevision) {
+				t.Fatal("print evidence omitted the retained verifier")
 			}
 		}
 	}

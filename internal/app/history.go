@@ -20,10 +20,10 @@ var ErrHistoryFilter = errors.New("invalid history filters")
 const HistoryExportLimit = 10000
 
 type HistoryFilter struct {
-	Search, Status, ProjectID string
-	Since, Until              *time.Time
-	Limit                     int
-	Before                    *historyCursor
+	Search, Status, ProjectID, Notification string
+	Since, Until                            *time.Time
+	Limit                                   int
+	Before                                  *historyCursor
 }
 
 type historyCursor struct {
@@ -76,12 +76,27 @@ type HistoryPage struct {
 }
 
 func parseHistoryFilter(values url.Values) (HistoryFilter, error) {
-	f := HistoryFilter{Search: strings.TrimSpace(values.Get("q")), Status: values.Get("status"), ProjectID: values.Get("project_id"), Limit: 50}
+	f := HistoryFilter{Search: strings.TrimSpace(values.Get("q")), Status: values.Get("status"), ProjectID: values.Get("project_id"), Notification: values.Get("notification"), Limit: 50}
+	for key, entries := range values {
+		if len(entries) != 1 {
+			return f, ErrHistoryFilter
+		}
+		switch key {
+		case "q", "status", "project_id", "notification", "since", "until", "limit", "cursor":
+		default:
+			return f, ErrHistoryFilter
+		}
+	}
 	if len(f.Search) > 480 || strings.ContainsRune(f.Search, 0) || (f.ProjectID != "" && !ValidID(f.ProjectID)) {
 		return f, ErrHistoryFilter
 	}
 	switch f.Status {
 	case "", "passed", "failed", "cancelled", "interrupted", "queued", "running":
+	default:
+		return f, ErrHistoryFilter
+	}
+	switch f.Notification {
+	case "", "pending", "delivered", "failed", "skipped":
 	default:
 		return f, ErrHistoryFilter
 	}
@@ -126,7 +141,13 @@ func parseHistoryFilter(values url.Values) (HistoryFilter, error) {
 }
 
 func (f HistoryFilter) fingerprint() string {
-	data, _ := json.Marshal([]any{f.Search, f.Status, f.ProjectID, f.Since, f.Until})
+	fields := []any{f.Search, f.Status, f.ProjectID, f.Since, f.Until}
+	// Keep existing unfiltered cursor fingerprints compatible across this
+	// optional filter addition; filtered cursors bind the delivery state too.
+	if f.Notification != "" {
+		fields = append(fields, f.Notification)
+	}
+	data, _ := json.Marshal(fields)
 	digest := sha256.Sum256(data)
 	return hex.EncodeToString(digest[:])
 }
@@ -147,6 +168,9 @@ func (f HistoryFilter) where(cursor bool) (string, []any) {
 	}
 	if f.Status != "" {
 		add("status=$%d", f.Status)
+	}
+	if f.Notification != "" {
+		add("notification_status=$%d", f.Notification)
 	}
 	if f.Since != nil {
 		add("queued_at >= $%d", *f.Since)

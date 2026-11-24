@@ -9,7 +9,7 @@ remote Docker engines are rejected. Never download a script and pipe it to a she
 Start Docker Desktop, then:
 
 ```powershell
-git clone --branch v0.1.0-pilot.3 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
+git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git restivra-pilot
 cd restivra-pilot
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1
@@ -17,13 +17,33 @@ cd restivra-pilot
 ```
 
 Open http://127.0.0.1:7474. The sign-in token is in your private `.env` file.
+For a custom port, use the URL printed by the installer. `pilot-check.ps1` and
+`pilot-smoke.ps1` read the saved port automatically (terminal overrides take
+precedence). The prerequisite check verifies the actual API container's loopback
+port and directory ownership before authenticating, so a mismatched `-Base`
+cannot silently target another local installation.
+Fresh installation also checks that the loopback port can be bound before
+downloading a release or creating Docker data volumes. If it is unavailable,
+choose another `RESTIVRA_PORT` in this new installation's `.env`. Existing
+applications remain running. Docker still checks the port when starting; another
+process could acquire it between preflight and startup.
 The installer creates random credentials only if absent, downloads the explicit
 release manifest from this repository, pulls its GHCR digest, checks image labels
 and the binary hash, and waits for API readiness and a new worker heartbeat.
+Manifests declaring `runtime_identity: true` additionally require the image's
+isolated `restivra version` output to match the release version, source revision,
+platform and metadata contract. Older immutable pilot manifests remain supported.
 It records the deployment privately and pins `RESTIVRA_IMAGE` in `.env`.
 `docker compose up -d` subsequently starts that exact image without a build.
-For a second installation set a unique `COMPOSE_PROJECT_NAME` and `RESTIVRA_PORT`
-in the terminal before installing; use those same values for every operation.
+New setup files persist a random `COMPOSE_PROJECT_NAME` and `RESTIVRA_PORT` in
+`.env`, so later commands and a new terminal select the same containers and port.
+For a second installation select an unused `RESTIVRA_PORT` before installing.
+You may also choose a unique `COMPOSE_PROJECT_NAME` before setup; both are saved.
+Existing `.env` files are never rewritten by setup. Older installations without
+these entries still require their original project/port environment settings.
+Terminal environment variables override `.env`; clear stale overrides before
+operating another installation. Do not change an installed project's name, which
+would select different database volumes instead of moving existing data.
 
 ## Update or roll back
 
@@ -31,15 +51,23 @@ Read the target release notes first. Finish running tests; stop submitting work.
 In the existing installation directory, with the same Compose project/port:
 
 ```powershell
-./scripts/update.ps1 -Version v0.1.0-pilot.3
+# Bring the target release's host scripts into a clean tracked checkout first.
+git fetch origin tag v0.1.0-pilot.4
+git checkout --detach v0.1.0-pilot.4
+./scripts/update.ps1 -Version v0.1.0-pilot.4
 # To return to the retained previous deployment:
 ./scripts/update.ps1 -Rollback
 ```
 
 Version tags are examples, not an automatic latest-version selector. Use an
-explicit published release with `restivra-release.json`. The updater downloads
-and verifies the target before stopping anything. Queued/running jobs, container
-ownership/image drift, a remote engine or an unsupported metadata contract abort
+explicit published release with `restivra-release.json`. Host PowerShell scripts
+come from the source checkout. Fetch and check out the reviewed target tag first;
+Git refuses conflicting tracked edits.
+Private ignored files and data volumes stay in place. Do not use `git clean` or
+force checkout to discard installation files.
+The updater downloads and verifies the target application image before stopping
+anything. Queued/running jobs, container ownership/image drift, a remote engine
+or an unsupported metadata contract abort
 the operation. An exclusive per-directory lock prevents concurrent installers.
 
 During a short maintenance window the API and worker stop. Idle state is checked
@@ -70,7 +98,7 @@ This one-time adoption is intentionally strict:
 # Bring the packaging scripts into the existing clean source checkout first.
 git fetch origin main
 git merge --ff-only origin/main
-./scripts/update.ps1 -Version v0.1.0-pilot.3 -Adopt
+./scripts/update.ps1 -Version v0.1.0-pilot.4 -Adopt
 ```
 
 Adoption requires the currently running API and worker to have the **identical
@@ -85,6 +113,32 @@ This is not an unattended major-version database migration tool. A power loss,
 killed PowerShell process or Docker outage can interrupt the maintenance window.
 An `in_progress` record in `private/deployment-journal.json` blocks further updates
 until an operator reviews it. Do not delete volumes or blindly rerun setup.
+
+For operations written by the current scripts (`restivra.operation.v2`), use:
+
+```powershell
+./scripts/update.ps1 -Recover
+./scripts/pilot-check.ps1
+```
+
+This resumes the **previous application image**, rather than retrying the failed
+update. The original metadata database container must still be running and
+unpaused, with the same installation identity and required tables. Recovery checks
+the journal's directory, Compose project, original database container, image
+digests, binary hash, metadata contract and image selectors before stopping an
+application. Queued work, paused containers, unexpected images or an unrelated
+one-off maintenance command block recovery. A missing API or worker container can
+be recreated; a missing metadata database requires manual review.
+
+The verified previous image can be used from the local Docker cache without a
+registry download. Recovery removes only diagnostic containers labelled for the
+interrupted operation. It checks API readiness and a fresh worker heartbeat,
+restores the previous deployment selector/state, and marks the journal recovered.
+It does **not** restore a database dump or replace credentials, source profiles,
+backup archives or history. Do not edit the journal to bypass an identity check.
+
+If the interrupted operation used older scripts without a v2 journal, or automatic
+recovery refuses an inconsistent installation, use this manual review procedure:
 
 1. Restore Docker availability. Read the private journal's `previous.image` and
    checkpoint location locally. Never paste private files into an issue.

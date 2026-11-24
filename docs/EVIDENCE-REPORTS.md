@@ -47,3 +47,18 @@ external resources; the fixed inline stylesheet is the only inline asset.
 
 Downloading or printing a report does not queue a verification, alter history or
 change notification state. Keep saved files private until reviewed for sharing.
+
+## Recorded verifier build
+
+New JSON reports include optional `application_build`: the Restivra version,
+source revision, metadata contract, Go version and platform recorded by the
+verifier when that attempt started. This identifies the worker or standalone
+CLI that performed the test, independently of the API currently presenting it.
+The interface and printable evidence show the retained version/revision.
+
+Older reports remain valid and show **Not recorded in this report**. Upgrading
+the API does not fill in or rewrite their provenance. An earlier attempt keeps
+its own build record. Redaction retains this public build identity. It is
+operational provenance, not a cryptographic signature or proof of an unmodified
+local development build; published images are verified separately by release
+digest and binary hash.

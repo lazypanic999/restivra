@@ -1,0 +1,22 @@
+{
+  "status": "passed",
+  "synthetic_data": true,
+  "fixture_mode": "Existing",
+  "application_image": "sha256:82e0208c566a6797905732451378786dee5c2dcc3e060b983004db07309d4888",
+  "started_at": "2026-11-24T13:36:36.3948919Z",
+  "build": {
+    "version": "development-20261124",
+    "revision": "2db2a4d9c5bbacfef75177c755f3190970978755",
+    "metadata_contract": 1,
+    "os": "linux",
+    "architecture": "amd64",
+    "go_version": "go1.27.4"
+  },
+  "archive_bytes": 59244344,
+  "archive_sha256": "ccc59d31c0b1d6f03e156e9f645194848e3ab12d72d220a789e1bec7888acff2",
+  "persisted_outcomes_rechecked": 16,
+  "restore_containers": 0,
+  "private_job_files": 0,
+  "finished_at": "2026-11-24T13:43:24.1780679Z",
+  "asserted_runs": 16
+}

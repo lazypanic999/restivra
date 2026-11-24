@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/lazypanic999/restivra/internal/buildinfo"
 	"github.com/lazypanic999/restivra/internal/verify"
 	"github.com/lazypanic999/restivra/internal/webui"
 )
@@ -46,9 +47,11 @@ func (a *API) Handler() http.Handler {
 		jsonResponse(w, 200, map[string]bool{"authenticated": false})
 	})
 	mux.HandleFunc("GET /api/session", func(w http.ResponseWriter, r *http.Request) {
-		jsonResponse(w, 200, map[string]any{"csrf_token": a.CSRFToken, "default_config": verify.DefaultConfig(), "version": "0.1.0"})
+		jsonResponse(w, 200, map[string]any{"csrf_token": a.CSRFToken, "default_config": verify.DefaultConfig(), "version": buildinfo.Current().Version, "build": buildinfo.Current()})
 	})
 	mux.HandleFunc("GET /api/health", a.health)
+	mux.HandleFunc("GET /api/support", a.support)
+	mux.HandleFunc("GET /api/support/download", a.support)
 	mux.HandleFunc("GET /api/sources", a.sources)
 	mux.HandleFunc("GET /api/history", a.history)
 	mux.HandleFunc("GET /api/history/export.csv", a.history)
@@ -65,6 +68,7 @@ func (a *API) Handler() http.Handler {
 		}
 		jsonResponse(w, 200, p)
 	})
+	mux.HandleFunc("GET /api/projects/page", a.projectPage)
 	mux.HandleFunc("POST /api/projects", a.saveProject)
 	mux.HandleFunc("PUT /api/projects/{id}", a.saveProject)
 	mux.HandleFunc("POST /api/projects/{id}/restore", func(w http.ResponseWriter, r *http.Request) {
@@ -270,7 +274,10 @@ func (a *API) health(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, 503, "worker state unavailable")
 		return
 	}
-	online := beat != nil && time.Since(*beat) < 30*time.Second
+	online := false
+	if beat != nil {
+		online = workerHeartbeatOnline(*beat)
+	}
 	jsonResponse(w, 200, map[string]any{"database": "online", "worker_online": online, "worker_heartbeat": beat, "authentication_enabled": a.Auth != nil})
 }
 func decodeJSON(w http.ResponseWriter, r *http.Request, dst any) error {

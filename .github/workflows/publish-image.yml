@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Existing release tag (for example v0.1.0-pilot.3)
+        description: Existing release tag (for example v0.1.0-pilot.4)
         required: true
         type: string
 permissions:
@@ -51,6 +51,7 @@ jobs:
             docker pull "$IMAGE:$VERSION"
           else
             docker build --pull --platform linux/amd64 \
+              --build-arg "VERSION=$VERSION" --build-arg "REVISION=$REVISION" \
               --label "org.opencontainers.image.source=https://github.com/$GH_REPO" \
               --label "org.opencontainers.image.revision=$REVISION" \
               --label "org.opencontainers.image.version=$VERSION" \
@@ -64,6 +65,14 @@ jobs:
           [[ "$REF" =~ ^ghcr\.io/[a-z0-9_-]+/[a-z0-9_-]+@sha256:[a-f0-9]{64}$ ]]
           BINARY_SHA=$(docker run --rm --network none --read-only --cap-drop ALL --security-opt no-new-privileges:true --entrypoint sha256sum "$REF" /usr/local/bin/restivra | cut -d' ' -f1)
           [[ "$BINARY_SHA" =~ ^[a-f0-9]{64}$ ]]
+          # Older immutable pilot tags predate the runtime version command.
+          # New releases must prove the binary reports the same identity as OCI.
+          if test -f internal/buildinfo/buildinfo.go; then
+            docker run --rm --network none --read-only --cap-drop ALL \
+              --security-opt no-new-privileges:true "$REF" version |
+              jq -e --arg version "$VERSION" --arg revision "$REVISION" \
+                '.version == $version and .revision == $revision and .os == "linux" and .architecture == "amd64" and .metadata_contract == 1' >/dev/null
+          fi
           echo "IMAGE_REF=$REF" >> "$GITHUB_ENV"
           echo "BINARY_SHA=$BINARY_SHA" >> "$GITHUB_ENV"
       - name: Require anonymous public access
@@ -86,6 +95,7 @@ jobs:
               'revision': os.environ['REVISION'], 'image': os.environ['IMAGE_REF'],
               'binary_sha256': os.environ['BINARY_SHA'], 'platform': 'linux/amd64',
               'metadata_contract': 1,
+              'runtime_identity': os.path.isfile('internal/buildinfo/buildinfo.go'),
               'published_at': datetime.datetime.now(datetime.timezone.utc).isoformat()
           }
           with open(os.path.join(os.environ['RUNNER_TEMP'], 'restivra-release.json'), 'w') as f:

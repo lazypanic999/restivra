@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"io"
 	"os"
@@ -69,6 +70,27 @@ func fakeBackup(t *testing.T) (string, string) {
 		t.Fatal(err)
 	}
 	return path, filepath.Join(dir, "work")
+}
+
+func TestFailedAttemptKeepsItsVerifierBuildInJSON(t *testing.T) {
+	path, work := fakeBackup(t)
+	cfg := DefaultConfig()
+	cfg.TimeoutSeconds = 0 // Fail validation before any restore command.
+	report := (Runner{Docker: &fakeDocker{}, WorkDir: work}).Run(context.Background(), path, cfg)
+	if report.Status != "failed" || report.ApplicationBuild == nil || report.ApplicationBuild.Version == "" || report.ApplicationBuild.GoVersion == "" || report.ApplicationBuild.MetadataContract != 1 {
+		t.Fatal("failed attempt lacks its actual verifier identity")
+	}
+	raw, err := json.Marshal(report)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var retained Report
+	if err = json.Unmarshal(raw, &retained); err != nil {
+		t.Fatal(err)
+	}
+	if retained.ApplicationBuild == nil || *retained.ApplicationBuild != *report.ApplicationBuild {
+		t.Fatal("JSON storage lost the attempt's verifier identity")
+	}
 }
 
 func TestFailuresNeverBecomeSuccessfulAndAlwaysCleanUp(t *testing.T) {

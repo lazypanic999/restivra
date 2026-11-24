@@ -8,7 +8,7 @@ $project="restivra-export-test-$suffix"
 $directory=Join-Path $root "work/metadata-export-$suffix"
 $fixtureScripts=Join-Path $directory 'scripts'
 New-Item -ItemType Directory -Path $fixtureScripts|Out-Null
-Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'metadata-backup.ps1'),(Join-Path $PSScriptRoot 'native-command.ps1') -Destination $fixtureScripts
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'metadata-backup.ps1'),(Join-Path $PSScriptRoot 'native-command.ps1'),(Join-Path $PSScriptRoot 'private-io.ps1') -Destination $fixtureScripts
 $compose=@'
 services:
   db:

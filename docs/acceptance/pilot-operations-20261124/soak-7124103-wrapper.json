@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "synthetic_data": true,
+  "image": "sha256:96081a4ea88953c1745055d0b292ff4fdaa986f44f4e5c50dbae9563d3ea2c53",
+  "requested_minutes": 120,
+  "started_at": "2026-11-24T12:58:31.2262125Z",
+  "archive_sha256": "0fc37693b2a07333cf179280803f390511d52d70a2e5542de5c0a533bad53464",
+  "archive_bytes": 530663,
+  "finished_at": "2026-11-24T14:58:59.9351845Z",
+  "build": {
+    "version": "development-20261124",
+    "revision": "7124103c6bee74ea41d9171c3453226e005dbd84",
+    "metadata_contract": 1,
+    "os": "linux",
+    "architecture": "amd64",
+    "go_version": "go1.27.4"
+  }
+}

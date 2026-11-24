@@ -1,0 +1,19 @@
+{
+  "platform": "Linux/amd64",
+  "synthetic_data": true,
+  "network": "none",
+  "root_filesystem": "read_only",
+  "user": "1001:1001",
+  "note": "Initial runner startup failed until XDG cache/config/data were placed in its disposable tmpfs. A test-only wildcard-sensitive symlink creation was replaced by the literal .NET API before the successful complete run.",
+  "checks": [
+    "private_modes_before_content_write",
+    "exclusive_creation_does_not_truncate_existing_file",
+    "literal_unicode_spaces_brackets_and_shell_metacharacter_paths",
+    "permission_changes_refuse_symbolic_link_targets",
+    "permission_hardening_preserves_existing_content"
+  ],
+  "scope": "Private I/O helper compatibility only, not an application/runtime support recommendation",
+  "status": "passed",
+  "image": "mcr.microsoft.com/powershell@sha256:eea5f6742bee136a11c91cb7ebd86dd994f3535ea72e2744be3ab15590b0500b",
+  "runtime": "PowerShell 7.2.7 / .NET 6"
+}

@@ -1,0 +1,19 @@
+{
+  "status": "passed",
+  "synthetic_data": true,
+  "from": "v0.1.0-pilot.2",
+  "to": "v0.1.0-pilot.3",
+  "checks": [
+    "actual_updater_process_kill_during_metadata_export_recovers_without_restoring_database",
+    "unsupported_operation_mode_and_missing_required_table_refused_before_stopping_apps",
+    "changed_rollback_image_incompatible_contract_selector_drift_and_paused_app_refused",
+    "foreign_root_project_installation_database_and_queued_work_refused_without_container_changes",
+    "unrelated_oneoff_command_is_neither_stopped_nor_deleted",
+    "actual_updater_process_kill_after_candidate_api_health_recovers_and_cleans_only_owned_diagnostic",
+    "missing_regular_worker_container_is_recreated_with_original_data_volume",
+    "previous_release_authenticated_health_and_worker_checks_pass_after_recovery",
+    "actual_interrupted_binary_identical_adoption_recovers_verified_local_rollback_tag"
+  ],
+  "started_at": "2026-11-24T13:04:43.0722379Z",
+  "finished_at": "2026-11-24T13:08:01.3187877Z"
+}

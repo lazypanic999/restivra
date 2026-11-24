@@ -6,12 +6,14 @@ COPY web/ ./
 RUN npm run build
 
 FROM golang:1.27.4-bookworm AS build
+ARG VERSION=development
+ARG REVISION=unknown
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
 COPY --from=web /src/internal/webui/dist ./internal/webui/dist
-RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /restivra ./cmd/restivra
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X github.com/lazypanic999/restivra/internal/buildinfo.Version=${VERSION} -X github.com/lazypanic999/restivra/internal/buildinfo.Revision=${REVISION}" -o /restivra ./cmd/restivra
 
 FROM docker:29-cli AS dockercli
 FROM debian:bookworm-slim

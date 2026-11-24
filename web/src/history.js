@@ -1,6 +1,7 @@
 export const emptyHistoryFilters = {
   q: "",
   status: "",
+  notification: "",
   from: "",
   to: "",
   project_id: "",
@@ -14,9 +15,8 @@ export function historyFiltersFromSearch(search) {
 }
 
 export function initialPage(search) {
-  return new URLSearchParams(search).get("view") === "history"
-    ? "history"
-    : "overview";
+  const view = new URLSearchParams(search).get("view");
+  return ["history", "projects", "setup"].includes(view) ? view : "overview";
 }
 
 function localDay(value, followingDay = false) {
@@ -40,6 +40,7 @@ export function historyParams(filters) {
   const query = new URLSearchParams();
   if (filters.q.trim()) query.set("q", filters.q.trim());
   if (filters.status) query.set("status", filters.status);
+  if (filters.notification) query.set("notification", filters.notification);
   if (filters.project_id) query.set("project_id", filters.project_id);
   if (filters.from) query.set("since", localDay(filters.from));
   if (filters.to) query.set("until", localDay(filters.to, true));

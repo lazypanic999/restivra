@@ -13,7 +13,7 @@ import (
 )
 
 func TestHistoryRejectsInvalidFilters(t *testing.T) {
-	for _, query := range []string{"status=unknown", "project_id=invalid", "limit=0", "limit=101", "limit=all", "since=yesterday", "since=2026-01-01", "since=2026-01-02T00:00:00Z&until=2026-01-01T00:00:00Z", "cursor=invalid", "q=" + strings.Repeat("a", 481)} {
+	for _, query := range []string{"status=unknown", "notification=unknown", "notification=Failed", "notification=failed&notification=delivered", "notification_status=failed", "q=first&q=second", "project_id=invalid", "limit=0", "limit=101", "limit=all", "since=yesterday", "since=2026-01-01", "since=2026-01-02T00:00:00Z&until=2026-01-01T00:00:00Z", "cursor=invalid", "q=" + strings.Repeat("a", 481)} {
 		q, _ := url.ParseQuery(query)
 		if _, err := parseHistoryFilter(q); err == nil {
 			t.Fatalf("accepted %q", query)
@@ -47,9 +47,10 @@ func testHistoryAndProjectRestore(t *testing.T, ctx context.Context, store *Stor
 		t.Fatal(err)
 	}
 	base := time.Date(2026, 3, 29, 0, 30, 0, 0, time.UTC)
-	_, err = store.DB.ExecContext(ctx, `INSERT INTO jobs(id,project_id,project_name,backup_pattern,config,status,trigger,queued_at,started_at,finished_at,attempt_count,report)
+	_, err = store.DB.ExecContext(ctx, `INSERT INTO jobs(id,project_id,project_name,backup_pattern,config,status,trigger,queued_at,started_at,finished_at,attempt_count,report,notification_status)
 SELECT md5($1||n::text),$1,$2,'fixture.dump','{}',CASE WHEN n%2=0 THEN 'passed' ELSE 'failed' END,'manual',$3::timestamptz,$3::timestamptz,$3::timestamptz+interval '1 second',1,
-jsonb_build_object('duration_ms',1000,'cleanup_status','passed','backup',jsonb_build_object('name','=1+1.dump','bytes',42,'sha256',repeat('a',64))) FROM generate_series(1,207) n`, p.ID, p.Name, base)
+jsonb_build_object('duration_ms',1000,'cleanup_status','passed','backup',jsonb_build_object('name','=1+1.dump','bytes',42,'sha256',repeat('a',64))),
+CASE WHEN n%2=0 THEN 'skipped' ELSE CASE n%8 WHEN 1 THEN 'pending' WHEN 3 THEN 'delivered' WHEN 5 THEN 'failed' ELSE 'skipped' END END FROM generate_series(1,207) n`, p.ID, p.Name, base)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,6 +78,41 @@ jsonb_build_object('duration_ms',1000,'cleanup_status','passed','backup',jsonb_b
 		t.Fatal("history lists exposed check configuration")
 	}
 	firstCursor := page.NextCursor
+	for _, state := range []struct {
+		name  string
+		count int64
+	}{{"pending", 26}, {"delivered", 26}, {"failed", 26}, {"skipped", 129}} {
+		filtered := url.Values{"project_id": {p.ID}, "notification": {state.name}, "limit": {"11"}}
+		r := requestJSON(t, handler, "GET", "/api/history?"+filtered.Encode(), nil, "")
+		var deliveryPage HistoryPage
+		if r.Code != 200 || json.Unmarshal(r.Body.Bytes(), &deliveryPage) != nil || deliveryPage.Summary.Total != state.count || len(deliveryPage.Items) != 11 || deliveryPage.NextCursor == "" {
+			t.Fatalf("delivery filter failed for %s", state.name)
+		}
+		for _, job := range deliveryPage.Items {
+			if job.NotificationStatus != state.name {
+				t.Fatal("delivery page contains a different notification state")
+			}
+		}
+		filtered.Set("notification", "failed")
+		if state.name == "failed" {
+			filtered.Set("notification", "pending")
+		}
+		filtered.Set("cursor", deliveryPage.NextCursor)
+		if requestJSON(t, handler, "GET", "/api/history?"+filtered.Encode(), nil, "").Code != 400 {
+			t.Fatal("delivery cursor reused with a different notification filter")
+		}
+	}
+	failedDelivery := url.Values{"project_id": {p.ID}, "notification": {"failed"}, "status": {"failed"}}
+	r := requestJSON(t, handler, "GET", "/api/history/export.csv?"+failedDelivery.Encode(), nil, "")
+	deliveryRows, err := csv.NewReader(strings.NewReader(r.Body.String())).ReadAll()
+	if r.Code != 200 || err != nil || len(deliveryRows) != 27 {
+		t.Fatal("failed-delivery CSV did not export every filtered archived-project row")
+	}
+	for _, row := range deliveryRows[1:] {
+		if row[3] != "failed" || row[15] != "failed" {
+			t.Fatal("delivery-filtered CSV mixed verification or notification outcomes")
+		}
+	}
 	seen := map[string]bool{}
 	for _, job := range page.Items {
 		seen[job.ID] = true

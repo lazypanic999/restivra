@@ -8,7 +8,7 @@ permissions:
 jobs:
   verify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: actions/setup-go@v7.1.0
@@ -45,6 +45,11 @@ jobs:
           try {
             ./scripts/test-native-command.ps1
             ./scripts/test-release-ops.ps1
+            ./scripts/test-private-io.ps1
+            ./scripts/test-qa-environment.ps1
+            ./scripts/test-setup.ps1
+            ./scripts/test-api-session.ps1
+            ./scripts/test-install-preflight.ps1
             ./scripts/test-metadata-backup.ps1
             ./scripts/setup.ps1
             $original = (Get-FileHash .env).Hash
@@ -60,6 +65,18 @@ jobs:
             $summary = Get-Content (Join-Path $smoke.FullName 'summary.json') -Raw | ConvertFrom-Json
             ./scripts/test-metadata-check.ps1 -MetadataArchive work/ci-metadata.dump -ApplicationArchive (Join-Path backups $summary.backup_pattern)
             ./scripts/test-metadata-paths.ps1
+            ./qa/browser/run.ps1 -ApplicationImage restivra:local -Port 27479
           } finally {
             docker compose down
           }
+  interrupted-release-recovery:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Kill real updater processes and recover the previous release
+        shell: pwsh
+        run: ./scripts/test-release-recovery.ps1 -Port 27481
+      - name: Migrate old profile mounts and Unix permissions without replacing data
+        shell: pwsh
+        run: ./scripts/test-legacy-private-upgrade.ps1 -Port 27483

@@ -1,5 +1,5 @@
 #Requires -Version 7.2
-param([string]$Version='v0.1.0-pilot.3')
+param([string]$Version='v0.1.0-pilot.4')
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot 'release-ops.ps1')
 Release-LocalEngine
@@ -11,6 +11,14 @@ try {
     $existing=Release-Docker @('compose','ps','--all','--quiet')
     $pendingPath=Join-Path $script:ReleaseRoot 'private/install-pending.json'
     if ($existing -and -not (Test-Path $pendingPath)) { throw 'Existing containers found. Use update.ps1 -Adopt for a reviewed, binary-identical source installation.' }
+    if(-not $existing){
+        $config=(Release-Docker @('compose','config','--format','json'))|ConvertFrom-Json
+        $ports=@($config.services.api.ports)
+        if($ports.Count -ne 1 -or $ports[0].host_ip -ne '127.0.0.1' -or $ports[0].target -ne 7474 -or $ports[0].protocol -ne 'tcp' -or $ports[0].published -notmatch '^\d{1,5}$'){
+            throw 'Ready-image installation requires one loopback TCP API port; inspect Compose overrides.'
+        }
+        Release-RequireFreePort ([int]$ports[0].published)
+    }
     $manifest=Release-ReadManifest $Version
     $imageID=Release-VerifyImage $manifest -Pull
     if(Test-Path $pendingPath){
@@ -31,8 +39,11 @@ try {
     try { if(-not $existing){Release-Docker @('compose','up','--no-build','--pull','never','-d','--wait','--wait-timeout','120','db') 150 | Out-Null} }
     finally { Remove-Item Env:RESTIVRA_IMAGE -ErrorAction SilentlyContinue }
     Release-Start $manifest.image
+    Release-ProtectPrivate
     Release-SetImage $manifest.image
     $installation=Release-SQL 'SELECT id FROM installation'
     Release-JSON $statePath @{format='restivra.deployment.v1';installation=$installation;current=@{manifest=$manifest;image=$manifest.image;image_id=$imageID};previous=$null;checkpoint=$null}
-    Write-Host "Installed $Version. Open http://localhost:7474 (or your RESTIVRA_PORT). Sign in with the token in your private .env."
+    $config=(Release-Docker @('compose','config','--format','json'))|ConvertFrom-Json
+    $port=$config.services.api.ports[0].published
+    Write-Host "Installed $Version. Open http://127.0.0.1:$port. Sign in with the token in your private .env."
 } finally { $operationLock.Dispose() }

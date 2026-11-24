@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "synthetic_data": true,
+  "started_at": "2026-11-24T14:29:30.5516947Z",
+  "checks": [
+    "old_binary_old_directory_mount_and_real_restore_history_established",
+    "live_legacy_topology_upgraded_with_narrow_readonly_profile_mount",
+    "atomic_profile_replacement_loads_after_idle_worker_recreation_without_api_credential_exposure",
+    "previous_binary_remains_healthy_after_rollback_with_hardened_private_files"
+  ],
+  "finished_at": "2026-11-24T14:31:21.8824687Z",
+  "scope": "Windows fixture; inherited NTFS ACLs. Unix 0600/0700 checks are conditional and verified separately in the Linux CI job. The published check label removes the earlier cross-platform shorthand."
+}

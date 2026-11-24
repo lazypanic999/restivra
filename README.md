@@ -28,6 +28,7 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 - React dashboard in English and Turkish: overview, project settings, recent runs, report details and JSON downloads.
 - Search all retained runs with result/date filters, cursor pagination, shareable filter links and CSV exports.
 - Browse archived projects and restore their settings/history with scheduling disabled.
+- Search every active or archived project with cursor pages; the dashboard shows the newest projects and complete totals.
 - Read existing archives from local files or an S3-compatible bucket, with worker-only private credentials, bounded conditional downloads and source evidence.
 - Printable English/Turkish evidence reports, optional name redaction and browser-assisted PDF saving.
 - [Editable SQL templates](docs/CHECK-TEMPLATES.md) for existence, minimum rows, recent data and required columns.
@@ -42,15 +43,23 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 - SHA-256 fingerprints, unchanged-file warnings and file-age warnings.
 - Optional failure webhook, with three persisted delivery attempts and independent delivery status.
 - Docker Compose installation; only the worker has Docker socket access.
+- Owner-only Unix configuration/metadata files and a worker mount limited to the private source profile; [permission behavior](docs/PRIVATE-FILES.md).
 - Standalone CLI for one-off verification.
 - Access-token sign-in with eight-hour HttpOnly sessions on fresh installations.
 - Readiness healthcheck, prerequisite diagnostics and [isolated metadata backup verification](docs/METADATA-CHECK.md).
+- Download an authenticated, [private-data-free support summary](docs/SUPPORT-SUMMARY.md) with build identity and live operational counts.
 
-This early MVP is ready for an unattended local developer pilot while the computer and Docker are running. A fixed-image two-hour run passed all 210 expected outcomes; separate Docker/metadata fault drills recovered automatically. See the [readiness evidence and limits](docs/PILOT-READINESS.md). A passing run establishes a logical restore and your selected checks, not complete application recovery, original permissions, PITR or backup freshness. Real customer pilots and payment validation remain to be done.
+This early MVP targets an unattended local developer pilot while the computer
+and Docker are running. The [readiness review](docs/PILOT-READINESS.md) records
+completed restore/fault checks and durations against their actual tested builds;
+the [November 24 acceptance](docs/acceptance/pilot-operations-20261124/) covers the
+new operating features. A passing run establishes a logical restore and your
+selected checks, not complete application recovery, original permissions, PITR
+or backup freshness. External seven-day pilots and payment validation remain open.
 
 The large-archive listing correction and full restore/failure/cancellation
 acceptance are recorded in [the current pilot evidence](docs/acceptance/large-archive-fix-20261120/).
-Use the pinned guide below for `v0.1.0-pilot.3`; earlier interrupted development
+Use the pinned guide below for `v0.1.0-pilot.4`; earlier interrupted development
 runs remain separate historical evidence.
 
 ## Quick start
@@ -58,7 +67,7 @@ runs remain separate historical evidence.
 Requires Docker Engine / Docker Desktop with Linux containers and Docker Compose. Allow RAM for the application database plus a restore container (1536 MiB default restore limit).
 
 ```powershell
-git clone --branch v0.1.0-pilot.3 --depth 1 https://github.com/lazypanic999/restivra.git
+git clone --branch v0.1.0-pilot.4 --depth 1 https://github.com/lazypanic999/restivra.git
 cd restivra
 ./scripts/install.ps1
 ./scripts/pilot-check.ps1
@@ -107,18 +116,19 @@ two projects labeled **Demo**. `./scripts/demo.ps1` runs only the standalone CLI
 ## Configuration
 
 For S3-compatible backups, configure an operator-managed read-only profile in
-`private/sources.json`, restart the idle worker, then choose it in the project
+`private/sources.json`, recreate the idle worker as described in the guide, then choose it in the project
 form. The API never receives storage keys. [Storage setup and limits](docs/S3-SOURCES.md).
 The pinned `v0.1.0-pilot.2` includes this integration; provider-specific external
 validation remains necessary. The earlier `v0.1.0-pilot.1` tag is unchanged.
 
-Setup generates `.env` with independent random database/access credentials and a unique instance name. Existing `.env` files are preserved. Do not commit `.env`, dumps, reports or runtime data.
+Setup generates `.env` with independent random database/access credentials, a unique instance/Compose project name and the chosen port. Subsequent terminals use the saved project and port; environment overrides still take precedence. Existing `.env` files are preserved. Do not commit `.env`, dumps, reports or runtime data.
 
 | Variable | Default / meaning |
 | --- | --- |
 | `POSTGRES_PASSWORD` | Generated by setup; required by Compose. Keep the generated hex format. |
 | `RESTIVRA_AUTH_TOKEN` | Random 256-bit access token generated by setup. Empty disables authentication for legacy local-only installations. |
 | `RESTIVRA_INSTANCE` | Generated unique name; keep stable. Docker resource ownership uses an independent database installation ID. |
+| `COMPOSE_PROJECT_NAME` | Generated unique Compose project on fresh setup; keep stable to retain the selected containers/volumes. |
 | `RESTIVRA_PORT` | `7474`; Compose host port, always bound to 127.0.0.1. |
 | `RESTIVRA_RETENTION_DAYS` | `30`; completed-job retention, 1–3650 days. Pending notifications are retained. |
 | `RESTIVRA_WEBHOOK_URL` | Optional public HTTPS webhook on port 443. |
@@ -149,7 +159,7 @@ Jobs snapshot the project name, path and checks. Edits affect future jobs. Alrea
 
 Recovery uses the metadata database's installation ID and exact legacy running-job IDs. It does not delete another installation's resources based on a shared instance name. Failed cleanup stops the worker before it claims another job; restart reconciles remaining resources first.
 
-History searches all retained runs with cursor pages; overview counters cover all retained outcomes. The project list displays up to 500 records per active/archived view. Archiving preserves history until retention removes it.
+History searches all retained runs with cursor pages; overview counters cover all retained outcomes. [Project search](docs/PROJECT-PAGES.md) searches all active or archived projects, with 50 per interface page and no legacy 500-project browsing cap. Archiving preserves history until retention removes it.
 
 ## Access and trust boundary
 

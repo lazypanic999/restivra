@@ -10,8 +10,9 @@ Keep your backup producer and independent recovery procedure.
 
 Run the setup script once after updating. It creates `private/sources.json` if
 missing, and preserves an existing file and `.env`. This directory is excluded
-from Git and Docker's build context. Compose mounts it read-only **only in the
-worker**. The API receives no storage credentials or storage mount.
+from Git and Docker's build context. Compose mounts only the profile file
+read-only **in the worker**. Deployment records and checkpoints are excluded.
+The API receives no storage credentials or storage mount.
 
 Edit this file privately, replacing the placeholders with your operator-managed
 read-only credentials. Do not put real keys in project settings or public issues.
@@ -37,7 +38,7 @@ HTTPS endpoint and region, and enable `path_style` if your provider requires
 bucket names in the URL path. The endpoint may not contain credentials, a path,
 query or fragment. An optional `session_token` supports temporary credentials,
 but automatic credential renewal and ambient AWS credential chains are not
-implemented. Replace expiring credentials privately and restart the worker.
+implemented. Replace expiring credentials privately and recreate the idle worker.
 
 For storage on a trusted private network, explicit `"allow_http": true` permits
 an HTTP endpoint such as `http://storage:9000`. This sends requests without TLS;
@@ -48,9 +49,13 @@ Project users cannot supply endpoints or credentials through the API.
 Wait until no job is active, then:
 
 ```sh
-docker compose restart worker
+docker compose up --no-build --no-deps --pull never --force-recreate -d worker
 docker compose logs --tail=30 worker
 ```
+
+Recreation binds the current file even if your editor replaced its inode while
+saving. A simple restart can keep the old file. See [private files](PRIVATE-FILES.md)
+for permissions and compatible upgrades from earlier directory mounts.
 
 The project form lists the profile's public name. Only its ID/name are advertised
 in the heartbeat. The database stores the selection (kind/profile/bucket/pattern),

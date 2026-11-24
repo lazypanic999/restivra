@@ -1,11 +1,12 @@
 #Requires -Version 7.2
 # Docker-only real PostgreSQL smoke test: unique synthetic resources, no Go/Node.
 param(
-    [string]$Base = 'http://127.0.0.1:7474',
+    [string]$Base,
     [string]$EnvFile = (Join-Path (Split-Path -Parent $PSScriptRoot) '.env')
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'api-session.ps1')
+$Base=Resolve-RestivraBase -Base $Base -EnvFile $EnvFile
 $root = Split-Path -Parent $PSScriptRoot
 $suffix = [guid]::NewGuid().ToString('N')
 $source = "restivra-pilot-source-$suffix"
