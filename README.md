@@ -134,7 +134,7 @@ Setup generates `.env` with independent random database/access credentials, a un
 | `COMPOSE_PROJECT_NAME` | Generated unique Compose project on fresh setup; keep stable to retain the selected containers/volumes. |
 | `RESTIVRA_PORT` | `7474`; Compose host port, always bound to 127.0.0.1. |
 | `RESTIVRA_RETENTION_DAYS` | `30`; completed-job retention, 1–3650 days. Pending notifications are retained. |
-| `RESTIVRA_WEBHOOK_URL` | Optional public HTTPS webhook on port 443. |
+| `RESTIVRA_WEBHOOK_URL` | Optional public HTTPS webhook on port 443. Slack incoming webhooks and Discord webhooks get a readable message with the checks that did not pass, mentions disabled; other URLs get JSON with `event`, `job_id`, `project`, `status`, `error_code`, `failed_checks` and `text`. |
 | `RESTIVRA_DATABASE_URL` | Required for direct service execution; supplied by Compose. |
 | `RESTIVRA_BACKUP_ROOT` | `backups` directly; `/backups` in Compose. |
 | `RESTIVRA_WORK_DIR` | `work/jobs` directly; `/work/jobs` in Compose. |

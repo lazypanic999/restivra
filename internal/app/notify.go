@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"io"
 	"net"
@@ -79,9 +78,9 @@ func ValidateWebhook(raw string) error {
 }
 
 func (w *Worker) notifyPending(ctx context.Context) error {
-	var id, name, status string
+	var id, name, status, report string
 	var attempts int
-	err := w.Store.DB.QueryRowContext(ctx, `SELECT id,project_name,status,notification_attempts FROM jobs WHERE notification_status='pending' AND notification_next_at<=clock_timestamp() ORDER BY notification_next_at LIMIT 1`).Scan(&id, &name, &status, &attempts)
+	err := w.Store.DB.QueryRowContext(ctx, `SELECT id,project_name,status,notification_attempts,COALESCE(report::text,'') FROM jobs WHERE notification_status='pending' AND notification_next_at<=clock_timestamp() ORDER BY notification_next_at LIMIT 1`).Scan(&id, &name, &status, &attempts, &report)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil
 	}
@@ -92,7 +91,7 @@ func (w *Worker) notifyPending(ctx context.Context) error {
 		_, err = w.Store.DB.ExecContext(ctx, "UPDATE jobs SET notification_status='skipped' WHERE id=$1", id)
 		return err
 	}
-	payload, _ := json.Marshal(map[string]any{"event": "restivra.verification.failed", "job_id": id, "project": name, "status": status, "text": "Restivra: " + name + " / " + status + " / " + id})
+	payload, _ := webhookPayload(w.WebhookURL, noticeFromReport(id, name, status, report))
 	deliverErr := ValidateWebhook(w.WebhookURL)
 	if deliverErr == nil {
 		req, e := http.NewRequestWithContext(ctx, http.MethodPost, w.WebhookURL, bytes.NewReader(payload))
