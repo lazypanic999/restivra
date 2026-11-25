@@ -23,6 +23,7 @@
 - [x] S3-compatible read-only sources, worker-only profiles, conditional bounded snapshots and source evidence in UI/history/CSV.
 - [x] Self-contained printable evidence, English/Turkish, optional name redaction and browser-assisted PDF saving.
 - [x] Editable SQL templates with bounded existence/minimum-row queries and real PostgreSQL edge-case checks.
+- [x] Trends page with archive-size, failure-streak, unchanged-archive and slow-restore signals.
 - [x] Immutable previous-run comparison with rule/source/configuration changes shown separately.
 - [x] Versioned project settings transfer with review and disabled imported schedules.
 - [x] Bounded PowerShell metadata export and isolated restore/schema/count verification.

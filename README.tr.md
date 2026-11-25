@@ -82,6 +82,7 @@ Sabit `v0.1.0-pilot.1` etiketi önceki yerel dosya pilotudur; değiştirilmedi.
 
 - Genel bakış, proje ayarları, saklanan geçmişin tamamında arama, tarih/sonuç filtresi, sayfalama, rapor ve JSON indirme.
 - Filtrelenmiş geçmişi CSV olarak indirme; arşivlenmiş projeyi zamanlaması kapalı biçimde geri getirme.
+- Eğilimler sayfası: proje başına son çalışmalar şeridi, geçme oranı, yedek boyutu ve geri yükleme süresi grafikleri. Yedek birden küçülürse, çalışmalar art arda düşerse, aynı yedek tekrar tekrar test edilirse ya da geri yükleme alışılmadık uzun sürerse uyarı verir.
 - Aktif/arşivlenmiş projelerin tamamında arama ve sayfalama; son 500 projeyle sınırlı değildir.
 - Bildirim teslimini sonuçtan bağımsız filtreleme ve başarısız teslimlere sistem kontrolünden erişim.
 - Proje adı, SQL, yedek yolu ve anahtar içermeyen [destek özeti](docs/SUPPORT-SUMMARY.md); otomatik gönderilmez.
