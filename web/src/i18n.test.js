@@ -43,4 +43,8 @@ test("Stored messages switch language without modifying user-provided identifier
   const message =
     'check "Customer orders" must be a single SELECT without semicolons, comments or backslashes';
   assert.match(translateMessage(message, "tr"), /"Customer orders"/);
+  assert.equal(
+    translateMessage("The backup is 70% smaller than the median of the previous 4 runs; it may be incomplete.", "tr"),
+    "Yedek, önceki 4 çalışmanın medyanından %70 küçük; eksik olabilir.",
+  );
 });
