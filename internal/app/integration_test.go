@@ -206,6 +206,12 @@ func TestIntegrationApp(t *testing.T) {
 		t.Fatal(err)
 	}
 	repeated := waitJob(again.ID, "passed")
+	metrics := requestJSON(t, handler, "GET", "/metrics", nil, "")
+	for _, want := range []string{"restivra_up 1", `restivra_project_last_run_passed{project_id="` + p.ID + `",project="Integration customer"} 1`, "restivra_project_last_backup_bytes{"} {
+		if metrics.Code != 200 || !strings.Contains(metrics.Body.String(), want) {
+			t.Fatalf("metrics missing %q: %d %s", want, metrics.Code, metrics.Body.String())
+		}
+	}
 	found := false
 	for _, warning := range repeated.Report.Warnings {
 		if strings.Contains(warning, "identical") {

@@ -40,6 +40,7 @@ func (a *API) Handler() http.Handler {
 		}
 		jsonResponse(w, 200, map[string]string{"status": "ready"})
 	})
+	mux.HandleFunc("GET /metrics", a.metrics)
 	mux.HandleFunc("GET /api/auth", a.authState)
 	mux.HandleFunc("POST /api/auth/login", a.login)
 	mux.HandleFunc("POST /api/auth/logout", func(w http.ResponseWriter, r *http.Request) {

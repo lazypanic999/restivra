@@ -256,6 +256,40 @@ go run ./cmd/restivra cleanup --run-id <32-character-run-id>
 
 Manual cleanup verifies the exact ownership label. Do not target active jobs. Hard-killed standalone snapshots may need removal from their CLI work directory; worker recovery does not touch unrelated CLI work.
 
+### Prometheus metrics
+
+`GET /metrics` returns Prometheus text format. With an access token configured, send it as a bearer token; a signed-in browser session also works.
+
+```yaml
+scrape_configs:
+  - job_name: restivra
+    metrics_path: /metrics
+    authorization:
+      credentials_file: /etc/prometheus/restivra-token   # contents of RESTIVRA_AUTH_TOKEN
+    static_configs:
+      - targets: ["127.0.0.1:7474"]
+```
+
+| Metric | Meaning |
+| --- | --- |
+| `restivra_up` | API and metadata database answered. |
+| `restivra_worker_online`, `restivra_worker_heartbeat_age_seconds` | Restore worker heartbeat. |
+| `restivra_jobs{status}` | Retained runs by status. |
+| `restivra_notifications_failed` | Failure notifications not delivered after all attempts. |
+| `restivra_project_last_run_passed{project_id,project}` | 1 or 0 for the newest finished run of each active project. |
+| `restivra_project_last_run_timestamp_seconds`, `restivra_project_last_success_timestamp_seconds` | When the newest run and the newest passed run finished. |
+| `restivra_project_last_restore_duration_seconds`, `restivra_project_last_backup_bytes` | Duration and archive size of the newest finished run. |
+
+An alert for a project that has not passed a restore test for two days:
+
+```yaml
+- alert: RestivraNoRecentPassingRestore
+  expr: time() - restivra_project_last_success_timestamp_seconds > 2 * 86400
+  for: 30m
+```
+
+Compose binds the port to 127.0.0.1, so Prometheus must run on the same host or reach it through your own tunnel or proxy.
+
 ## Brand
 
 <img src="docs/brand/restivra-badger.png" alt="Restivra badger mascot" width="170" align="right">
