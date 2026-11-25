@@ -27,6 +27,7 @@
 - [x] Slack and Discord webhook formats with failed check names and mentions disabled.
 - [x] Report warning when an archive is at most half the median size of earlier runs.
 - [x] Prometheus `/metrics` with bearer-token access, per-project last result, last success, duration and archive size.
+- [x] Actionable report warnings shown under the latest result in project and run tables.
 - [x] Immutable previous-run comparison with rule/source/configuration changes shown separately.
 - [x] Versioned project settings transfer with review and disabled imported schedules.
 - [x] Bounded PowerShell metadata export and isolated restore/schema/count verification.
