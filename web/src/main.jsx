@@ -4,6 +4,7 @@ import "@fontsource/public-sans/400.css";
 import "@fontsource/public-sans/600.css";
 import { LanguageProvider, useLanguage } from "./language.jsx";
 import { History } from "./history.jsx";
+import { Trends } from "./trends.jsx";
 import { CheckTemplates } from "./check-templates.jsx";
 import { RunComparison } from "./comparison.jsx";
 import { SupportDiagnostics } from "./support.jsx";
@@ -437,7 +438,7 @@ function App({ onUnauthorized, onLogout }) {
         query.set("project_id", projectID);
       }
     } else {
-      if (destination === "projects" || destination === "setup") query.set("view", destination);
+      if (destination === "projects" || destination === "setup" || destination === "trends") query.set("view", destination);
       else query.delete("view");
       for (const key of Object.keys(emptyHistoryFilters)) query.delete(key);
     }
@@ -500,7 +501,7 @@ function App({ onUnauthorized, onLogout }) {
             vra
           </a>
           <nav aria-label="Restivra">
-            {["overview", "projects", "history", "setup"].map((id) => (
+            {["overview", "projects", "history", "trends", "setup"].map((id) => (
               <button
                 key={id}
                 aria-current={page === id ? "page" : undefined}
@@ -529,6 +530,8 @@ function App({ onUnauthorized, onLogout }) {
                   ? t("projectsDescription")
                   : page === "history"
                     ? t("historyDescription")
+                    : page === "trends"
+                      ? t("trendsDescription")
                     : t("setupDescription")}
             </p>
           </div>
@@ -810,6 +813,9 @@ function App({ onUnauthorized, onLogout }) {
                 </nav>}
                 {page === "overview" && projectTotal > projects.length && <p className="help-text">{t("overviewProjectWindow", { count: projects.length, total: projectTotal })} <button className="text-button" onClick={() => go("projects")}>{t("allProjects")}</button></p>}
               </section>
+            )}
+            {page === "trends" && (
+              <Trends api={api} onInspect={inspect} size={size} Empty={Empty} />
             )}
             {page === "history" && (
               <History

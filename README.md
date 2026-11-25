@@ -26,6 +26,7 @@ The video and all screenshots use synthetic demo projects. The [sign-in page](do
 ## Features
 
 - React dashboard in English and Turkish: overview, project settings, recent runs, report details and JSON downloads.
+- Trends page: per-project run strip, pass rate, archive size and restore time sparklines, with signals for a sharply smaller archive, repeated failures, an unchanged archive and unusually slow restores.
 - Search all retained runs with result/date filters, cursor pagination, shareable filter links and CSV exports.
 - Browse archived projects and restore their settings/history with scheduling disabled.
 - Search every active or archived project with cursor pages; the dashboard shows the newest projects and complete totals.

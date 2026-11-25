@@ -290,3 +290,98 @@ pre {
     background-image: none;
   }
 }
+
+/* Trends: run strip, sparklines and signals. */
+.trend-summary {
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+.run-strip {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.tick {
+  width: 7px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 2px;
+  background: #4a3f41;
+}
+.tick-passed {
+  background: var(--success);
+}
+.tick-failed,
+.tick-error {
+  background: var(--failure);
+  height: 26px;
+}
+.tick:hover,
+.tick:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+.trend-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.trend-cell span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.spark polyline {
+  fill: none;
+  stroke: var(--brand-text);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+.spark circle {
+  fill: var(--brand);
+}
+.trends tbody tr.trend-alert td:first-child {
+  box-shadow: inset 3px 0 0 var(--failure);
+}
+.trend-signals {
+  white-space: normal;
+  min-width: 260px;
+  max-width: 380px;
+}
+.trend-signals ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+.trend-signals li {
+  font-family: var(--prose);
+  font-size: 12px;
+  line-height: 1.4;
+  padding-left: 14px;
+  position: relative;
+}
+.trend-signals li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 7px;
+  height: 7px;
+}
+.trend-signals .sev-3::before {
+  background: var(--failure);
+  transform: rotate(45deg);
+}
+.trend-signals .sev-2::before {
+  background: var(--pending);
+}
+.trend-signals .sev-1::before {
+  border: 1.5px solid var(--muted);
+  box-sizing: border-box;
+}
+.trends .table-scroll + .help-text,
+.trends .help-text + .help-text {
+  margin-top: 12px;
+}
