@@ -66,7 +66,7 @@ func service(ctx context.Context, mode string, args []string) int {
 			log.Print(err)
 			return 2
 		}
-		worker := app.Worker{Store: store, BackupRoot: env("RESTIVRA_BACKUP_ROOT", "backups"), WorkDir: env("RESTIVRA_WORK_DIR", "work/jobs"), Instance: instance, WebhookURL: webhook, RetentionDays: days, Sources: sources}
+		worker := app.Worker{Store: store, BackupRoot: env("RESTIVRA_BACKUP_ROOT", "backups"), WorkDir: env("RESTIVRA_WORK_DIR", "work/jobs"), Instance: instance, WebhookURL: webhook, NotifyWarnings: os.Getenv("RESTIVRA_WEBHOOK_WARNINGS") == "1", RetentionDays: days, Sources: sources}
 		if err := worker.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
 			log.Print("worker stopped: ", err)
 			return 1

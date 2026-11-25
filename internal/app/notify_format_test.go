@@ -91,3 +91,21 @@ func TestGenericPayloadKeepsEventFields(t *testing.T) {
 		t.Fatalf("event fields changed: %s", raw)
 	}
 }
+
+func TestPassedRunWithShrinkWarning(t *testing.T) {
+	report := `{"warnings":["This verifies a logical restore.","The backup is 72% smaller than the median of the previous 10 runs; it may be incomplete."],"checks":[{"name":"rows","status":"passed"}]}`
+	n := noticeFromReport("abc", "Billing", "passed", report)
+	want := "Restivra: Billing passed with a warning (run abc). The backup is 72% smaller than the median of the previous 10 runs; it may be incomplete."
+	if n.summary() != want {
+		t.Fatalf("summary %q", n.summary())
+	}
+	raw, _ := webhookPayload("https://example.com/hook", n)
+	var p map[string]any
+	if json.Unmarshal(raw, &p) != nil || p["event"] != "restivra.verification.warning" || p["warning"] == "" {
+		t.Fatalf("payload %s", raw)
+	}
+	failed, _ := webhookPayload("https://example.com/hook", noticeFromReport("x", "P", "failed", failedReport))
+	if !strings.Contains(string(failed), `"event":"restivra.verification.failed"`) {
+		t.Fatalf("failure event changed: %s", failed)
+	}
+}

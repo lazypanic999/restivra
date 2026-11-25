@@ -25,6 +25,7 @@ type Worker struct {
 	Instance          string
 	Installation      string
 	WebhookURL        string
+	NotifyWarnings    bool // also notify for a passed run whose archive shrank sharply
 	RetentionDays     int
 	Docker            verify.Commander
 	Sources           source.Profiles
@@ -448,6 +449,12 @@ func (w *Worker) execute(parent context.Context, conn *sql.Conn, root *os.Root, 
 	}
 	if err := w.Store.FinishAttempt(finalCtx, job.ID, job.AttemptCount, status, errorText, report, w.WebhookURL != ""); err != nil {
 		return err
+	}
+	if w.NotifyWarnings && w.WebhookURL != "" && status == "passed" && shrinkWarning(report) != "" {
+		// Only a run that FinishAttempt left passed and unnotified is promoted.
+		if _, err := w.Store.DB.ExecContext(finalCtx, `UPDATE jobs SET notification_status='pending',notification_attempts=0,notification_next_at=clock_timestamp() WHERE id=$1 AND status='passed' AND notification_status='skipped'`, job.ID); err != nil {
+			return err
+		}
 	}
 	if cleanupFailed {
 		return ErrCleanupPending
