@@ -12,6 +12,7 @@ const maxListedChecks = 5
 
 type failureNotice struct {
 	JobID, Project, Status, ErrorCode string
+	Warning                           string
 	FailedChecks                      []string
 }
 
@@ -20,7 +21,8 @@ type failureNotice struct {
 func noticeFromReport(id, project, status, report string) failureNotice {
 	n := failureNotice{JobID: id, Project: project, Status: status, FailedChecks: []string{}}
 	var r struct {
-		ErrorCode string `json:"error_code"`
+		ErrorCode string   `json:"error_code"`
+		Warnings  []string `json:"warnings"`
 		Checks    []struct {
 			Name   string `json:"name"`
 			Status string `json:"status"`
@@ -30,6 +32,7 @@ func noticeFromReport(id, project, status, report string) failureNotice {
 		return n
 	}
 	n.ErrorCode = r.ErrorCode
+	n.Warning = firstShrink(r.Warnings)
 	for _, c := range r.Checks {
 		if c.Status != "passed" && c.Status != "not_run" && c.Status != "" {
 			n.FailedChecks = append(n.FailedChecks, c.Name)
@@ -48,6 +51,9 @@ func clip(s string, max int) string {
 }
 
 func (n failureNotice) summary() string {
+	if n.Status == "passed" && n.Warning != "" {
+		return fmt.Sprintf("Restivra: %s passed with a warning (run %s). %s", clip(n.Project, 120), n.JobID, n.Warning)
+	}
 	line := fmt.Sprintf("Restivra: %s %s (run %s)", clip(n.Project, 120), n.Status, n.JobID)
 	if len(n.FailedChecks) == 0 {
 		if n.ErrorCode != "" {
@@ -107,8 +113,12 @@ func webhookPayload(raw string, n failureNotice) ([]byte, error) {
 			"allowed_mentions": map[string]any{"parse": []string{}},
 		})
 	}
+	event := "restivra.verification.failed"
+	if n.Status == "passed" {
+		event = "restivra.verification.warning"
+	}
 	return json.Marshal(map[string]any{
-		"event": "restivra.verification.failed", "job_id": n.JobID, "project": n.Project, "status": n.Status,
+		"event": event, "warning": n.Warning, "job_id": n.JobID, "project": n.Project, "status": n.Status,
 		"error_code": n.ErrorCode, "failed_checks": n.FailedChecks, "text": text,
 	})
 }

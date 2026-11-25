@@ -130,7 +130,7 @@ Worker yeni iş öncesinde ve boşta yaklaşık 30 saniyede bir sahip olduğu ge
 
 `docker compose exec worker restivra doctor --role worker` ön gereksinimleri kontrol eder. `docker compose exec api restivra healthcheck` API/veritabanı hazır olma kontrolüdür; worker bağlantısını ayrıca panelden izle. Proje ve rapor veritabanını yedeklemek için `./scripts/metadata-backup.ps1 -OutputPath work/metadata.dump` kullan; Linux karşılığı `sh scripts/metadata-backup.sh /private/metadata.dump`. Bu arşiv müşteri dump'larını ve `.env` dosyasını içermez.
 
-Bildirim için `.env` içindeki `RESTIVRA_WEBHOOK_URL` değerine genel JSON kabul eden açık HTTPS adresi yazıp worker'ı yeniden oluştur. Yerel/özel ağlar ve yönlendirmeler engellenir. Slack ve Discord webhook adreslerine, geçmeyen kontrollerin adlarını içeren okunur bir mesaj gider; @everyone gibi etiketlemeler devre dışıdır. Diğer adreslere `event`, `job_id`, `project`, `status`, `error_code`, `failed_checks` ve `text` alanlı JSON gider. Bildirim hatası test sonucunu değiştirmez.
+Bildirim için `.env` içindeki `RESTIVRA_WEBHOOK_URL` değerine genel JSON kabul eden açık HTTPS adresi yazıp worker'ı yeniden oluştur. Yerel/özel ağlar ve yönlendirmeler engellenir. Slack ve Discord webhook adreslerine, geçmeyen kontrollerin adlarını içeren okunur bir mesaj gider; @everyone gibi etiketlemeler devre dışıdır. Diğer adreslere `event`, `job_id`, `project`, `status`, `error_code`, `failed_checks` ve `text` alanlı JSON gider. `RESTIVRA_WEBHOOK_WARNINGS=1` yazarsan, test geçse bile yedek önceki çalışmaların medyanının yarısına veya altına düştüğünde de bildirim gider. Bildirim hatası test sonucunu değiştirmez.
 
 Ayrıntılı mimari, yapılandırma ve testler: [README.md](README.md).
 
