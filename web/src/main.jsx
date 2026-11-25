@@ -5,6 +5,7 @@ import "@fontsource/public-sans/600.css";
 import { LanguageProvider, useLanguage } from "./language.jsx";
 import { History } from "./history.jsx";
 import { Trends } from "./trends.jsx";
+import { attentionWarnings } from "./warnings.js";
 import { CheckTemplates } from "./check-templates.jsx";
 import { RunComparison } from "./comparison.jsx";
 import { SupportDiagnostics } from "./support.jsx";
@@ -40,9 +41,16 @@ function Status({ value }) {
 }
 function RunState({ job }) {
   const { t, formatDate } = useLanguage();
+  const warnings = attentionWarnings(job.report);
   return (
     <>
       <Status value={job.status} />
+      {warnings.length > 0 && (
+        <small className={`run-warning sev-${warnings[0].severity}`}>
+          {t(warnings[0].key, warnings[0].values)}
+          {warnings.length > 1 && ` ${t("warnMore", { count: warnings.length - 1 })}`}
+        </small>
+      )}
       {job.retry_at ? (
         <small className="attempt-info">
           {t("retryAt", { time: formatDate(job.retry_at, true) })}

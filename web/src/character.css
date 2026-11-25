@@ -385,3 +385,42 @@ pre {
 .trends .help-text + .help-text {
   margin-top: 12px;
 }
+
+/* Actionable report warnings under a run's status. */
+.run-warning {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--prose);
+  font-size: 11px;
+  font-weight: 400;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.run-warning::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 6px;
+  vertical-align: 1px;
+}
+.run-warning.sev-3 {
+  color: var(--failure);
+}
+.run-warning.sev-3::before {
+  background: var(--failure);
+  transform: rotate(45deg);
+}
+.run-warning.sev-2 {
+  color: var(--pending);
+}
+.run-warning.sev-2::before {
+  background: var(--pending);
+}
+.run-warning.sev-1::before {
+  border: 1.5px solid var(--muted);
+  box-sizing: border-box;
+}
+.status-button {
+  text-align: left;
+}
