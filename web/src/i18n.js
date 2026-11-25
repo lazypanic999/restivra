@@ -689,6 +689,11 @@ export function translateMessage(message, language) {
     );
     if (check)
       return `${check[1]} kontrolü noktalı virgül, yorum veya ters eğik çizgi içermeyen tek SELECT olmalı`;
+    const shrank = message.match(
+      /^The backup is (\d+)% smaller than the median of the previous (\d+) runs; it may be incomplete\.$/,
+    );
+    if (shrank)
+      return `Yedek, önceki ${shrank[2]} çalışmanın medyanından %${shrank[1]} küçük; eksik olabilir.`;
     if (message.startsWith("PostgreSQL image missing; run: "))
       return `PostgreSQL imajı yok; çalıştır: ${message.slice("PostgreSQL image missing; run: ".length)}`;
     if (message.startsWith("container cleanup failed; use cleanup --run-id "))

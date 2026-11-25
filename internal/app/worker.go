@@ -383,6 +383,28 @@ func (w *Worker) execute(parent context.Context, conn *sql.Conn, root *os.Root, 
 			if previous.Valid && previous.String == result.Backup.SHA256 {
 				report.Warnings = append(report.Warnings, "The tested backup is identical to the previous run; backup freshness was not established.")
 			}
+			var earlier []int64
+			sizeCtx, stopSize := context.WithTimeout(parent, 15*time.Second)
+			rows, err := w.Store.DB.QueryContext(sizeCtx, `SELECT (report->'backup'->>'bytes')::bigint FROM jobs WHERE project_id=$1 AND id<>$2 AND report IS NOT NULL AND report->'backup'->>'bytes' ~ '^[0-9]{1,18}$' ORDER BY queued_at DESC LIMIT 10`, job.ProjectID, job.ID)
+			if err == nil {
+				for rows.Next() {
+					var size int64
+					if rows.Scan(&size) == nil {
+						earlier = append(earlier, size)
+					}
+				}
+				err = rows.Err()
+				rows.Close()
+			}
+			stopSize()
+			if err != nil {
+				cancel()
+				<-heartbeatDone
+				return err
+			}
+			if warning := sizeDropWarning(result.Backup.Bytes, earlier); warning != "" {
+				report.Warnings = append(report.Warnings, warning)
+			}
 			if time.Since(result.Backup.ModifiedAt) > 24*time.Hour {
 				report.Warnings = append(report.Warnings, "The backup file modification time is over 24 hours old; this is not a verified backup creation timestamp.")
 			}
