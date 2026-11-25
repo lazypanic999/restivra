@@ -21,6 +21,8 @@ The 51-second walkthrough creates a project, runs a restore test, opens the repo
 | --- | --- |
 | ![Verification report with one failed SQL check](docs/screenshots/report.jpg) | ![Dashboard on a 390 px wide screen](docs/screenshots/dashboard-mobile.jpg) |
 
+![Trends page: run strip, archive size and restore time per project, with signals](docs/screenshots/trends.jpg)
+
 The video and all screenshots use synthetic demo projects. The [sign-in page](docs/screenshots/sign-in.jpg) and the [Turkish interface](docs/screenshots/dashboard-tr.jpg) have their own captures.
 
 ## Features
