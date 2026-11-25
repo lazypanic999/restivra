@@ -291,6 +291,8 @@ An alert for a project that has not passed a restore test for two days:
 
 Compose binds the port to 127.0.0.1, so Prometheus must run on the same host or reach it through your own tunnel or proxy.
 
+Ready-made [alert rules](deploy/monitoring/restivra-alerts.yaml) (worker offline, last restore failed, no passing restore for two days, archive shrank, undelivered notifications) and a [Grafana dashboard](deploy/monitoring/grafana-dashboard.json) are in `deploy/monitoring`. Import the dashboard and pick your Prometheus data source.
+
 ## Brand
 
 <img src="docs/brand/restivra-badger.png" alt="Restivra badger mascot" width="170" align="right">
