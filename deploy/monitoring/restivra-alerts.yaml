@@ -1,0 +1,51 @@
+# Prometheus alerting rules for Restivra's /metrics endpoint.
+# Load with: rule_files: ["restivra-alerts.yaml"]
+groups:
+  - name: restivra
+    rules:
+      - alert: RestivraDown
+        expr: up{job="restivra"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: Restivra has not answered a scrape for 5 minutes.
+
+      - alert: RestivraWorkerOffline
+        expr: restivra_worker_online == 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: The Restivra restore worker has no recent heartbeat; scheduled tests are not running.
+
+      - alert: RestivraLastRestoreFailed
+        expr: restivra_project_last_run_passed == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'The newest restore test of {{ $labels.project }} did not pass.'
+
+      - alert: RestivraNoRecentPassingRestore
+        expr: time() - restivra_project_last_success_timestamp_seconds > 2 * 86400
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: '{{ $labels.project }} has not passed a restore test for over two days.'
+
+      - alert: RestivraArchiveShrank
+        expr: restivra_project_last_backup_bytes < 0.5 * avg_over_time(restivra_project_last_backup_bytes[7d] offset 1d)
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'The newest archive of {{ $labels.project }} is under half its usual size; the dump may be incomplete.'
+
+      - alert: RestivraNotificationsUndelivered
+        expr: increase(restivra_notifications_failed[1h]) > 0
+        labels:
+          severity: warning
+        annotations:
+          summary: A failure notification could not be delivered after all attempts.

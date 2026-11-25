@@ -29,6 +29,7 @@
 - [x] Prometheus `/metrics` with bearer-token access, per-project last result, last success, duration and archive size.
 - [x] Actionable report warnings shown under the latest result in project and run tables.
 - [x] Optional webhook for passed runs whose archive shrank sharply (`RESTIVRA_WEBHOOK_WARNINGS=1`).
+- [x] Prometheus alert rules and a Grafana dashboard in `deploy/monitoring`.
 - [x] Immutable previous-run comparison with rule/source/configuration changes shown separately.
 - [x] Versioned project settings transfer with review and disabled imported schedules.
 - [x] Bounded PowerShell metadata export and isolated restore/schema/count verification.

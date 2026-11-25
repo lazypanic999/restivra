@@ -138,6 +138,8 @@ Ayrıntılı mimari, yapılandırma ve testler: [README.md](README.md).
 
 `GET /metrics` Prometheus metin formatında metrik döndürür. Erişim belirteci tanımlıysa `Authorization: Bearer <RESTIVRA_AUTH_TOKEN>` başlığıyla çağrılır; giriş yapılmış tarayıcı oturumu da geçerlidir. Worker durumu, durumlara göre çalışma sayıları, teslim edilemeyen bildirimler ve her aktif proje için son sonuç, son başarılı test zamanı, geri yükleme süresi ve yedek boyutu verilir. Ayrıntılı tablo ve örnek alarm İngilizce [README](README.md#prometheus-metrics) içinde. Compose portu 127.0.0.1'e bağladığı için Prometheus aynı makinede çalışmalı ya da kendi tünelin veya proxy'n üzerinden erişmeli.
 
+Hazır [alarm kuralları](deploy/monitoring/restivra-alerts.yaml) ve [Grafana paneli](deploy/monitoring/grafana-dashboard.json) `deploy/monitoring` klasöründe.
+
 ## Arayüz geliştirme ve bağımlılık güvenliği
 
 Vite ve sorunlu glob bağımlılıkları kaldırıldı; derleme doğrudan esbuild ile yapılır. `npm --prefix web run build` üretim dosyalarını hazırlar. Geliştirmede bir terminalde `npm --prefix web run dev`, diğerinde veritabanı ortamı tanımlıyken `go run ./cmd/restivra serve --assets-dir internal/webui/dist` çalıştır. Arayüz ve API aynı `127.0.0.1:7474` adresindedir; ek sunucu/proxy yoktur.
