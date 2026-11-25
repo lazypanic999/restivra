@@ -14,6 +14,8 @@ Mevcut PostgreSQL 17 yedeğini geçici bir ortamda geri yükler, SQL kontrolleri
 
 ![Türkçe arayüzde örnek doğrulama kayıtları](docs/screenshots/dashboard-tr.jpg)
 
+![Eğilimler sayfası: proje başına çalışma şeridi, yedek boyutu, geri yükleme süresi ve uyarılar](docs/screenshots/trends-tr.jpg)
+
 Video ve görüntülerdeki projeler sentetik demo verisidir. Başarısız bir SQL kontrolünün raporu için [rapor ekranına](docs/screenshots/report.jpg), telefon görünümü için [mobil ekrana](docs/screenshots/dashboard-mobile.jpg) bakabilirsin.
 
 ## Kurulum
